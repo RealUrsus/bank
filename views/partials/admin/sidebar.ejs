@@ -1,0 +1,74 @@
+<div class="d-flex flex-column p-3 sidebar">
+    <ul class="nav flex-column" id="menu">
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/transactions">
+                <span data-feather="send"></span>
+                Transactions
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link align-middle" href="#menu-agreement" data-bs-toggle="collapse" aria-expanded="false">
+                <span data-feather="file" class="d-none d-sm-inline"></span>
+                Agreements
+            </a>
+            <ul class="collapse nav flex-column ms-3" id="menu-agreement">
+                <li>
+                    <a href="/admin/agreements/add" class="nav-link">
+                        <span data-feather="file-plus" class="d-none d-sm-inline"></span> 
+                        Add
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/agreements/view" class="nav-link">
+                        <span data-feather="file-text" class="d-none d-sm-inline"></span> 
+                        Edit
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/loans">
+                <span data-feather="shopping-bag"></span>
+                Loans
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <span data-feather="users"></span>
+                Clients
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <span data-feather="help-circle"></span>
+                Help
+            </a>
+        </li>
+    </ul>
+    
+    <div class="dropdown mt-auto">
+        <hr>
+        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="/images/admin.png" alt="Admin" width="32" height="32" class="rounded-circle me-2">
+            <strong><%= user.username %></strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-light text-small shadow">        
+            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><a class="dropdown-item" href="#">Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form action="/logout" method="post" class="d-flex align-items-center">
+                    <button type="submit" class="btn dropdown-item">
+                        <img 
+                            src="/images/log-out.png" 
+                            alt="Log Out" 
+                            height="20px"
+                        /> 
+                        <span class="ms-1 text-nowrap">Sign out</span>
+                    </button>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                </form>
+            </li>
+        </ul>
+    </div>    
+</div>

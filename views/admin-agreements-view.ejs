@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<%- include('partials/head'); %>
+		<link rel="stylesheet" href="/css/sidebar.css">
+	</head>
+	<body>
+		<header>
+			<%- include('partials/header'); %>
+		</header>
+
+		<main class="container-fluid d-flex flex-nowrap">
+			<aside class="border">
+				<%- include('partials/admin/sidebar'); %>
+			</aside>
+        <!-- Content -->
+        <div class="container">
+          <input class="form-control" id="myInput" type="text" placeholder="Search..">
+          <br>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Agreement</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="myTable">
+              <% agreements.forEach(agreement => { %>
+                  <tr>
+                  <td><%= agreement.Name %></td>
+                  <td><%= agreement.Surname %></td>
+                  <td><a href="/admin/agreements/edit/<%= agreement.AgreementID%>"><%= agreement.AgreementName %></a></td>
+                  <td><%= agreement.StatusName %></td>
+                  </tr>
+              <% }) %>
+            </tbody>
+          </table>                
+        </div>
+              
+          <script>
+            document.addEventListener("DOMContentLoaded", function() {
+              var input = document.getElementById("myInput");
+              input.addEventListener("keyup", function() {
+                var filter = input.value.toLowerCase();
+                var rows = document.querySelectorAll("#myTable tr");
+          
+                rows.forEach(function(row) {
+                  var text = row.textContent.toLowerCase();
+                  row.style.display = text.includes(filter) ? "" : "none";
+                });
+              });
+            });
+          </script>
+    </main>
+		  
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+	</body>
+</html>

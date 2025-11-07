@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<%- include('partials/head'); %>
+		<!-- Custom styles for this template -->
+		<link href="/css/sign-in.css" rel="stylesheet">		
+	</head>
+	<body>
+		<header>
+			<%- include('partials/header'); %>
+		</header>
+
+		<% if (message) { %>
+			<section class="d-flex justify-content-center align-items-center">
+			  <div class="alert alert-danger"><%= message %></div>
+			</section>
+		<% } %>
+
+		<main role="main" class="form-signin w-100 m-auto">
+			<div class="p-5 d-flex flex-column align-items-center">
+				<img class="mb-4" src="/images/signin.png" alt="" width="72" height="72">
+				<h3 class="mb-3">Please sign in</h3>
+				<form action="/login/password" method="post">
+					<section class="form-floating">
+						<input id="username" name="username" type="text" placeholder="Username" autocomplete="username" class="form-control" required autofocus>
+						<label for="username" class="sr-only">Username</label>						
+					</section>
+					<section class="form-floating">
+						<input id="current-password" name="password" type="password" placeholder="Password" autocomplete="current-password" class="form-control" required>
+						<label for="current-password" class="sr-only">Password</label>						
+					</section>				  
+					<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+					<button class="btn btn-primary w-100" type="submit">Sign in</button>
+				</form>
+				<hr>
+				<p>Don't have an account? <a class="btn btn-secondary btn-sm" href="/signup" role="button">Sign up &raquo;</a></p>
+			</div>
+		</main>
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>		  
+	</body>
+</html>

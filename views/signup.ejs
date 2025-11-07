@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+  		<%- include('partials/head'); %>
+		<!-- Custom styles for this template -->
+		<link href="/css/sign-up.css" rel="stylesheet">		
+	</head>
+
+	<body>
+		<header>
+  			<%- include('partials/header'); %>
+		</header>
+		<main role="main" class="form-signin w-100 m-auto">
+			<div class="p-5 d-flex flex-column align-items-center">
+				<img class="mb-4" src="/images/signup.png" alt="" width="72" height="72">
+				<h3 class="mb-3">Please sign up</h3>
+				<form class="form-sign" action="/signup" method="post">
+					<section class="form-floating">
+						<input id="name" class="form-control" name="name" type="text" placeholder="First Name" autocomplete="name" required autofocus>
+						<label for="name" class="sr-only">Name</label>						
+					</section>
+					<section class="form-floating">
+						<input id="surname" class="form-control" name="surname" type="text" placeholder="Last Name"autocomplete="surname" required>
+						<label for="surname" class="sr-only">Surname</label>						
+					</section>				
+					<section class="form-floating">
+						<input id="username" class="form-control" name="username" type="text" placeholder="Username" autocomplete="username" required>
+						<label for="username" class="sr-only">Username</label>						
+					</section>
+					<section class="form-floating">						
+						<input id="new-password" class="form-control" name="password" type="password" placeholder="New Password" autocomplete="new-password" required>
+						<label for="new-password" class="sr-only">Password</label>
+					</section>
+					<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+					<button class="btn btn-primary w-100" type="submit">Sign up</button>				
+				</form>
+				<hr>
+				<p class="help">Already have an account? <a class="btn btn-secondary btn-sm" href="/login" role="button">Sign in &raquo;</a></p>
+		    </div>
+		</main>
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>
+	</body>
+</html>

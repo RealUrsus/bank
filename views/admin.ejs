@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<%- include('partials/head'); %>
+		<link rel="stylesheet" href="/css/sidebar.css">
+	</head>
+	<body>
+		<header>
+			<%- include('partials/header'); %>
+		</header>
+
+		<main class="container-fluid d-flex flex-nowrap">
+			<aside class="border">
+				<%- include('partials/admin/sidebar'); %>
+			</aside>
+			<!-- Content -->
+			<div class="p-5">
+				<h3>И от всякого, кому дано много, много и потребуется, и кому много вверено, с того больше взыщут</h3>
+				<hr>
+				<h3>Un gran poder conlleva una gran responsabilidad</h3>
+				<hr>
+				<h3>With great power comes great responsibility</h3>
+				<hr>
+				<h3>大いなる力には、大いなる責任が伴う</h3>
+				<hr>
+			</div>			
+		</main>
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>
+
+		<!-- Icons -->
+		<script src="/js/feather.min.js"></script>
+		<script>feather.replace()</script>
+	</body>
+</html>

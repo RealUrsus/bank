@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<%- include('partials/head'); %>
+		<link rel="stylesheet" href="/css/sidebar.css">
+	</head>
+	<body>
+		<header>
+			<%- include('partials/header'); %>
+		</header>
+
+		<main class="container-fluid d-flex flex-nowrap">
+			<aside class="border">
+				<%- include('partials/client/sidebar'); %>
+			</aside>
+			<!-- Content -->
+			<div class="p-5">
+				<p>Dear <%= user.name %>, your Loan Confirmation ID is <b><%= confirmationId %></b></p>
+				<hr>				
+				<p>Your loan request is currently under review by Bank Administration. We will notify you of their decision as soon as possible.</p>
+			</div>			
+		</main>
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>
+
+		<!-- Icons -->
+		<script src="/js/feather.min.js"></script>
+		<script>feather.replace()</script>
+	</body>
+</html>

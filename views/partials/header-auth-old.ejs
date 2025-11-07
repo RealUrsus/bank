@@ -1,0 +1,42 @@
+<nav class="navbar navbar-expand-sm bg-light navbar-light">
+    <div class="container-fluid">
+        <a href="/" class="navbar-brand d-flex" style="gap: 40px;">
+          <img 
+            src="/images/bank.png"
+            height="45"
+            loading="lazy"
+          />
+          <strong class="navbar-text lead"> First Home Bank </strong>
+        </a>      
+    </div>    
+    <div>
+        <ul class="navbar-nav d-flex flex-row align-items-center">
+            <li class="nav-item me-1">
+                <img                
+                    src="/images/user.png" 
+                    alt="Logged-in User"
+                    height="20px"
+                    loading="lazy"
+                />                    
+            </li>                      
+            <li class="nav-item me-3">
+                <span class="navbar-text"><%= user.username %></span>
+            </li>
+            <li class="nav-item me-3 ">
+                <form action="/logout" method="post" class="d-flex align-items-center">
+                    <button type="submit" class="btn d-flex align-items-center">
+                        <img 
+                            src="/images/log-out.png" 
+                            alt="Log Out" 
+                            height="20px"
+                        /> 
+                        <span class="ms-1 navbar-text text-nowrap">Log Out</span>
+                    </button>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                </form>
+            </li>
+        </ul>
+    </div>
+    
+    
+</nav>

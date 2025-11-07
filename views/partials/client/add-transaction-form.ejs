@@ -1,0 +1,88 @@
+<!-- Modal -->
+<div class="modal fade" id="enter-transaction" tabindex="-1" aria-labelledby="enterTransactionLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="enterTransactionLabel">Financial Activity</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <form id="addTransaction">
+          <div class="mb-3">
+            <label for="type" class="form-label required">Transaction Type:</label>
+            <select name="type" id="type" class="form-select">
+              <option value="1">Deposit (+)</option>
+              <option value="2">Withdrawal (-)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="amount" class="form-label required">Amount:</label>
+            <input type="number" class="form-control" id="amount" name="amount" step="0.01">
+          </div>
+          <div class="mb-3">
+            <label for="date" class="form-label required">Date:</label>
+            <input type="date" class="form-control" id="date" name="date">
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label required">Transaction Description:</label>
+            <textarea class="form-control" id="description" name="description"></textarea>
+          </div>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        </form>
+      </div>
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="submit" form="addTransaction" class="btn btn-primary">Submit</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('addTransaction');
+  form.addEventListener('submit', function (event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(form);
+    let isValid = true;
+
+    // Validate form fields
+    form.querySelectorAll('input, textarea, select').forEach((field) => {
+      if (!field.value.trim()) {
+        isValid = false;
+        field.classList.add('is-invalid');
+      } else {
+        field.classList.remove('is-invalid');
+      }
+    });
+
+    if (isValid) {
+      // Send data to server using Fetch API
+      fetch('/client/transactions/add', {
+        method: 'POST',
+        body: new URLSearchParams(formData),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      })
+        .then((response) => {
+          if (response.ok) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('enter-transaction'));
+            modal.hide();
+            location.reload();
+          } else {
+            throw new Error('Failed to submit form.');
+          }
+        })
+        .catch((error) => {
+          console.error('Error submitting form:', error);
+          alert('An error occurred while submitting the form. Please try again.');
+        });
+    } else {
+      alert('Please fill in all required fields.');
+    }
+  });
+});
+</script>

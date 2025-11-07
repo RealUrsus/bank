@@ -1,0 +1,41 @@
+{
+  "name": "first_home_bank",
+  "version": "0.0.0",
+  "private": true,
+  "description": "First Home Bank for kids",
+  "keywords": [
+    "express",
+    "passport",
+    "sqlite"
+  ],
+  "author": {
+    "name": "Polar Bear",
+    "email": "polar@bear.com",
+    "url": "https://www.polarbear.me/"
+  },
+  "homepage": "https://github.com/",
+  "license": "Unlicense",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "connect-sqlite3": "latest",
+    "cookie-parser": "latest",
+    "csurf": "^1.2.2",
+    "debug": "latest",
+    "ejs": "latest",
+    "express": "latest",
+    "express-favicon": "latest",
+    "express-session": "latest",
+    "helmet": "latest",
+    "http-errors": "latest",
+    "node-cron": "latest",
+    "mkdirp": "latest",
+    "morgan": "latest",
+    "passport": "latest",
+    "passport-local": "latest",
+    "sqlite3": "latest"
+  }
+}

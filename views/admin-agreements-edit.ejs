@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<%- include('partials/head'); %>
+		<link rel="stylesheet" href="/css/sidebar.css">
+	</head>
+	<body>
+		<header>
+			<%- include('partials/header'); %>
+		</header>
+
+		<main class="container-fluid d-flex flex-nowrap">
+			<aside class="border bg-light p-3">
+				<%- include('partials/admin/sidebar'); %>
+			</aside>
+			<div class="container p-3">
+				<form action="/admin/agreements/edit/<%= agreement.AgreementID %>" method="post" >
+
+				<div class="mb-3">
+					<label for="aid"><h5>Agreement #</h5></label>
+					<input type="text" name ="id" id="aid" value=<%= agreement.AgreementID %> readonly style="border: none;">
+				</div>
+				<div class="mb-3">
+					<h5>Agreement Title: <%= agreement.StatusName %></h5>
+					<input type="text" name="title" value="<%= agreement.AgreementName %>" class="form-control" style="max-width: 320px;">
+				</div>
+				<div>
+					<h5>Agreement Content:</h5>
+					<textarea class="form-control" name="context" rows="15" style="white-space: pre-wrap;"><%= agreement.AgreementContent %></textarea>
+				</div>
+				<div class="mb-3">
+					<label for="status"><h5>Status</h5></label>
+					<select id="status" name="status" class="form-select w-auto">
+						<% Object.keys(statuses).forEach(function(key) { %>
+							<option value="<%= statuses[key] %>" <%= (agreement.StatusName).toUpperCase() === key ? 'selected' : '' %>><%= key %> %></option>
+						<% }); %>
+					  </select>
+				</div>
+				<div class="col-auto">
+					<button type="reset" class="btn btn-secondary">Reset</button>
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</div>
+
+				<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+				</form>	
+			</div>
+		
+		</main>
+		  
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+	</body>
+</html>

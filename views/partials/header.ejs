@@ -1,0 +1,32 @@
+<nav class="navbar navbar-expand-sm bg-light navbar-light">
+  <div class="container-fluid">
+      <a href="/" class="navbar-brand d-flex" style="gap: 40px;">
+        <img 
+          src="/images/bank.png"
+          height="45"
+          alt="Bank Logo"
+          loading="lazy"
+        />
+        <strong class="navbar-text lead"> First Home Bank </strong>
+      </a>      
+  </div>  
+  <div>
+      <ul class="navbar-nav d-flex flex-row align-items-center">
+        <% if (typeof user === 'undefined') { %>
+          <li class="nav-item"><a class="nav-link active" href="/">Home</a></li>
+        <% } else if (user.role == 1) {%>
+          <li class="nav-item"><a class="nav-link" href="/admin">
+            <span class="ms-1 navbar-text text-nowrap">Admin Home</span></a>
+          </li>
+        <% } else if (user.role == 3) {%>
+          <li class="nav-item"><a class="nav-link" href="/client">
+            <span class="ms-1 navbar-text text-nowrap">Client Home</span></a>
+          </li>
+        <%}%>
+        <% if (typeof user === 'undefined') { %>
+          <li class="nav-item"><a class="nav-link active" href="/login">Login</a></li>          
+        <% } %>
+        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+      </ul>
+  </div>
+</nav>

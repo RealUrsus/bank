@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<%- include('partials/head'); %>
+		<link rel="stylesheet" href="/css/sidebar.css">
+	</head>
+	<body>
+		<header>
+			<%- include('partials/header'); %>
+		</header>
+
+		<main class="container-fluid d-flex">
+			<aside class="border bg-light p-3">
+				<%- include('partials/client/sidebar'); %>
+			</aside>
+			<div class="container p-3">
+
+				<div class="mb-3">
+					<b>Agreement #</b> <%= agreement.AgreementID %>
+				</div>
+				<div class="mb-3">
+					<h5>Agreement Title:</h5> <%= agreement.AgreementName %>
+				</div>
+				<div class="mb-3">
+					<h5>Agreement Content: </h5>
+					<textarea readonly class="form-control" name="context" rows="15" style="white-space: pre-wrap;"><%= agreement.AgreementContent %></textarea>
+				</div>
+			</div>
+		</main>
+
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+	</body>
+</html>

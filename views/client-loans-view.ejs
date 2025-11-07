@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head'); %>
+    <link rel="stylesheet" href="/css/sidebar.css">
+  </head>
+  <body>
+    <header>
+      <%- include('partials/header'); %>
+    </header>
+    <main class="container-fluid d-flex flex-nowrap">
+      <aside class="border">
+        <%- include('partials/client/sidebar'); %>
+      </aside>
+      <!-- Content -->
+      <div class="flex-grow-1 p-3">
+        <!-- Loans Table -->
+        <div class="table-responsive mt-4">
+          <% if (loans && loans.length > 0) { %>
+          <table class="table table-striped table-sm align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Principal Amount</th>
+                <th>Rate</th>
+                <th>Term</th>
+                <th>Start Date</th>
+                <th>Description</th>
+                <th class="text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (const loan of loans) { %>
+              <tr>
+                <td><a href="/client/loan/view/<%= loan.AccountID %>"><%= loan.AccountID %></a></td>
+                <td><%= loan.PrincipalAmount %></td>
+                <td><%= loan.InterestRate %>%</td>
+                <td><%= loan.Term %> months</td>
+                <td><%= loan.StartDate %></td>
+                <td><%= loan.Description %></td>
+                <td><%= loan.Status %></td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+          <% } %>
+          <hr>
+          <!-- Summary Table -->
+          <table class="table table-hover w-auto ms-auto">
+            <tbody>
+              <% if (typeof total_amount !== 'undefined' && total_amount !== null) { %>
+              <tr>
+                <th scope="row">Total Amount:</th>
+                <td><%= total_amount.toFixed(2) %></td>
+              </tr>
+              <% } %>
+              <% if (typeof total_approved_amount !== 'undefined' && total_approved_amount !== null && total_approved_amount !== total_amount) { %>
+              <tr>
+                <th scope="row">Total Approved Amount:</th>
+                <td><%= total_approved_amount.toFixed(2) %></td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <%- include('partials/footer'); %>
+    </footer>
+    <script src="/js/feather.min.js"></script>
+    <script>feather.replace()</script>
+  </body>
+</html>

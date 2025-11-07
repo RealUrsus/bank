@@ -1,0 +1,45 @@
+.sidebar {
+  position: relative;
+  top: 0;
+  height: calc(100vh - 2*52px);
+  width: 200px;
+  padding-top: .75rem;
+  overflow-x: hidden;
+  overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+}
+
+.sidebar .nav-link {
+  font-weight: 500;
+  color: #333;
+}
+
+.sidebar .nav-link .feather {
+  margin-right: 4px;
+  color: #999;
+}
+
+.sidebar .nav-link.active {
+  color: #007bff;
+}
+
+.sidebar .nav-link:hover .feather,
+.sidebar .nav-link.active .feather {
+  color: inherit;
+}
+
+.sidebar-heading {
+  font-size: .75rem;
+  text-transform: uppercase;
+}
+.sidebar .collapse {
+  overflow: hidden;
+}
+  
+
+/*
+  * Content
+  */
+
+  [role="main"] {
+  padding-top: 52px; /* Space for fixed navbar */
+}

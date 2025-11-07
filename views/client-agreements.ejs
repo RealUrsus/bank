@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head'); %>
+    <link rel="stylesheet" href="/css/sidebar.css">
+  </head>
+  <body>
+    <header>
+      <%- include('partials/header'); %>
+    </header>
+		<main class="container-fluid d-flex flex-nowrap">
+			<aside class="border">
+				<%- include('partials/client/sidebar'); %>
+			</aside>
+        <!-- Content -->
+        <div class="flex-grow-1 p-3">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th class="col-md-3 themed-grid-col">Agreement ID</th>
+                <th class="col-md-6 themed-grid-col">Agreement</th>
+                <th class="col-md-3 themed-grid-col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% agreements.forEach(agreement => { %>
+                  <tr>
+                    <td><%= agreement.AgreementID %></td>
+                    <td><a href="/client/agreements/<%= agreement.AgreementID%>"><%= agreement.AgreementName %></a></td>
+                    <td><%= agreement.StatusName %></td>
+                  </tr>
+              <% }) %>
+            </tbody>
+          </table>                
+        </div>
+    </main>
+
+    <footer>
+      <%- include('partials/footer'); %>
+    </footer>
+    <script src="/js/feather.min.js"></script>
+    <script>feather.replace()</script>
+  </body>
+</html>

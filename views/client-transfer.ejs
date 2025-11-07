@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head'); %>
+    <link rel="stylesheet" href="/css/sidebar.css">
+  </head>
+  <body>
+    <header>
+      <%- include('partials/header'); %>
+    </header>
+    <main class="container-fluid d-flex flex-nowrap">
+      <aside class="border">
+        <%- include('partials/client/sidebar'); %>
+      </aside>         
+      <!-- Content -->
+      <div class="p-3">
+        <!-- Message Section -->
+        <% if (message) { %>
+          <section class="d-flex justify-content-center align-items-center">
+            <div class="alert alert-danger"><%= message %></div>
+          </section>
+        <% } %>  
+
+        <form action="/client/transfer" method="post" class="row g-2 align-items-center">
+          
+            <div class="form-floating mb-3">
+              <select class="form-select" id="source" name="source" aria-label="From Account">
+                <option selected>Select From Account...</option>
+                <option value=<%= account %>>Chequing # <%= account %> ($<%= (typeof approved_balance !== 'undefined' && approved_balance !== null) ? approved_balance.toFixed(2) : "0.0" %>)</option>
+              </select>
+              <label for="source">From Account</label>
+            </div>        
+          
+            <div class="form-floating mb-3">
+                <select class="form-select" id="destination" name="destination" aria-label="To Account">
+                  <option selected>Select To Account...</option>
+                  <% if (loans && loans.length > 0) { %>
+                    <% for (const loan of loans) { %>
+                        <% if (loan.StatusID === 2) { %>
+                        <option value = <%= loan.AccountID %>>Loan #<%= loan.AccountID %> (-$<%= loan.PrincipalAmount %>)</option>
+                        <% } %>
+                    <%}%>
+                  <%}%>
+                </select>
+                <label for="destination">To Account</label>
+            </div>   
+
+          <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="amount" name="amount" pattern="^\d+(\.\d+)?$" placeholder="Amount" aria-label="Amount">
+            <label for="amount">Amount</label>
+          </div>          
+          <div class="col-auto">
+            <button type="reset" class="btn btn-secondary">Reset</button>
+            <button type="submit" class="btn btn-primary me-2">Transfer</button>            
+          </div>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        </form>
+      </div>
+    </main>
+    <footer>
+      <%- include('partials/footer'); %>
+    </footer>
+    <script src="/js/feather.min.js"></script>
+    <script>feather.replace()</script>
+  </body>
+</html>

@@ -1,0 +1,80 @@
+<div class="d-flex flex-column pb-4 sidebar">
+    <ul class="nav flex-column" id="menu">
+        <li class="nav-item">
+            <a class="nav-link" href="/client/agreements">
+                <span data-feather="file-text"></span>
+                Agreements
+            </a>
+        </li>        
+        <li class="nav-item">
+            <a class="nav-link" href="/client/transactions">
+                <span data-feather="credit-card"></span>
+                Chequing Account
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/client/transfer">
+                <span data-feather="send"></span>
+                Money Transfers
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <span data-feather="trending-up"></span>
+                Investments
+            </a>
+        </li>        
+        <li class="nav-item">
+            <a class="nav-link align-middle" href="#menu-loan" data-bs-toggle="collapse" aria-expanded="false">
+                <span data-feather="shopping-bag" class="d-none d-sm-inline"></span>
+                Loans
+            </a>
+            <ul class="collapse nav flex-column ms-3" id="menu-loan">
+                <li>
+                    <a href="/client/loan/add" class="nav-link">
+                        <span data-feather="activity" class="d-none d-sm-inline"></span> 
+                        Request
+                    </a>
+                </li>
+                <li>
+                    <a href="/client/loan/view" class="nav-link">
+                        <span data-feather="list" class="d-none d-sm-inline"></span> 
+                        View
+                    </a>
+                </li>
+            </ul>
+        </li>        
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <span data-feather="help-circle"></span>
+                Help
+            </a>
+        </li>
+    </ul>
+    
+    <div class="dropdown mt-auto">
+        <hr>
+        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="/images/user.png" alt="User" width="32" height="32" class="rounded-circle me-2">
+            <strong><%= user.username %></strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-light text-small shadow">        
+            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><a class="dropdown-item" href="#">Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form action="/logout" method="post" class="d-flex align-items-center">
+                    <button type="submit" class="btn dropdown-item">
+                        <img 
+                            src="/images/log-out.png" 
+                            alt="Log Out" 
+                            height="20px"
+                        /> 
+                        <span class="ms-1 text-nowrap">Sign out</span>
+                    </button>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                </form>
+            </li>
+        </ul>
+    </div>    
+</div>

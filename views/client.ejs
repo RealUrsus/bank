@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<%- include('partials/head'); %>
+		<link rel="stylesheet" href="/css/sidebar.css">
+	</head>
+	<body>
+		<header>
+			<%- include('partials/header'); %>
+		</header>
+
+		<main class="container-fluid d-flex flex-nowrap">
+			<aside class="border">
+				<%- include('partials/client/sidebar'); %>
+			</aside>
+			<!-- Content -->
+			<div class="p-5">
+				<h3>Бережёного Бог бережёт</h3>
+				<hr>
+				<h3>Más vale prevenir que lamentar</h3>
+				<hr>
+				<h3>Better be safe than sorry</h3>
+				<hr>
+				<h3>安全总比后悔好</h3>
+				<hr>
+			</div>			
+		</main>
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>
+
+		<!-- Icons -->
+		<script src="/js/feather.min.js"></script>
+		<script>feather.replace()</script>
+	</body>
+</html>

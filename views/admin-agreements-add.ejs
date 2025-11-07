@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<%- include('partials/head'); %>
+		<link rel="stylesheet" href="/css/sidebar.css">
+	</head>
+	<body>
+		<header>
+			<%- include('partials/header'); %>
+		</header>
+
+		<main class="container-fluid d-flex flex-nowrap">
+			<aside class="border">
+				<%- include('partials/admin/sidebar'); %>
+			</aside>
+            <!-- Content -->
+            <div class="p-3">
+                <form action="/admin/agreements/add" method="post" class="row g-2 align-items-center">
+                <div class="input-group mb-3">
+                    <div class="form-floating mb-3">
+                        <select name="clientId" class="form-select w-auto" required aria-label="Select a Customer">
+                            <option value="" disabled selected>Select an agreement promisor...</option>
+                            <% options.forEach(option => { %>
+                            <option value="<%= option.UserID %>">
+                                <%= option.Name %> <%= option.Surname %>
+                            </option>
+                            <% }) %>
+                        </select>
+                        <label for="type">Agreement Promisor</label>
+                    </div>        
+                </div>
+                <div class="input-group mb-3">       
+                    <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="title" name="title" placeholder="Title" aria-label="Title">
+                    <label for="title">Title</label>
+                    </div>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" style="height: 480px;" placeholder="Agreement Context" id="context" name="context"></textarea>
+                    <label for="context">Enter Agreement Content</label>
+                </div>
+                <div class="col-auto">
+                    <button type="reset" class="btn btn-secondary">Reset</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                </form>
+            </div>
+        </main>
+		  
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+	</body>
+</html>
