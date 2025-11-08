@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head'); %>
+    <link rel="stylesheet" href="/css/sidebar.css">
+  </head>
+  <body>
+    <header>
+      <%- include('partials/header'); %>
+    </header>
+
+    <main class="container-fluid d-flex flex-nowrap">
+      <aside class="border bg-light p-3">
+        <%- include('partials/admin/sidebar'); %>
+      </aside>
+      <div class="container p-3">
+        <h2 class="mb-4">Edit Loan</h2>
+        <form action="/admin/loans/edit/<%= loan.AccountID %>" method="post">
+
+          <div class="mb-3">
+            <label for="loanId"><h5>Loan ID</h5></label>
+            <input type="text" name="loanId" id="loanId" value="<%= loan.AccountID %>" readonly style="border: none;">
+          </div>
+
+          <div class="mb-3">
+            <h5>Client</h5>
+            <input type="text" value="<%= loan.Name %> <%= loan.Surname %>" class="form-control" style="max-width: 320px;" readonly>
+          </div>
+
+          <div class="mb-3">
+            <label for="date"><h5>Start Date</h5></label>
+            <input type="date" class="form-control" id="date" name="date" value="<%= loan.StartDate %>" style="max-width: 320px;" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="amount"><h5>Principal Amount</h5></label>
+            <input type="text" class="form-control" id="amount" name="amount" pattern="^\d+(\.\d+)?$" value="<%= loan.PrincipalAmount %>" style="max-width: 320px;" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="interest"><h5>Interest Rate</h5></label>
+            <input type="number" class="form-control" id="interest" name="interest" min="0" max="100" step="0.1" value="<%= loan.InterestRate %>" style="max-width: 320px;" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="term"><h5>Term</h5></label>
+            <select class="form-select" id="term" name="term" style="max-width: 320px;" required>
+              <option value="12" <%= loan.Term === 12 ? 'selected' : '' %>>12 months</option>
+              <option value="24" <%= loan.Term === 24 ? 'selected' : '' %>>24 months</option>
+              <option value="36" <%= loan.Term === 36 ? 'selected' : '' %>>36 months</option>
+              <option value="48" <%= loan.Term === 48 ? 'selected' : '' %>>48 months</option>
+              <option value="60" <%= loan.Term === 60 ? 'selected' : '' %>>60 months</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="description"><h5>Description</h5></label>
+            <textarea class="form-control" id="description" name="description" rows="4" required><%= loan.Description %></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="status"><h5>Status</h5></label>
+            <select id="status" name="status" class="form-select w-auto">
+              <% Object.keys(statuses).forEach(function(key) { %>
+                <option value="<%= statuses[key] %>" <%= loan.StatusID === statuses[key] ? 'selected' : '' %>><%= key %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="col-auto">
+            <a href="/admin/loans" class="btn btn-secondary">Cancel</a>
+            <button type="reset" class="btn btn-secondary">Reset</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        </form>
+      </div>
+    </main>
+
+    <footer>
+      <%- include('partials/footer'); %>
+    </footer>
+
+    <!-- Icons -->
+    <script src="/js/feather.min.js"></script>
+    <script>feather.replace()</script>
+  </body>
+</html>
