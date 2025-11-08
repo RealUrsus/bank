@@ -14,10 +14,23 @@
       </aside>
       <!-- Content -->
       <div class="flex-grow-1 p-5">
-
-        <div class="mb-3">
-          <a href="/admin/loans/add" class="btn btn-success">Add New Loan</a>
-        </div>
+        <form action="/admin/loans/view" method="POST" class="d-flex align-items-center gap-3 mb-4">
+          <label for="clientSelect" class="form-label mb-0">
+            <h5 class="mb-0">Loans list for the client:</h5>
+          </label>
+          <select id="clientSelect" name="clientId" class="form-select w-auto" required>
+            <% if (!clientId) { %>
+            <option value="" disabled selected>Select a customer...</option>
+            <% } %>
+            <% options.forEach(option => { %>
+            <option value="<%= option.UserID %>" <% if (option.UserID == clientId) { %> selected <% } %> >
+              <%= option.Name %> <%= option.Surname %>
+            </option>
+            <% }) %>
+          </select>
+          <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        </form>
 
         <div class="table-responsive">
           <% if (loans && loans.length > 0) { %>
@@ -25,7 +38,6 @@
             <thead>
               <tr>
                 <th>LID</th>
-                <th>Client</th>
                 <th style="width: 120px;">Start Date</th>
                 <th>Principal Amount</th>
                 <th>Interest Rate</th>
@@ -38,7 +50,6 @@
               <% loans.forEach(loan => { %>
               <tr>
                 <td><%= loan.AccountID %></td>
-                <td><%= loan.Name %> <%= loan.Surname %></td>
                 <td><%= loan.StartDate %></td>
                 <td><%= loan.PrincipalAmount %></td>
                 <td><%= loan.InterestRate %></td>
@@ -49,11 +60,13 @@
                     <a href="/admin/loans/edit/<%= loan.AccountID %>" class="btn btn-secondary btn-sm">Edit</a>
                     <form action="/admin/loans/update" method="POST" class="d-inline">
                       <input type="hidden" name="id" value="<%= loan.AccountID %>">
+                      <input type="hidden" name="clientId" value="<%= clientId %>">
                       <button type="submit" class="btn btn-primary btn-sm">Approve</button>
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     </form>
                     <form action="/admin/loans/delete" method="POST" class="d-inline">
                       <input type="hidden" name="id" value="<%= loan.AccountID %>">
+                      <input type="hidden" name="clientId" value="<%= clientId %>">
                       <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     </form>
