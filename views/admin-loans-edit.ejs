@@ -23,8 +23,14 @@
           </div>
 
           <div class="mb-3">
-            <h5>Client</h5>
-            <input type="text" value="<%= loan.Name %> <%= loan.Surname %>" class="form-control" style="max-width: 320px;" readonly>
+            <label for="clientId"><h5>Client</h5></label>
+            <select name="clientId" id="clientId" class="form-select" style="max-width: 320px;" required>
+              <% users.forEach(user => { %>
+              <option value="<%= user.UserID %>" <%= loan.UserID === user.UserID ? 'selected' : '' %>>
+                <%= user.Name %> <%= user.Surname %>
+              </option>
+              <% }) %>
+            </select>
           </div>
 
           <div class="mb-3">
@@ -68,7 +74,7 @@
           </div>
 
           <div class="col-auto">
-            <a href="/admin/loans" class="btn btn-secondary">Cancel</a>
+            <a href="/admin/loans/view" class="btn btn-secondary">Cancel</a>
             <button type="reset" class="btn btn-secondary">Reset</button>
             <button type="submit" class="btn btn-primary">Submit</button>
           </div>

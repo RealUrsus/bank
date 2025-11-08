@@ -27,10 +27,24 @@
             </ul>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/admin/loans">
-                <span data-feather="shopping-bag"></span>
+            <a class="nav-link align-middle" href="#menu-loans" data-bs-toggle="collapse" aria-expanded="false">
+                <span data-feather="shopping-bag" class="d-none d-sm-inline"></span>
                 Loans
             </a>
+            <ul class="collapse nav flex-column ms-3" id="menu-loans">
+                <li>
+                    <a href="/admin/loans/add" class="nav-link">
+                        <span data-feather="plus-circle" class="d-none d-sm-inline"></span>
+                        Add
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/loans/view" class="nav-link">
+                        <span data-feather="list" class="d-none d-sm-inline"></span>
+                        View
+                    </a>
+                </li>
+            </ul>
         </li>
         <li class="nav-item">
             <a class="nav-link" href="#">
