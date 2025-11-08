@@ -43,7 +43,7 @@
                 <th>Interest Rate</th>
                 <th>Term</th>
                 <th>Description</th>
-                <th style="width: 140px; text-align: center;">Action</th>
+                <th style="width: 100px; text-align: center;">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -58,12 +58,6 @@
                 <td class="text-center">
                   <div class="btn-group" role="group">
                     <a href="/admin/loans/edit/<%= loan.AccountID %>" class="btn btn-secondary btn-sm">Edit</a>
-                    <form action="/admin/loans/update" method="POST" class="d-inline">
-                      <input type="hidden" name="id" value="<%= loan.AccountID %>">
-                      <input type="hidden" name="clientId" value="<%= clientId %>">
-                      <button type="submit" class="btn btn-primary btn-sm">Approve</button>
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    </form>
                     <form action="/admin/loans/delete" method="POST" class="d-inline">
                       <input type="hidden" name="id" value="<%= loan.AccountID %>">
                       <input type="hidden" name="clientId" value="<%= clientId %>">
