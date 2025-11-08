@@ -56,15 +56,19 @@ async function fetchTransactions(clientId) {
   });
 }
 
-async function fetchLoans() {
+async function fetchLoans(clientId) {
   return new Promise((resolve, reject) => {
-    db.all(`SELECT a.*, u.Name, u.Surname
-              FROM Accounts a
-              INNER JOIN Users u ON a.UserID = u.UserID
-              WHERE a.AccountTypeID = 2 AND a.StatusID = 1;`, (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
+    if (clientId) {
+      db.all(`SELECT a.*, u.Name, u.Surname
+                FROM Accounts a
+                INNER JOIN Users u ON a.UserID = u.UserID
+                WHERE a.AccountTypeID = 2 AND a.UserID = ?;`, [clientId], (err, rows) => {
+        if (err) return reject(err);
+        resolve(rows);
+      });
+    } else {
+      resolve([]);
+    }
   });
 }
 
@@ -159,14 +163,30 @@ router.post('/transactions/delete', async (req, res, next) => {
   }
 });
 
-router.get('/loans/view', async (req, res, next) => {
+router.route('/loans/view')
+  .get(async (req, res, next) => {
+    const clientId = req.query.clientId ? parseInt(req.query.clientId, 10) : null;
+
     try {
-      const loans = await fetchLoans();
-      res.render('admin-loans-view', { user: req.user, loans });
+      const options = await fetchUsers();
+      const loans = clientId ? await fetchLoans(clientId) : null;
+
+      res.render('admin-loans-view', { user: req.user, options, clientId, loans });
     } catch (err) {
       next(err);
     }
-});
+  })
+  .post(async (req, res, next) => {
+    const clientId = parseInt(req.body.clientId, 10);
+
+    try {
+      const options = await fetchUsers();
+      const loans = clientId ? await fetchLoans(clientId) : [];
+      res.render('admin-loans-view', { user: req.user, options, clientId, loans });
+    } catch (err) {
+      next(err);
+    }
+  });
 
 router.route('/loans/add')
   .get(async (req, res, next) => {
@@ -243,14 +263,15 @@ router.route('/loans/edit/:loanId')
           }
         );
       });
-      res.redirect('/admin/loans/view');
+      res.redirect(`/admin/loans/view?clientId=${clientId}`);
     } catch (err) {
       next(err);
     }
   });
 
 router.post('/loans/update', async (req, res, next) => {
-  const { id  } = req.body;
+  const { id, clientId } = req.body;
+  if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
   if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid option id'));
 
   try {
@@ -260,14 +281,15 @@ router.post('/loans/update', async (req, res, next) => {
         resolve();
       });
     });
-    res.redirect(`/admin/loans/view`);
+    res.redirect(`/admin/loans/view?clientId=${clientId}`);
   } catch (err) {
     next(err);
   }
 });
 
 router.post('/loans/delete', async (req, res, next) => {
-  const { id } = req.body;
+  const { id, clientId } = req.body;
+  if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
   if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid option id'));
 
   try {
@@ -277,7 +299,7 @@ router.post('/loans/delete', async (req, res, next) => {
         resolve();
       });
     });
-    res.redirect(`/admin/loans/view`);
+    res.redirect(`/admin/loans/view?clientId=${clientId}`);
   } catch (err) {
     next(err);
   }
