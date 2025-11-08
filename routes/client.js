@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const checkRole = require('../middleware/checkRole.js');
 const configService = require('../helpers/configService.js');
 const ensureAuthenticated = require('../middleware/ensureAuth.js');
@@ -342,11 +343,88 @@ router.get('/agreements', async (req, res, next) => {
 
 router.get('/agreements/:agreementId(\\d+)', async (req, res, next) => {
   try {
-    const agreementId = req.params.agreementId;      
-    const agreement = await fetchAgreement(agreementId);      
+    const agreementId = req.params.agreementId;
+    const agreement = await fetchAgreement(agreementId);
     res.render('client-agreements-view', { user: req.user, agreement });
   } catch (err) {
       next(err);
+  }
+});
+
+// GET /client/change-password
+router.get('/change-password', (req, res) => {
+  res.render('change-password', { user: req.user, userRole: 'client' });
+});
+
+// POST /client/change-password
+router.post('/change-password', async (req, res, next) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  // Validate input
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    req.session.message = 'All fields are required.';
+    return res.redirect('/client/change-password');
+  }
+
+  if (newPassword !== confirmPassword) {
+    req.session.message = 'New passwords do not match.';
+    return res.redirect('/client/change-password');
+  }
+
+  if (newPassword.length < 8) {
+    req.session.message = 'New password must be at least 8 characters long.';
+    return res.redirect('/client/change-password');
+  }
+
+  try {
+    // Get user's current password hash and salt
+    const user = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM Users WHERE UserID = ?', [req.user.id], (err, row) => {
+        if (err) return reject(err);
+        if (!row) return reject(new Error('User not found'));
+        resolve(row);
+      });
+    });
+
+    // Verify current password
+    const currentHash = await new Promise((resolve, reject) => {
+      crypto.pbkdf2(currentPassword, user.Salt, 310000, 32, 'sha256', (err, hash) => {
+        if (err) return reject(err);
+        resolve(hash);
+      });
+    });
+
+    if (!crypto.timingSafeEqual(user.HashedPassword, currentHash)) {
+      req.session.message = 'Current password is incorrect.';
+      return res.redirect('/client/change-password');
+    }
+
+    // Generate new salt and hash for new password
+    const newSalt = crypto.randomBytes(16);
+    const newHash = await new Promise((resolve, reject) => {
+      crypto.pbkdf2(newPassword, newSalt, 310000, 32, 'sha256', (err, hash) => {
+        if (err) return reject(err);
+        resolve(hash);
+      });
+    });
+
+    // Update password in database
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE Users SET HashedPassword = ?, Salt = ? WHERE UserID = ?',
+        [newHash, newSalt, req.user.id],
+        (err) => {
+          if (err) return reject(err);
+          resolve();
+        }
+      );
+    });
+
+    req.session.message = 'Password changed successfully!';
+    res.redirect('/client');
+  } catch (err) {
+    console.error('Error changing password:', err);
+    req.session.message = 'An error occurred while changing password.';
+    res.redirect('/client/change-password');
   }
 });
 
