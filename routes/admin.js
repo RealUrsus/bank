@@ -68,6 +68,18 @@ async function fetchLoans() {
   });
 }
 
+async function fetchLoan(loanId) {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT a.*, u.Name, u.Surname, u.UserID
+              FROM Accounts a
+              INNER JOIN Users u ON a.UserID = u.UserID
+              WHERE a.AccountID = ? AND a.AccountTypeID = 2;`, [loanId], (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
+  });
+}
+
 function validationError(message) {
   const error = new Error(message);
   error.status = 400;
@@ -148,13 +160,92 @@ router.post('/transactions/delete', async (req, res, next) => {
 });
 
 router.get('/loans', async (req, res, next) => {
-    try { 
+    try {
       const loans = await fetchLoans();
       res.render('admin-loans', { user: req.user, loans });
     } catch (err) {
       next(err);
     }
 });
+
+router.route('/loans/add')
+  .get(async (req, res, next) => {
+    try {
+      const users = await fetchUsers();
+      res.render('admin-loans-add', { user: req.user, users });
+    } catch (err) {
+      next(err);
+    }
+  })
+  .post(async (req, res, next) => {
+    const { clientId, amount, interest, date, term, description } = req.body;
+
+    if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
+    if (!amount || !interest || !date || !term || !description) {
+      return next(validationError('All fields are required'));
+    }
+
+    try {
+      await new Promise((resolve, reject) => {
+        db.run(
+          'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [clientId, 2, interest, amount, term, date, 1, description],
+          (err) => {
+            if (err) return reject(err);
+            resolve();
+          }
+        );
+      });
+      res.redirect('/admin/loans');
+    } catch (err) {
+      next(err);
+    }
+  });
+
+router.route('/loans/edit/:loanId')
+  .get(async (req, res, next) => {
+    try {
+      const loanId = parseInt(req.params.loanId, 10);
+
+      if (!Number.isInteger(loanId) || loanId <= 0) {
+        return next(validationError('Invalid loanId'));
+      }
+
+      const loan = await fetchLoan(loanId);
+      if (!loan) {
+        return next(validationError('Loan not found'));
+      }
+
+      const statuses = await configService.getConfig('Status');
+      res.render('admin-loans-edit', { user: req.user, loan, statuses });
+    } catch (err) {
+      next(err);
+    }
+  })
+  .post(async (req, res, next) => {
+    const { loanId, amount, interest, date, term, description, status } = req.body;
+
+    if (!Number.isInteger(parseInt(loanId, 10))) return next(validationError('Invalid loanId'));
+    if (!amount || !interest || !date || !term || !description || !status) {
+      return next(validationError('All fields are required'));
+    }
+
+    try {
+      await new Promise((resolve, reject) => {
+        db.run(
+          'UPDATE Accounts SET InterestRate = ?, PrincipalAmount = ?, Term = ?, StartDate = ?, Description = ?, StatusID = ? WHERE AccountID = ? AND AccountTypeID = 2',
+          [interest, amount, term, date, description, status, loanId],
+          (err) => {
+            if (err) return reject(err);
+            resolve();
+          }
+        );
+      });
+      res.redirect('/admin/loans');
+    } catch (err) {
+      next(err);
+    }
+  });
 
 router.post('/loans/update', async (req, res, next) => {
   const { id  } = req.body;

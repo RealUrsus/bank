@@ -15,7 +15,9 @@
       <!-- Content -->
       <div class="flex-grow-1 p-5">
 
-        
+        <div class="mb-3">
+          <a href="/admin/loans/add" class="btn btn-success">Add New Loan</a>
+        </div>
 
         <div class="table-responsive">
           <% if (loans && loans.length > 0) { %>
@@ -44,8 +46,9 @@
                 <td><%= loan.Description %></td>
                 <td class="text-center">
                   <div class="btn-group" role="group">
+                    <a href="/admin/loans/edit/<%= loan.AccountID %>" class="btn btn-secondary btn-sm">Edit</a>
                     <form action="/admin/loans/update" method="POST" class="d-inline">
-                      <input type="hidden" name="id" value="<%= loan.AccountID %>">                     						
+                      <input type="hidden" name="id" value="<%= loan.AccountID %>">
                       <button type="submit" class="btn btn-primary btn-sm">Approve</button>
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     </form>
