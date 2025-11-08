@@ -174,7 +174,7 @@ router.get('/', async (req, res) => {
 }
 });
 
-router.get('/transactions/:period(\\d+)?', getTransactions, async (req, res) => {  
+router.get('/transactions/:period?', getTransactions, async (req, res) => {
   res.locals.filter = null;
   const balance = await getBalance(req.user.account);
   const approved_balance = await getApprovedBalance(req.user.account);
