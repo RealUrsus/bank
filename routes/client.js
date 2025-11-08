@@ -250,9 +250,15 @@ router.get('/loan/view', fetchLoans, async (req, res, next) => {
   }
 });
 
-router.get('/loan/view/:loanId(\\d+)', async (req, res, next) => {
+router.get('/loan/view/:loanId', async (req, res, next) => {
   try {
-    const loanId = parseInt(req.params.loanId, 10)    
+    const loanId = parseInt(req.params.loanId, 10);
+
+    // Validate loanId
+    if (isNaN(loanId) || loanId <= 0) {
+      return res.status(400).send('Invalid loanId');
+    }
+
     const account = await fetchAccount(loanId);
     const transactions = await fetchTransactions(loanId);
     const balance = await getBalance(loanId);
@@ -263,7 +269,7 @@ router.get('/loan/view/:loanId(\\d+)', async (req, res, next) => {
   }
 });
 
-router.get('/loan/:confirmationId(\\d+)', async (req, res, next) => {
+router.get('/loan/:confirmationId', async (req, res, next) => {
   const confirmationId = parseInt(req.params.confirmationId, 10);
 
   // Validate confirmationId right after parsing it
@@ -350,9 +356,15 @@ router.get('/agreements', async (req, res, next) => {
   }
 });
 
-router.get('/agreements/:agreementId(\\d+)', async (req, res, next) => {
+router.get('/agreements/:agreementId', async (req, res, next) => {
   try {
-    const agreementId = req.params.agreementId;
+    const agreementId = parseInt(req.params.agreementId, 10);
+
+    // Validate agreementId
+    if (isNaN(agreementId) || agreementId <= 0) {
+      return res.status(400).send('Invalid agreementId');
+    }
+
     const agreement = await fetchAgreement(agreementId);
     res.render('client-agreements-view', { user: req.user, agreement });
   } catch (err) {
