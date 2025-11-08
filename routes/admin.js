@@ -159,10 +159,10 @@ router.post('/transactions/delete', async (req, res, next) => {
   }
 });
 
-router.get('/loans', async (req, res, next) => {
+router.get('/loans/view', async (req, res, next) => {
     try {
       const loans = await fetchLoans();
-      res.render('admin-loans', { user: req.user, loans });
+      res.render('admin-loans-view', { user: req.user, loans });
     } catch (err) {
       next(err);
     }
@@ -196,7 +196,7 @@ router.route('/loans/add')
           }
         );
       });
-      res.redirect('/admin/loans');
+      res.redirect('/admin/loans/view');
     } catch (err) {
       next(err);
     }
@@ -216,16 +216,18 @@ router.route('/loans/edit/:loanId')
         return next(validationError('Loan not found'));
       }
 
+      const users = await fetchUsers();
       const statuses = await configService.getConfig('Status');
-      res.render('admin-loans-edit', { user: req.user, loan, statuses });
+      res.render('admin-loans-edit', { user: req.user, loan, users, statuses });
     } catch (err) {
       next(err);
     }
   })
   .post(async (req, res, next) => {
-    const { loanId, amount, interest, date, term, description, status } = req.body;
+    const { loanId, clientId, amount, interest, date, term, description, status } = req.body;
 
     if (!Number.isInteger(parseInt(loanId, 10))) return next(validationError('Invalid loanId'));
+    if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
     if (!amount || !interest || !date || !term || !description || !status) {
       return next(validationError('All fields are required'));
     }
@@ -233,15 +235,15 @@ router.route('/loans/edit/:loanId')
     try {
       await new Promise((resolve, reject) => {
         db.run(
-          'UPDATE Accounts SET InterestRate = ?, PrincipalAmount = ?, Term = ?, StartDate = ?, Description = ?, StatusID = ? WHERE AccountID = ? AND AccountTypeID = 2',
-          [interest, amount, term, date, description, status, loanId],
+          'UPDATE Accounts SET UserID = ?, InterestRate = ?, PrincipalAmount = ?, Term = ?, StartDate = ?, Description = ?, StatusID = ? WHERE AccountID = ? AND AccountTypeID = 2',
+          [clientId, interest, amount, term, date, description, status, loanId],
           (err) => {
             if (err) return reject(err);
             resolve();
           }
         );
       });
-      res.redirect('/admin/loans');
+      res.redirect('/admin/loans/view');
     } catch (err) {
       next(err);
     }
@@ -258,7 +260,7 @@ router.post('/loans/update', async (req, res, next) => {
         resolve();
       });
     });
-    res.redirect(`/admin/loans`);
+    res.redirect(`/admin/loans/view`);
   } catch (err) {
     next(err);
   }
@@ -275,7 +277,7 @@ router.post('/loans/delete', async (req, res, next) => {
         resolve();
       });
     });
-    res.redirect(`/admin/loans`);
+    res.redirect(`/admin/loans/view`);
   } catch (err) {
     next(err);
   }
