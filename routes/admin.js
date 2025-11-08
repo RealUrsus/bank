@@ -227,7 +227,7 @@ router.route('/agreements/add')
     }
   });  
 
-  router.route('/agreements/edit/:agreementId(\\d+)')
+  router.route('/agreements/edit/:agreementId')
   .get(async (req, res, next) => {
 
     try {

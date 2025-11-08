@@ -3,14 +3,11 @@ const PORT = process.env.PORT || 8000;
 const express = require("express");
 const app = express();
 const session = require('express-session');
-
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
-//const helmet = require('helmet');
+// const helmet = require('helmet');
 const passport = require('passport');
-
-// pass the session to the connect sqlite3 module allowing it to inherit from session.Store
 const SQLiteStore = require('connect-sqlite3')(session);
 
 // Import Bank scheduled jobs
@@ -20,7 +17,7 @@ require('./jobs/dailyTasks');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-//app.use(helmet());
+// app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
@@ -32,13 +29,13 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.use(session({
   secret: require("crypto").randomBytes(32).toString("hex"),
   store: new SQLiteStore({ db: 'sessions.db', dir: './var/db' }),
-  resave: false,  // don't save session if unmodified
-  saveUninitialized: false, // don't create session until something stored
+  resave: false,           // don't save session if unmodified
+  saveUninitialized: false // don't create session until something stored
 }));
 
 app.use(passport.authenticate('session'));
 
-app.use((req, res, next)=> { 
+app.use((req, res, next) => { 
   res.locals.message = req.session.message || null;
   req.session.message = null;
   next();
@@ -54,38 +51,48 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    // Main routes
     app.get("/", (req, res) => res.render("home"));
     app.get("/about", (req, res) => res.render("about"));
     app.use('/', require("./routes/auth.js"));
     app.use('/client', require("./routes/client.js"));
-    app.use('/admin', require("./routes/admin.js"));    
+    app.use('/admin', require("./routes/admin.js"));
 
-    // 404 handler
-    app.get('*', (req, res) => {
-      res.status(404).type('text/plain').send(`Error: ${req.originalUrl} was not found`);
+    // ✅ 404 handler (Express 5–compatible)
+    app.use((req, res) => {
+      res.status(404)
+         .type('text/plain')
+         .send(`Error: ${req.originalUrl} was not found`);
     });
 
-    // Global error handler
+    // ✅ Global error handler (after all routes)
     app.use((err, req, res, next) => {
       console.error(err.stack);
-      res.status(err.status || 500).type('text/plain').send(`Error: ${err.message}`);
+      res.status(err.status || 500)
+         .type('text/plain')
+         .send(`Error: ${err.message}`);
     });
 
     // Start Server
-    const server = app.listen(PORT, () => console.log(`Bank app is listening on port ${PORT}`));
+    const server = app.listen(PORT, () => 
+      console.log(`Bank app is listening on port ${PORT}`)
+    );
+
+    // Graceful shutdown
     process.on('SIGTERM', () => {
       console.log("Shutting down gracefully...");
       server.close(() => {
         console.log("Closed all connections.");
         process.exit(0);
       });
-    });    
+    });
+
     process.on('uncaughtException', (err) => {
       console.error("Uncaught Exception:", err);
       process.exit(1);
     });
 
   } catch (err) {
-      console.error(err.stack);
+    console.error(err.stack);
   }
 })();
