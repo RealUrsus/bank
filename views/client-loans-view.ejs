@@ -25,18 +25,25 @@
                 <th>Rate</th>
                 <th>Term</th>
                 <th>Start Date</th>
+                <th>End Date</th>
                 <th>Description</th>
                 <th class="text-center">Status</th>
               </tr>
             </thead>
             <tbody>
-              <% for (const loan of loans) { %>
+              <% for (const loan of loans) {
+                const startDate = new Date(loan.StartDate);
+                const endDate = new Date(startDate);
+                endDate.setMonth(endDate.getMonth() + parseInt(loan.Term));
+                const formattedEndDate = endDate.toISOString().split('T')[0];
+              %>
               <tr>
                 <td><a href="/client/loan/view/<%= loan.AccountID %>"><%= loan.AccountID %></a></td>
                 <td><%= loan.PrincipalAmount %></td>
                 <td><%= loan.InterestRate %>%</td>
                 <td><%= loan.Term %> months</td>
                 <td><%= loan.StartDate %></td>
+                <td><%= formattedEndDate %></td>
                 <td><%= loan.Description %></td>
                 <td><%= loan.Status %></td>
               </tr>

@@ -46,15 +46,22 @@ db.serialize(() => {
       Balance REAL NOT NULL DEFAULT 0.0,
       MinimumBalance REAL DEFAULT 0.0,
       PrincipalAmount REAL DEFAULT 0.0,
-      InterestRate REAL DEFAULT 0.0,      
+      InterestRate REAL DEFAULT 0.0,
       Term INTEGER DEFAULT NULL,
       StartDate DATE DEFAULT NULL,
       StatusID INTEGER DEFAULT 1 NOT NULL,
       Description TEXT DEFAULT NULL,
-      FOREIGN KEY (AccountTypeID) REFERENCES AccountTypes(AccountTypeID),      
+      PaymentFrequency TEXT DEFAULT NULL,
+      FOREIGN KEY (AccountTypeID) REFERENCES AccountTypes(AccountTypeID),
       FOREIGN KEY (UserID) REFERENCES Users(UserID)
   )`);
 
+  // Migration: Add PaymentFrequency column if it doesn't exist
+  db.run(`ALTER TABLE Accounts ADD COLUMN PaymentFrequency TEXT DEFAULT NULL`, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding PaymentFrequency column:', err);
+    }
+  });
 
   db.run(`CREATE TABLE IF NOT EXISTS Users (
       UserID INTEGER PRIMARY KEY AUTOINCREMENT,
