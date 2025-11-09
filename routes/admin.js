@@ -527,12 +527,12 @@ router.route('/clients/edit/:userId')
         return next(validationError('Invalid userId'));
       }
 
-      const client = await fetchUser(userId);
-      if (!client || client.RoleID !== 3) {
+      const clientData = await fetchUser(userId);
+      if (!clientData || clientData.RoleID !== 3) {
         return next(validationError('Client not found'));
       }
 
-      res.render('admin-clients-edit', { user: req.user, client, csrfToken: res.locals.csrfToken });
+      res.render('admin-clients-edit', { user: req.user, clientData });
     } catch (err) {
       next(err);
     }
