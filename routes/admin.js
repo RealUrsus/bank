@@ -21,6 +21,16 @@ async function fetchUsers() {
   });
 }
 
+// Helper function to fetch a single user
+async function fetchUser(userId) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT UserID, Username, Name, Surname, RoleID FROM Users WHERE UserID = ?', [userId], (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
+  });
+}
+
 async function fetchAgreement(agreemetId) {
   return new Promise((resolve, reject) => {
     db.get('SELECT u.UserID, u.Name, u.Surname, a.AgreementID, a.AgreementName, a.AgreementContent, s.StatusName \
@@ -493,6 +503,60 @@ router.route('/agreements/add')
 
       });
       res.redirect(`/admin/agreements/view`);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+// Client management routes
+router.get('/clients', async (req, res, next) => {
+  try {
+    const clients = await fetchUsers();
+    res.render('admin-clients', { user: req.user, clients });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.route('/clients/edit/:userId')
+  .get(async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.userId, 10);
+
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return next(validationError('Invalid userId'));
+      }
+
+      const client = await fetchUser(userId);
+      if (!client || client.RoleID !== 3) {
+        return next(validationError('Client not found'));
+      }
+
+      res.render('admin-clients-edit', { user: req.user, client });
+    } catch (err) {
+      next(err);
+    }
+  })
+  .post(async (req, res, next) => {
+    const { userId, username, name, surname } = req.body;
+
+    if (!Number.isInteger(parseInt(userId, 10))) return next(validationError('Invalid userId'));
+    if (!username || !name || !surname) {
+      return next(validationError('All fields are required'));
+    }
+
+    try {
+      await new Promise((resolve, reject) => {
+        db.run(
+          'UPDATE Users SET Username = ?, Name = ?, Surname = ? WHERE UserID = ? AND RoleID = 3',
+          [username, name, surname, userId],
+          (err) => {
+            if (err) return reject(err);
+            resolve();
+          }
+        );
+      });
+      res.redirect('/admin/clients');
     } catch (err) {
       next(err);
     }

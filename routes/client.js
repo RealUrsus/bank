@@ -231,6 +231,16 @@ router.post('/transactions/add', (req, res, next) => {
     return res.status(400).send('All fields are required.');
   }
 
+  // Validate that date is not in the future
+  const transactionDate = new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
+  transactionDate.setHours(0, 0, 0, 0);
+
+  if (transactionDate > today) {
+    return res.status(400).send('Transaction date cannot be in the future.');
+  }
+
   db.run(
     'INSERT INTO Transactions (AccountID, TransactionTypeID, Amount, Date, Description) VALUES (?, ?, ?, ?, ?)',
     [req.user.account, type, amount, date, description],
@@ -458,6 +468,7 @@ router.post('/transfer', async (req, res, next) => {
     // Verification
     let src_balance = await getBalance(source);
     let dst_balance = await getBalance(destination);
+    let src_account = await fetchAccount(source);
     let dst_account = await fetchAccount(destination);
 
     if (src_balance <= 0 || src_balance < amount) {
@@ -470,10 +481,23 @@ router.post('/transfer', async (req, res, next) => {
       return res.redirect('/client/transfer'); // Exit after redirect
     }
 
+    // Get account type names for descriptions
+    const getAccountTypeName = (accountTypeId) => {
+      const types = ['Chequing', 'Loan', 'Saving', 'Investment'];
+      return types[accountTypeId - 1] || 'Account';
+    };
+
+    const srcAccountType = getAccountTypeName(src_account.AccountTypeID);
+    const dstAccountType = getAccountTypeName(dst_account.AccountTypeID);
+
+    // Create descriptive messages
+    const destinationDesc = `Internal Transaction from ${srcAccountType} #${source}`;
+    const sourceDesc = `Internal Transaction to ${dstAccountType} #${destination}`;
+
     // Perform database transactions
     db.run(
       'INSERT INTO Transactions (AccountID, TransactionTypeID, Amount, Date, TransferID, Description, StatusID) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [destination, 1, amount, formatDate(new Date()), TransferID, "Internal Transaction", 2],
+      [destination, 1, amount, formatDate(new Date()), TransferID, destinationDesc, 2],
       (err) => {
         if (err) return next(err);
       }
@@ -481,7 +505,7 @@ router.post('/transfer', async (req, res, next) => {
 
     db.run(
       'INSERT INTO Transactions (AccountID, TransactionTypeID, Amount, Date, TransferID, Description, StatusID) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [source, 2, amount, formatDate(new Date()), TransferID, "Internal Transaction", 2],
+      [source, 2, amount, formatDate(new Date()), TransferID, sourceDesc, 2],
       (err) => {
         if (err) return next(err);
       }

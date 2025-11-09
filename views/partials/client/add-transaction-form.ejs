@@ -60,6 +60,20 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
+    // Validate that date is not in the future
+    const dateField = document.getElementById('date');
+    const transactionDate = new Date(dateField.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    transactionDate.setHours(0, 0, 0, 0);
+
+    if (transactionDate > today) {
+      isValid = false;
+      dateField.classList.add('is-invalid');
+      alert('Transaction date cannot be in the future.');
+      return;
+    }
+
     if (isValid) {
       // Send data to server using Fetch API
       fetch('/client/transactions/add', {
