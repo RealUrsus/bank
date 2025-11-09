@@ -22,24 +22,24 @@
             <thead>
               <tr>
                 <th>#</th>
+                <th>Product Name</th>
                 <th>Principal Amount</th>
                 <th>Rate</th>
                 <th>Term</th>
                 <th>Start Date</th>
                 <th>Current Balance</th>
-                <th class="text-center">Status</th>
               </tr>
             </thead>
             <tbody>
               <% for (const gic of gics) { %>
               <tr>
                 <td><a href="/client/gic/view/<%= gic.AccountID %>"><%= gic.AccountID %></a></td>
+                <td><%= gic.ProductName || 'N/A' %></td>
                 <td>$<%= parseFloat(gic.PrincipalAmount).toFixed(2) %></td>
                 <td><%= gic.InterestRate %>%</td>
                 <td><%= gic.Term %> months</td>
                 <td><%= gic.StartDate %></td>
                 <td>$<%= parseFloat(gic.Balance).toFixed(2) %></td>
-                <td><%= gic.Status %></td>
               </tr>
               <% } %>
             </tbody>
