@@ -48,10 +48,10 @@ db.serialize(() => {
       PrincipalAmount REAL DEFAULT 0.0,
       InterestRate REAL DEFAULT 0.0,
       Term INTEGER DEFAULT NULL,
+      PaymentFrequency TEXT DEFAULT NULL,
       StartDate DATE DEFAULT NULL,
       StatusID INTEGER DEFAULT 1 NOT NULL,
-      Description TEXT DEFAULT NULL,
-      PaymentFrequency TEXT DEFAULT NULL,
+      Description TEXT DEFAULT NULL,      
       FOREIGN KEY (AccountTypeID) REFERENCES AccountTypes(AccountTypeID),
       FOREIGN KEY (UserID) REFERENCES Users(UserID)
   )`);
