@@ -258,17 +258,17 @@ router.get('/loan/add', (req, res) => {
 });
 
 router.post('/loan/add', async (req, res, next) => {
-  const { amount, interest, date, term, description } = req.body;
+  const { amount, interest, date, term, description, paymentFrequency } = req.body;
 
-  if (!amount || !interest || !date || !term || !description) {
+  if (!amount || !interest || !date || !term || !description || !paymentFrequency) {
     return res.status(400).send('All fields are required.');
   }
 
   try {
     const result = await new Promise((resolve, reject) => {
       db.run(
-        'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [req.user.id, 2, interest, amount, term, date, 1, description],
+        'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Description, PaymentFrequency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [req.user.id, 2, interest, amount, term, date, 1, description, paymentFrequency],
         function (err) {
           if (err) {
             return reject(err);
