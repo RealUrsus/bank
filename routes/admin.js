@@ -532,7 +532,7 @@ router.route('/clients/edit/:userId')
         return next(validationError('Client not found'));
       }
 
-      res.render('admin-clients-edit', { user: req.user, client });
+      res.render('admin-clients-edit', { user: req.user, client, csrfToken: res.locals.csrfToken });
     } catch (err) {
       next(err);
     }
