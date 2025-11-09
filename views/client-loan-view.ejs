@@ -49,17 +49,25 @@
           <hr>
           <!-- Summary Table -->
           <table class="table table-hover w-auto ms-auto">
-            <tbody>              
+            <tbody>
+              <%
+                // Calculate total amount at maturity (Principal + Interest)
+                const principal = parseFloat(account.PrincipalAmount);
+                const interestRate = parseFloat(account.InterestRate);
+                const term = parseFloat(account.Term);
+                const interestAmount = (principal * interestRate * (term / 12)) / 100;
+                const totalAtMaturity = principal + interestAmount;
+              %>
               <tr>
                 <th scope="row">Principal Amount:</th>
-                <td>- <%= account.PrincipalAmount %></td>
+                <td>- <%= principal.toFixed(2) %> + <%= interestRate %>% at maturity (Total: <%= totalAtMaturity.toFixed(2) %>)</td>
               </tr>
               <% if (typeof balance !== 'undefined' && balance !== null) { %>
                 <tr>
                   <th scope="row">Current Balance:</th>
                   <td>- <%= (account.PrincipalAmount - balance).toFixed(2) %></td>
                 </tr>
-                <% } %>              
+                <% } %>
             </tbody>
           </table>
         </div>

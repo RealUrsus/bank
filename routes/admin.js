@@ -226,18 +226,18 @@ router.route('/loans/add')
     }
   })
   .post(async (req, res, next) => {
-    const { clientId, amount, interest, date, term, description } = req.body;
+    const { clientId, amount, interest, date, term, description, paymentFrequency } = req.body;
 
     if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-    if (!amount || !interest || !date || !term || !description) {
+    if (!amount || !interest || !date || !term || !description || !paymentFrequency) {
       return next(validationError('All fields are required'));
     }
 
     try {
       await new Promise((resolve, reject) => {
         db.run(
-          'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [clientId, 2, interest, amount, term, date, 1, description],
+          'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Description, PaymentFrequency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [clientId, 2, interest, amount, term, date, 1, description, paymentFrequency],
           (err) => {
             if (err) return reject(err);
             resolve();
@@ -536,8 +536,8 @@ router.route('/agreements/add')
   .get(async (req, res, next) => {
 
     try {
-      const agreementId = req.params.agreementId;      
-      const agreement = await fetchAgreement(agreementId); 
+      const agreementId = req.params.agreementId;
+      const agreement = await fetchAgreement(agreementId);
       const statuses = await configService.getConfig('Status');
 
       res.render('admin-agreements-edit', { user: req.user, agreement, statuses });
@@ -564,6 +564,23 @@ router.route('/agreements/add')
       next(err);
     }
   });
+
+router.post('/agreements/delete', async (req, res, next) => {
+  const { id } = req.body;
+  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid agreement id'));
+
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('DELETE FROM Agreements WHERE AgreementID = ?', [id], (err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+    res.redirect('/admin/agreements/view');
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Client management routes
 router.get('/clients', async (req, res, next) => {
