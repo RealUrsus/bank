@@ -15,26 +15,26 @@
       </aside>
       <div class="container p-3">
         <h2 class="mb-4">Edit Client</h2>
-        <form action="/admin/clients/edit/<%= client.UserID %>" method="post">
+        <form action="/admin/clients/edit/<%= clientData.UserID %>" method="post">
 
           <div class="mb-3">
             <label for="userId"><h5>User ID</h5></label>
-            <input type="text" name="userId" id="userId" value="<%= client.UserID %>" readonly style="border: none;">
+            <input type="text" name="userId" id="userId" value="<%= clientData.UserID %>" readonly style="border: none;">
           </div>
 
           <div class="mb-3">
             <label for="username"><h5>Username</h5></label>
-            <input type="text" class="form-control" id="username" name="username" value="<%= client.Username %>" style="max-width: 320px;" required>
+            <input type="text" class="form-control" id="username" name="username" value="<%= clientData.Username %>" style="max-width: 320px;" required>
           </div>
 
           <div class="mb-3">
             <label for="name"><h5>Name</h5></label>
-            <input type="text" class="form-control" id="name" name="name" value="<%= client.Name %>" style="max-width: 320px;" required>
+            <input type="text" class="form-control" id="name" name="name" value="<%= clientData.Name %>" style="max-width: 320px;" required>
           </div>
 
           <div class="mb-3">
             <label for="surname"><h5>Surname</h5></label>
-            <input type="text" class="form-control" id="surname" name="surname" value="<%= client.Surname %>" style="max-width: 320px;" required>
+            <input type="text" class="form-control" id="surname" name="surname" value="<%= clientData.Surname %>" style="max-width: 320px;" required>
           </div>
 
           <div class="col-auto">
