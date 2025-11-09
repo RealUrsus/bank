@@ -67,6 +67,12 @@ app.use((req, res, next) => {
 
     // ✅ Global error handler (after all routes)
     app.use((err, req, res, next) => {
+      // Handle CSRF token errors by redirecting to login
+      if (err.code === 'EBADCSRFTOKEN' || (err.message && err.message.includes('csrf'))) {
+        req.session.message = 'Your session has expired. Please log in again.';
+        return res.redirect('/login');
+      }
+
       console.error(err.stack);
       res.status(err.status || 500)
          .type('text/plain')
