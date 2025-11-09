@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head'); %>
+    <link rel="stylesheet" href="/css/sidebar.css">
+  </head>
+  <body>
+    <header>
+      <%- include('partials/header'); %>
+    </header>
+
+    <main class="container-fluid d-flex flex-nowrap">
+      <aside class="border">
+        <%- include('partials/admin/sidebar'); %>
+      </aside>
+      <!-- Content -->
+      <div class="p-3">
+        <h2 class="mb-3">Add New GIC Investment</h2>
+        <form action="/admin/gics/add" method="post" class="row g-2 align-items-center">
+          <div class="input-group mb-3">
+            <div class="form-floating mb-3">
+              <select name="clientId" class="form-select w-auto" required aria-label="Select a Customer">
+                <option value="" disabled selected>Select a client...</option>
+                <% users.forEach(user => { %>
+                <option value="<%= user.UserID %>">
+                  <%= user.Name %> <%= user.Surname %>
+                </option>
+                <% }) %>
+              </select>
+              <label for="clientId">Client</label>
+            </div>
+          </div>
+          <div class="input-group mb-3">
+            <div class="form-floating mb-3">
+              <input type="date" class="form-control" id="date" name="date" placeholder="Start date" required>
+              <label for="date" class="form-label required">Start Date</label>
+            </div>
+            <div class="form-floating mb-3">
+              <input type="text" class="form-control" id="amount" name="amount" pattern="^\d+(\.\d+)?$" placeholder="Amount" aria-label="Amount" required>
+              <label for="amount">Principal Amount</label>
+            </div>
+          </div>
+          <div class="input-group mb-3">
+            <div class="form-floating mb-3">
+              <input type="number" class="form-control" id="interest" name="interest" placeholder="Interest Rate" min="0" max="100" step="0.1" value="0.0" required>
+              <label for="interest" class="form-label required">Annual Interest Rate (%)</label>
+            </div>
+            <div class="form-floating mb-3">
+              <select class="form-select" id="term" name="term" aria-label="Term" required>
+                <option value="" disabled selected>Select a term...</option>
+                <option value="12">12 months</option>
+                <option value="24">24 months</option>
+                <option value="36">36 months</option>
+                <option value="48">48 months</option>
+                <option value="60">60 months</option>
+              </select>
+              <label for="term">Term</label>
+            </div>
+          </div>
+          <div class="col-auto">
+            <a href="/admin/gics/view" class="btn btn-secondary">Cancel</a>
+            <button type="reset" class="btn btn-secondary">Reset</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        </form>
+      </div>
+    </main>
+
+    <footer>
+      <%- include('partials/footer'); %>
+    </footer>
+
+    <!-- Icons -->
+    <script src="/js/feather.min.js"></script>
+    <script>feather.replace()</script>
+  </body>
+</html>

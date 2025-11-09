@@ -157,6 +157,40 @@ async function fetchTransactions(accountId) {
   });
 }
 
+async function fetchGICs(req, res, next) {
+  try {
+    const rows = await new Promise((resolve, reject) => {
+      db.all(`SELECT
+                Accounts.*,
+                Status.StatusName AS Status
+             FROM
+                Accounts
+             INNER JOIN
+                Status
+             ON
+                Accounts.StatusID = Status.StatusID
+             WHERE
+                Accounts.UserID = ?
+                AND Accounts.AccountTypeID = 4
+                AND ( Status.StatusName = 'Approved' OR Status.StatusName = 'Paid Off')
+             ORDER BY
+                Accounts.StartDate ASC`, [
+        req.user.id
+      ], (err, rows) => {
+        if (err) return reject(err);
+        resolve(rows);
+      });
+    });
+
+    res.locals.gics = rows.map(row => ({
+      ...row
+    }));
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
 // Reducing redundancy
 router.use(ensureAuthenticated, checkRole("CLIENT"));
 
@@ -279,6 +313,82 @@ router.get('/loan/:confirmationId', async (req, res, next) => {
 
   try {
     res.render('client-loan-confirmation', { user: req.user, confirmationId: confirmationId });
+  } catch (err) {
+      next(err);
+  }
+});
+
+// GIC Routes
+router.get('/gic/add', (req, res) => {
+  res.locals.filter = null;
+  res.render('client-gic-add', { user: req.user });
+});
+
+router.post('/gic/add', async (req, res, next) => {
+  const { amount, interest, date, term } = req.body;
+
+  if (!amount || !interest || !date || !term) {
+    return res.status(400).send('All fields are required.');
+  }
+
+  try {
+    const result = await new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Balance) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [req.user.id, 4, interest, amount, term, date, 1, amount],
+        function (err) {
+          if (err) {
+            return reject(err);
+          }
+          resolve(this); // `this` contains the statement context, including `lastID`
+        }
+      );
+    });
+
+    const gicId = result.lastID;
+    res.redirect(`/client/gic/${gicId}`);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/gic/view', fetchGICs, async (req, res, next) => {
+  try {
+    res.render('client-gics-view', { user: req.user });
+  } catch (err) {
+      next(err);
+  }
+});
+
+router.get('/gic/view/:gicId', async (req, res, next) => {
+  try {
+    const gicId = parseInt(req.params.gicId, 10);
+
+    // Validate gicId
+    if (isNaN(gicId) || gicId <= 0) {
+      return res.status(400).send('Invalid gicId');
+    }
+
+    const account = await fetchAccount(gicId);
+    const transactions = await fetchTransactions(gicId);
+    const balance = await getBalance(gicId);
+
+    res.render('client-gic-view', { user: req.user, transactions, balance, account });
+  } catch (err) {
+      next(err);
+  }
+});
+
+router.get('/gic/:confirmationId', async (req, res, next) => {
+  const confirmationId = parseInt(req.params.confirmationId, 10);
+
+  // Validate confirmationId right after parsing it
+  if (isNaN(confirmationId) || confirmationId <= 0) {
+      return res.status(400).send('Invalid confirmationId');
+  }
+
+  try {
+    res.render('client-gic-confirmation', { user: req.user, confirmationId: confirmationId });
   } catch (err) {
       next(err);
   }
