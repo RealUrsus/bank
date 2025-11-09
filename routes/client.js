@@ -157,38 +157,37 @@ async function fetchTransactions(accountId) {
   });
 }
 
-async function fetchGICs(req, res, next) {
-  try {
-    const rows = await new Promise((resolve, reject) => {
-      db.all(`SELECT
-                Accounts.*,
-                Status.StatusName AS Status
-             FROM
-                Accounts
-             INNER JOIN
-                Status
-             ON
-                Accounts.StatusID = Status.StatusID
-             WHERE
-                Accounts.UserID = ?
-                AND Accounts.AccountTypeID = 4
-                AND ( Status.StatusName = 'Approved' OR Status.StatusName = 'Paid Off')
-             ORDER BY
-                Accounts.StartDate ASC`, [
-        req.user.id
-      ], (err, rows) => {
-        if (err) return reject(err);
-        resolve(rows);
-      });
+async function fetchGICProducts() {
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT * FROM GICProducts ORDER BY ProductID DESC`, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
     });
+  });
+}
 
-    res.locals.gics = rows.map(row => ({
-      ...row
-    }));
-    next();
-  } catch (err) {
-    next(err);
-  }
+async function fetchGICProduct(productId) {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT * FROM GICProducts WHERE ProductID = ?`, [productId], (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
+  });
+}
+
+async function fetchMyGICs(userId) {
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT
+              a.*,
+              gp.ProductName
+            FROM Accounts a
+            LEFT JOIN GICProducts gp ON a.Description = CAST(gp.ProductID AS TEXT)
+            WHERE a.UserID = ? AND a.AccountTypeID = 4
+            ORDER BY a.StartDate DESC`, [userId], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
 }
 
 // Reducing redundancy
@@ -319,44 +318,84 @@ router.get('/loan/:confirmationId', async (req, res, next) => {
 });
 
 // GIC Routes
-router.get('/gic/add', (req, res) => {
-  res.locals.filter = null;
-  res.render('client-gic-add', { user: req.user });
-});
-
-router.post('/gic/add', async (req, res, next) => {
-  const { amount, interest, date, term } = req.body;
-
-  if (!amount || !interest || !date || !term) {
-    return res.status(400).send('All fields are required.');
-  }
-
+router.get('/gic/add', async (req, res, next) => {
   try {
-    const result = await new Promise((resolve, reject) => {
-      db.run(
-        'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Balance) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [req.user.id, 4, interest, amount, term, date, 1, amount],
-        function (err) {
-          if (err) {
-            return reject(err);
-          }
-          resolve(this); // `this` contains the statement context, including `lastID`
-        }
-      );
-    });
-
-    const gicId = result.lastID;
-    res.redirect(`/client/gic/${gicId}`);
+    const gicProducts = await fetchGICProducts();
+    const approved_balance = await getApprovedBalance(req.user.account);
+    res.render('client-gic-add', { user: req.user, gicProducts, approved_balance });
   } catch (err) {
     next(err);
   }
 });
 
-router.get('/gic/view', fetchGICs, async (req, res, next) => {
+router.post('/gic/purchase/:productId', async (req, res, next) => {
   try {
-    res.render('client-gics-view', { user: req.user });
+    const productId = parseInt(req.params.productId, 10);
+    const { amount } = req.body;
+
+    if (isNaN(productId) || productId <= 0) {
+      return res.status(400).send('Invalid product ID');
+    }
+
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      return res.status(400).send('Invalid investment amount');
+    }
+
+    const product = await fetchGICProduct(productId);
+    if (!product) {
+      return res.status(400).send('GIC product not found');
+    }
+
+    const investmentAmount = parseFloat(amount);
+    if (investmentAmount < product.MinimumAmount) {
+      req.session.message = `Minimum investment amount is $${product.MinimumAmount.toFixed(2)}`;
+      return res.redirect('/client/gic/add');
+    }
+
+    const approved_balance = await getApprovedBalance(req.user.account);
+    if (approved_balance <= 0 || approved_balance < investmentAmount) {
+      req.session.message = 'Insufficient funds for this investment';
+      return res.redirect('/client/gic/add');
+    }
+
+    // Create GIC investment account
+    const result = await new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Balance, Description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [req.user.id, 4, product.InterestRate, investmentAmount, product.Term, formatDate(new Date()), 2, investmentAmount, productId.toString()],
+        function (err) {
+          if (err) return reject(err);
+          resolve(this);
+        }
+      );
+    });
+
+    const gicAccountId = result.lastID;
+
+    // Deduct from chequing account
+    await new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO Transactions (AccountID, TransactionTypeID, Amount, Date, Description, StatusID) VALUES (?, ?, ?, ?, ?, ?)',
+        [req.user.account, 2, investmentAmount, formatDate(new Date()), `GIC Investment - ${product.ProductName}`, 2],
+        (err) => {
+          if (err) return reject(err);
+          resolve();
+        }
+      );
+    });
+
+    res.redirect(`/client/gic/${gicAccountId}`);
   } catch (err) {
-      next(err);
+    next(err);
+  }
+});
+
+router.get('/gic/view', async (req, res, next) => {
+  try {
+    const gics = await fetchMyGICs(req.user.id);
+    res.render('client-gics-view', { user: req.user, gics });
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -364,7 +403,6 @@ router.get('/gic/view/:gicId', async (req, res, next) => {
   try {
     const gicId = parseInt(req.params.gicId, 10);
 
-    // Validate gicId
     if (isNaN(gicId) || gicId <= 0) {
       return res.status(400).send('Invalid gicId');
     }
@@ -375,22 +413,22 @@ router.get('/gic/view/:gicId', async (req, res, next) => {
 
     res.render('client-gic-view', { user: req.user, transactions, balance, account });
   } catch (err) {
-      next(err);
+    next(err);
   }
 });
 
 router.get('/gic/:confirmationId', async (req, res, next) => {
   const confirmationId = parseInt(req.params.confirmationId, 10);
 
-  // Validate confirmationId right after parsing it
   if (isNaN(confirmationId) || confirmationId <= 0) {
-      return res.status(400).send('Invalid confirmationId');
+    return res.status(400).send('Invalid confirmationId');
   }
 
   try {
-    res.render('client-gic-confirmation', { user: req.user, confirmationId: confirmationId });
+    const account = await fetchAccount(confirmationId);
+    res.render('client-gic-confirmation', { user: req.user, gic: account });
   } catch (err) {
-      next(err);
+    next(err);
   }
 });
 

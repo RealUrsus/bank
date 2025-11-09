@@ -84,28 +84,18 @@ async function fetchLoan(loanId) {
   });
 }
 
-async function fetchGICs(clientId) {
+async function fetchGICProducts() {
   return new Promise((resolve, reject) => {
-    if (clientId) {
-      db.all(`SELECT a.*, u.Name, u.Surname
-                FROM Accounts a
-                INNER JOIN Users u ON a.UserID = u.UserID
-                WHERE a.AccountTypeID = 4 AND a.UserID = ?;`, [clientId], (err, rows) => {
-        if (err) return reject(err);
-        resolve(rows);
-      });
-    } else {
-      resolve([]);
-    }
+    db.all(`SELECT * FROM GICProducts ORDER BY ProductID DESC`, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
   });
 }
 
-async function fetchGIC(gicId) {
+async function fetchGICProduct(productId) {
   return new Promise((resolve, reject) => {
-    db.get(`SELECT a.*, u.Name, u.Surname, u.UserID
-              FROM Accounts a
-              INNER JOIN Users u ON a.UserID = u.UserID
-              WHERE a.AccountID = ? AND a.AccountTypeID = 4;`, [gicId], (err, row) => {
+    db.get(`SELECT * FROM GICProducts WHERE ProductID = ?`, [productId], (err, row) => {
       if (err) return reject(err);
       resolve(row);
     });
@@ -333,54 +323,38 @@ router.post('/loans/delete', async (req, res, next) => {
   }
 });
 
-// GIC Routes
-router.route('/gics/view')
-  .get(async (req, res, next) => {
-    const clientId = req.query.clientId ? parseInt(req.query.clientId, 10) : null;
-
-    try {
-      const options = await fetchUsers();
-      const gics = clientId ? await fetchGICs(clientId) : null;
-
-      res.render('admin-gics-view', { user: req.user, options, clientId, gics });
-    } catch (err) {
-      next(err);
-    }
-  })
-  .post(async (req, res, next) => {
-    const clientId = parseInt(req.body.clientId, 10);
-
-    try {
-      const options = await fetchUsers();
-      const gics = clientId ? await fetchGICs(clientId) : [];
-      res.render('admin-gics-view', { user: req.user, options, clientId, gics });
-    } catch (err) {
-      next(err);
-    }
-  });
+// GIC Product Routes
+router.get('/gics/view', async (req, res, next) => {
+  try {
+    const gicProducts = await fetchGICProducts();
+    res.render('admin-gics-view', { user: req.user, gicProducts });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.route('/gics/add')
   .get(async (req, res, next) => {
     try {
-      const users = await fetchUsers();
-      res.render('admin-gics-add', { user: req.user, users });
+      res.render('admin-gics-add', { user: req.user });
     } catch (err) {
       next(err);
     }
   })
   .post(async (req, res, next) => {
-    const { clientId, amount, interest, date, term } = req.body;
+    const { productName, interest, term, minimumAmount } = req.body;
 
-    if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-    if (!amount || !interest || !date || !term) {
-      return next(validationError('All fields are required'));
+    if (!productName || !interest || !term) {
+      return next(validationError('Product name, interest rate, and term are required'));
     }
+
+    const minAmount = minimumAmount || 100;
 
     try {
       await new Promise((resolve, reject) => {
         db.run(
-          'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Balance) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [clientId, 4, interest, amount, term, date, 1, amount],
+          'INSERT INTO GICProducts (ProductName, InterestRate, Term, MinimumAmount) VALUES (?, ?, ?, ?)',
+          [productName, interest, term, minAmount],
           (err) => {
             if (err) return reject(err);
             resolve();
@@ -393,84 +367,62 @@ router.route('/gics/add')
     }
   });
 
-router.route('/gics/edit/:gicId')
+router.route('/gics/edit/:productId')
   .get(async (req, res, next) => {
     try {
-      const gicId = parseInt(req.params.gicId, 10);
+      const productId = parseInt(req.params.productId, 10);
 
-      if (!Number.isInteger(gicId) || gicId <= 0) {
-        return next(validationError('Invalid gicId'));
+      if (!Number.isInteger(productId) || productId <= 0) {
+        return next(validationError('Invalid productId'));
       }
 
-      const gic = await fetchGIC(gicId);
-      if (!gic) {
-        return next(validationError('GIC not found'));
+      const product = await fetchGICProduct(productId);
+      if (!product) {
+        return next(validationError('GIC Product not found'));
       }
 
-      const users = await fetchUsers();
-      const statuses = await configService.getConfig('Status');
-      res.render('admin-gics-edit', { user: req.user, gic, users, statuses });
+      res.render('admin-gics-edit', { user: req.user, product });
     } catch (err) {
       next(err);
     }
   })
   .post(async (req, res, next) => {
-    const { gicId, clientId, amount, interest, date, term, status } = req.body;
+    const { productId, productName, interest, term, minimumAmount } = req.body;
 
-    if (!Number.isInteger(parseInt(gicId, 10))) return next(validationError('Invalid gicId'));
-    if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-    if (!amount || !interest || !date || !term || !status) {
+    if (!Number.isInteger(parseInt(productId, 10))) return next(validationError('Invalid productId'));
+    if (!productName || !interest || !term || !minimumAmount) {
       return next(validationError('All fields are required'));
     }
 
     try {
       await new Promise((resolve, reject) => {
         db.run(
-          'UPDATE Accounts SET UserID = ?, InterestRate = ?, PrincipalAmount = ?, Term = ?, StartDate = ?, StatusID = ?, Balance = ? WHERE AccountID = ? AND AccountTypeID = 4',
-          [clientId, interest, amount, term, date, status, amount, gicId],
+          'UPDATE GICProducts SET ProductName = ?, InterestRate = ?, Term = ?, MinimumAmount = ? WHERE ProductID = ?',
+          [productName, interest, term, minimumAmount, productId],
           (err) => {
             if (err) return reject(err);
             resolve();
           }
         );
       });
-      res.redirect(`/admin/gics/view?clientId=${clientId}`);
+      res.redirect('/admin/gics/view');
     } catch (err) {
       next(err);
     }
   });
 
-router.post('/gics/update', async (req, res, next) => {
-  const { id, clientId } = req.body;
-  if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid option id'));
-
-  try {
-    await new Promise((resolve, reject) => {
-      db.run('UPDATE Accounts SET StatusID = 2 WHERE AccountID = ?', [id], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
-    res.redirect(`/admin/gics/view?clientId=${clientId}`);
-  } catch (err) {
-    next(err);
-  }
-});
-
 router.post('/gics/delete', async (req, res, next) => {
-  const { id, clientId } = req.body;
-  if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid option id'));
+  const { id } = req.body;
+  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid product id'));
 
   try {
     await new Promise((resolve, reject) => {
-      db.run('DELETE FROM Accounts WHERE AccountID = ?', [id], (err) => {
+      db.run('DELETE FROM GICProducts WHERE ProductID = ?', [id], (err) => {
         if (err) return reject(err);
         resolve();
       });
     });
-    res.redirect(`/admin/gics/view?clientId=${clientId}`);
+    res.redirect('/admin/gics/view');
   } catch (err) {
     next(err);
   }

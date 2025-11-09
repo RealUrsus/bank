@@ -93,6 +93,15 @@ db.serialize(() => {
     FOREIGN KEY (StatusID) REFERENCES Status(StatusID)
   )`);
 
+  db.run(`CREATE TABLE IF NOT EXISTS GICProducts (
+    ProductID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ProductName TEXT NOT NULL,
+    InterestRate REAL NOT NULL,
+    Term INTEGER NOT NULL,
+    MinimumAmount REAL NOT NULL DEFAULT 100.0,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
   // Seeding Data
   db.run("INSERT OR IGNORE INTO AccountTypes (AccountTypeName) VALUES ('Chequing'), ('Loan'), ('Saving'), ('Investment')");
   db.run("INSERT OR IGNORE INTO Roles (RoleName) VALUES ('Admin'), ('Auditor'), ('Client')");

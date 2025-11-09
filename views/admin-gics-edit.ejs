@@ -14,58 +14,38 @@
         <%- include('partials/admin/sidebar'); %>
       </aside>
       <div class="container p-3">
-        <h2 class="mb-4">Edit GIC Investment</h2>
-        <form action="/admin/gics/edit/<%= gic.AccountID %>" method="post">
+        <h2 class="mb-4">Edit GIC Product</h2>
+        <form action="/admin/gics/edit/<%= product.ProductID %>" method="post">
 
           <div class="mb-3">
-            <label for="gicId"><h5>GIC ID</h5></label>
-            <input type="text" name="gicId" id="gicId" value="<%= gic.AccountID %>" readonly style="border: none;">
+            <label for="productId"><h5>Product ID</h5></label>
+            <input type="text" name="productId" id="productId" value="<%= product.ProductID %>" readonly style="border: none;">
           </div>
 
           <div class="mb-3">
-            <label for="clientId"><h5>Client</h5></label>
-            <select name="clientId" id="clientId" class="form-select" style="max-width: 320px;" required>
-              <% users.forEach(user => { %>
-              <option value="<%= user.UserID %>" <%= gic.UserID === user.UserID ? 'selected' : '' %>>
-                <%= user.Name %> <%= user.Surname %>
-              </option>
-              <% }) %>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label for="date"><h5>Start Date</h5></label>
-            <input type="date" class="form-control" id="date" name="date" value="<%= gic.StartDate %>" style="max-width: 320px;" required>
-          </div>
-
-          <div class="mb-3">
-            <label for="amount"><h5>Principal Amount</h5></label>
-            <input type="text" class="form-control" id="amount" name="amount" pattern="^\d+(\.\d+)?$" value="<%= gic.PrincipalAmount %>" style="max-width: 320px;" required>
+            <label for="productName"><h5>Product Name</h5></label>
+            <input type="text" class="form-control" id="productName" name="productName" value="<%= product.ProductName %>" style="max-width: 320px;" required>
           </div>
 
           <div class="mb-3">
             <label for="interest"><h5>Annual Interest Rate (%)</h5></label>
-            <input type="number" class="form-control" id="interest" name="interest" min="0" max="100" step="0.1" value="<%= gic.InterestRate %>" style="max-width: 320px;" required>
+            <input type="number" class="form-control" id="interest" name="interest" min="0" max="100" step="0.1" value="<%= product.InterestRate %>" style="max-width: 320px;" required>
           </div>
 
           <div class="mb-3">
             <label for="term"><h5>Term</h5></label>
             <select class="form-select" id="term" name="term" style="max-width: 320px;" required>
-              <option value="12" <%= gic.Term === 12 ? 'selected' : '' %>>12 months</option>
-              <option value="24" <%= gic.Term === 24 ? 'selected' : '' %>>24 months</option>
-              <option value="36" <%= gic.Term === 36 ? 'selected' : '' %>>36 months</option>
-              <option value="48" <%= gic.Term === 48 ? 'selected' : '' %>>48 months</option>
-              <option value="60" <%= gic.Term === 60 ? 'selected' : '' %>>60 months</option>
+              <option value="12" <%= product.Term === 12 ? 'selected' : '' %>>12 months</option>
+              <option value="24" <%= product.Term === 24 ? 'selected' : '' %>>24 months</option>
+              <option value="36" <%= product.Term === 36 ? 'selected' : '' %>>36 months</option>
+              <option value="48" <%= product.Term === 48 ? 'selected' : '' %>>48 months</option>
+              <option value="60" <%= product.Term === 60 ? 'selected' : '' %>>60 months</option>
             </select>
           </div>
 
           <div class="mb-3">
-            <label for="status"><h5>Status</h5></label>
-            <select id="status" name="status" class="form-select w-auto">
-              <% Object.keys(statuses).forEach(function(key) { %>
-                <option value="<%= statuses[key] %>" <%= gic.StatusID === statuses[key] ? 'selected' : '' %>><%= key %></option>
-              <% }); %>
-            </select>
+            <label for="minimumAmount"><h5>Minimum Investment Amount</h5></label>
+            <input type="number" class="form-control" id="minimumAmount" name="minimumAmount" min="0" step="0.01" value="<%= product.MinimumAmount %>" style="max-width: 320px;" required>
           </div>
 
           <div class="col-auto">
