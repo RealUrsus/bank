@@ -297,6 +297,63 @@ router.route('/loans/edit/:loanId')
     }
   });
 
+// View pending loan requests
+router.get('/loans/requests', async (req, res, next) => {
+  try {
+    const pendingLoans = await new Promise((resolve, reject) => {
+      db.all(`SELECT a.*, u.Name, u.Surname, u.UserID, s.StatusName
+                FROM Accounts a
+                INNER JOIN Users u ON a.UserID = u.UserID
+                INNER JOIN Status s ON a.StatusID = s.StatusID
+                WHERE a.AccountTypeID = 2 AND a.StatusID = 1
+                ORDER BY a.AccountID DESC;`, (err, rows) => {
+        if (err) return reject(err);
+        resolve(rows);
+      });
+    });
+
+    res.render('admin-loans-requests', { user: req.user, pendingLoans });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Approve loan request
+router.post('/loans/approve', async (req, res, next) => {
+  const { loanId } = req.body;
+  if (!Number.isInteger(parseInt(loanId, 10))) return next(validationError('Invalid loan id'));
+
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE Accounts SET StatusID = 2 WHERE AccountID = ? AND AccountTypeID = 2', [loanId], (err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+    res.redirect('/admin/loans/requests');
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Deny loan request
+router.post('/loans/deny', async (req, res, next) => {
+  const { loanId } = req.body;
+  if (!Number.isInteger(parseInt(loanId, 10))) return next(validationError('Invalid loan id'));
+
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE Accounts SET StatusID = 3 WHERE AccountID = ? AND AccountTypeID = 2', [loanId], (err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+    res.redirect('/admin/loans/requests');
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/loans/update', async (req, res, next) => {
   const { id, clientId } = req.body;
   if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
