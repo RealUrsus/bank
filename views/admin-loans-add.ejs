@@ -46,6 +46,14 @@
               <label for="interest" class="form-label required">Interest Rate</label>
             </div>
             <div class="form-floating mb-3">
+              <select class="form-select" id="paymentFrequency" name="paymentFrequency" aria-label="Payment Frequency" required>
+                <option value="" disabled selected>Select frequency...</option>
+                <option value="monthly">Monthly</option>
+                <option value="annually">Annually</option>
+              </select>
+              <label for="paymentFrequency">Payment Frequency</label>
+            </div>
+            <div class="form-floating mb-3">
               <select class="form-select" id="term" name="term" aria-label="Term" required>
                 <option value="" disabled selected>Select a term...</option>
                 <option value="12">12 months</option>
