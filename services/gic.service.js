@@ -321,7 +321,13 @@ const gicService = {
    * @returns {Promise<Array>} Array of GICs maturing soon
    */
   async getMaturingGICs(days = 30) {
-    const gics = await this.getActiveGICs();
+    const gics = await db.queryMany(
+      `SELECT a.*, u.Name, u.Surname, u.UserID
+       FROM Accounts a
+       INNER JOIN Users u ON a.UserID = u.UserID
+       WHERE a.AccountTypeID = ? AND a.StatusID = ?`,
+      [ACCOUNT_TYPES.INVESTMENT, STATUS.APPROVED]
+    );
     const maturingGICs = [];
 
     for (const gic of gics) {
