@@ -153,19 +153,47 @@ const accountService = {
       minimumBalance = null
     } = accountData;
 
-    const result = await db.run(
-      `INSERT INTO Accounts (
-        UserID, AccountTypeID, InterestRate, PrincipalAmount,
-        Term, StartDate, StatusID, Description, PaymentFrequency,
-        Balance, MinimumBalance
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        userId, accountTypeId, interestRate, principalAmount,
-        term, startDate, statusId, description, paymentFrequency,
-        balance, minimumBalance
-      ]
-    );
+    // Build dynamic INSERT to only include fields that are provided
+    const fields = ['UserID', 'AccountTypeID', 'StatusID'];
+    const values = [userId, accountTypeId, statusId];
 
+    if (interestRate !== null) {
+      fields.push('InterestRate');
+      values.push(interestRate);
+    }
+    if (principalAmount !== null) {
+      fields.push('PrincipalAmount');
+      values.push(principalAmount);
+    }
+    if (term !== null) {
+      fields.push('Term');
+      values.push(term);
+    }
+    if (startDate !== null) {
+      fields.push('StartDate');
+      values.push(startDate);
+    }
+    if (description !== null) {
+      fields.push('Description');
+      values.push(description);
+    }
+    if (paymentFrequency !== null) {
+      fields.push('PaymentFrequency');
+      values.push(paymentFrequency);
+    }
+    if (balance !== null) {
+      fields.push('Balance');
+      values.push(balance);
+    }
+    if (minimumBalance !== null) {
+      fields.push('MinimumBalance');
+      values.push(minimumBalance);
+    }
+
+    const placeholders = values.map(() => '?').join(', ');
+    const sql = `INSERT INTO Accounts (${fields.join(', ')}) VALUES (${placeholders})`;
+
+    const result = await db.run(sql, values);
     return result.lastID;
   },
 
