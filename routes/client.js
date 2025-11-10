@@ -62,44 +62,59 @@ router.get('/', async (req, res) => {
     const accountID = await getAccountID(req.user.id, "Chequing");
     req.user["account"] = accountID;
 
+    // Check if user has any activity (transactions, loans, investments, agreements)
+    const transactions = await transactionService.getTransactions(accountID);
+    const loans = await loanService.getUserLoans(req.user.id);
+    const gics = await gicService.getUserGICs(req.user.id);
+    const agreements = await agreementService.getUserAgreements(req.user.id);
+
+    // If no activity, show default page
+    const hasActivity = transactions.length > 0 || loans.length > 0 || gics.length > 0 || agreements.length > 0;
+
+    if (!hasActivity) {
+      return res.render('client', {
+        user: req.user,
+        showDefault: true
+      });
+    }
+
     // Get financial summary data
     // Savings (Chequing account balance)
     const savingsBalance = await accountService.getApprovedBalance(accountID);
 
     // Loans summary
-    const loans = await loanService.getUserLoans(req.user.id, true);
+    const activeLoans = loans.filter(l => l.StatusID === 4 || l.StatusID === 6); // Approved or Paid Off
     let totalLoaned = 0;
     let totalOwed = 0;
-    loans.forEach(loan => {
+    for (const loan of activeLoans) {
       totalLoaned += loan.PrincipalAmount;
-      const balance = loan.Balance || 0;
+      const balance = await accountService.getBalance(loan.AccountID);
       const remaining = loan.PrincipalAmount - balance;
       if (remaining > 0) {
         totalOwed += remaining;
       }
-    });
+    }
 
     // Investments (GICs) summary
-    const gics = await gicService.getUserGICs(req.user.id);
+    const activeGICs = gics.filter(g => g.StatusID === 4); // Active status
     let totalInvested = 0;
     let currentInvestmentValue = 0;
-    for (const gic of gics) {
-      if (gic.StatusID === 4) { // Active status
-        totalInvested += gic.PrincipalAmount;
-        const balance = await accountService.getBalance(gic.AccountID);
-        currentInvestmentValue += balance;
-      }
+    for (const gic of activeGICs) {
+      totalInvested += gic.PrincipalAmount;
+      const balance = await accountService.getBalance(gic.AccountID);
+      currentInvestmentValue += balance;
     }
 
     res.render('client', {
       user: req.user,
+      showDefault: false,
       savingsBalance,
       totalLoaned,
       totalOwed,
-      loansCount: loans.length,
+      loansCount: activeLoans.length,
       totalInvested,
       currentInvestmentValue,
-      gicsCount: gics.filter(g => g.StatusID === 4).length
+      gicsCount: activeGICs.length
     });
   } catch (error) {
     console.error('Error in client dashboard:', error);
