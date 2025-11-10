@@ -22,18 +22,29 @@ router.use(ensureAuthenticated, checkRole("ADMIN"));
 // Route handler for the page
 router.get('/', async (req, res, next) => {
     try {
-      // Get counts for notifications
-      const pendingTransactionsCount = await transactionService.getPendingTransactionsCount();
+      // Get counts and data for notifications
+      const pendingTransactions = await transactionService.getAllPendingTransactions();
+      const pendingTransactionsCount = pendingTransactions.length;
       const pendingLoans = await loanService.getPendingLoanRequests();
       const pendingLoansCount = pendingLoans.length;
       const maturingLoans = await loanService.getMaturingLoans(30);
       const maturingGICs = await gicService.getMaturingGICs(30);
       const maturingCount = maturingLoans.length + maturingGICs.length;
 
+      // Get unique clients for each notification type
+      const transactionClients = [...new Set(pendingTransactions.map(t =>
+        `${t.Name} ${t.Surname} (#${t.UserID})`
+      ))];
+      const loanClients = [...new Set(pendingLoans.map(l =>
+        `${l.Name} ${l.Surname} (#${l.UserID})`
+      ))];
+
       res.render('admin', {
         user: req.user,
         pendingTransactionsCount,
+        transactionClients,
         pendingLoansCount,
+        loanClients,
         maturingCount,
         maturingLoans,
         maturingGICs

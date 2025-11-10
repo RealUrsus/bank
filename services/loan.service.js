@@ -264,7 +264,13 @@ const loanService = {
    * @returns {Promise<Array>} Array of loans maturing soon
    */
   async getMaturingLoans(days = 30) {
-    const loans = await this.getActiveLoans();
+    const loans = await db.queryMany(
+      `SELECT a.*, u.Name, u.Surname, u.UserID
+       FROM Accounts a
+       INNER JOIN Users u ON a.UserID = u.UserID
+       WHERE a.AccountTypeID = ? AND a.StatusID = ?`,
+      [ACCOUNT_TYPES.LOAN, STATUS.APPROVED]
+    );
     const maturingLoans = [];
 
     for (const loan of loans) {

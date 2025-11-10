@@ -26,6 +26,15 @@
 								<i data-feather="alert-circle"></i> Pending Transactions
 							</h5>
 							<p class="mb-2">You have <strong><%= pendingTransactionsCount %></strong> transaction(s) awaiting approval.</p>
+							<% if (transactionClients.length > 0) { %>
+								<p class="mb-2 small text-muted">
+									<strong>From clients:</strong><br>
+									<%= transactionClients.slice(0, 3).join(', ') %>
+									<% if (transactionClients.length > 3) { %>
+										<br>and <%= transactionClients.length - 3 %> more...
+									<% } %>
+								</p>
+							<% } %>
 							<a href="/admin/transactions" class="btn btn-sm btn-warning">Review Transactions</a>
 						</div>
 					</div>
@@ -38,6 +47,15 @@
 								<i data-feather="file-text"></i> Pending Loan Requests
 							</h5>
 							<p class="mb-2">You have <strong><%= pendingLoansCount %></strong> loan request(s) awaiting approval.</p>
+							<% if (loanClients.length > 0) { %>
+								<p class="mb-2 small text-muted">
+									<strong>From clients:</strong><br>
+									<%= loanClients.slice(0, 3).join(', ') %>
+									<% if (loanClients.length > 3) { %>
+										<br>and <%= loanClients.length - 3 %> more...
+									<% } %>
+								</p>
+							<% } %>
 							<a href="/admin/loans/requests" class="btn btn-sm btn-info">Review Loan Requests</a>
 						</div>
 					</div>
@@ -95,7 +113,7 @@
 									<thead>
 										<tr>
 											<th>Account ID</th>
-											<th>User</th>
+											<th>Client</th>
 											<th>Amount</th>
 											<th>Maturity Date</th>
 											<th>Days Until Maturity</th>
@@ -105,7 +123,7 @@
 										<% maturingLoans.forEach(loan => { %>
 										<tr>
 											<td><%= loan.AccountID %></td>
-											<td>User #<%= loan.UserID %></td>
+											<td><%= loan.Name %> <%= loan.Surname %> (#<%= loan.UserID %>)</td>
 											<td>$<%= loan.PrincipalAmount.toFixed(2) %></td>
 											<td><%= loan.maturityDate %></td>
 											<td><%= loan.daysUntilMaturity %> days</td>
@@ -123,7 +141,7 @@
 									<thead>
 										<tr>
 											<th>Account ID</th>
-											<th>User</th>
+											<th>Client</th>
 											<th>Amount</th>
 											<th>Maturity Date</th>
 											<th>Days Until Maturity</th>
@@ -133,7 +151,7 @@
 										<% maturingGICs.forEach(gic => { %>
 										<tr>
 											<td><%= gic.AccountID %></td>
-											<td>User #<%= gic.UserID %></td>
+											<td><%= gic.Name %> <%= gic.Surname %> (#<%= gic.UserID %>)</td>
 											<td>$<%= gic.PrincipalAmount.toFixed(2) %></td>
 											<td><%= gic.maturityDate %></td>
 											<td><%= gic.daysUntilMaturity %> days</td>

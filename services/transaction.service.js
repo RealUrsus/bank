@@ -210,6 +210,22 @@ const transactionService = {
       [STATUS.PENDING, 1] // 1 = Chequing account type
     );
     return result?.count || 0;
+  },
+
+  /**
+   * Get all pending transactions with client information
+   * @returns {Promise<Array>} Array of pending transactions with client info
+   */
+  async getAllPendingTransactions() {
+    return await db.queryMany(
+      `SELECT t.*, u.UserID, u.Name, u.Surname
+       FROM Transactions t
+       INNER JOIN Accounts a ON t.AccountID = a.AccountID
+       INNER JOIN Users u ON a.UserID = u.UserID
+       WHERE t.StatusID = ? AND a.AccountTypeID = ?
+       ORDER BY t.CreatedAt DESC`,
+      [STATUS.PENDING, 1] // 1 = Chequing account type
+    );
   }
 };
 
