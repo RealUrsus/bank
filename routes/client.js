@@ -82,11 +82,11 @@ router.get('/', async (req, res) => {
     // Savings (Chequing account balance)
     const savingsBalance = await accountService.getApprovedBalance(accountID);
 
-    // Loans summary
-    const activeLoans = loans.filter(l => l.StatusID === 4 || l.StatusID === 6); // Approved or Paid Off
+    // Loans summary - include all non-pending, non-rejected loans
+    const relevantLoans = loans.filter(l => l.StatusID !== 1 && l.StatusID !== 3); // Exclude Pending(1) and Rejected(3)
     let totalLoaned = 0;
     let totalOwed = 0;
-    for (const loan of activeLoans) {
+    for (const loan of relevantLoans) {
       totalLoaned += loan.PrincipalAmount;
       const balance = await accountService.getBalance(loan.AccountID);
       const remaining = loan.PrincipalAmount - balance;
@@ -95,11 +95,11 @@ router.get('/', async (req, res) => {
       }
     }
 
-    // Investments (GICs) summary
-    const activeGICs = gics.filter(g => g.StatusID === 4); // Active status
+    // Investments (GICs) summary - include all non-pending, non-rejected investments
+    const relevantGICs = gics.filter(g => g.StatusID !== 1 && g.StatusID !== 3); // Exclude Pending(1) and Rejected(3)
     let totalInvested = 0;
     let currentInvestmentValue = 0;
-    for (const gic of activeGICs) {
+    for (const gic of relevantGICs) {
       totalInvested += gic.PrincipalAmount;
       const balance = await accountService.getBalance(gic.AccountID);
       currentInvestmentValue += balance;
@@ -111,10 +111,10 @@ router.get('/', async (req, res) => {
       savingsBalance,
       totalLoaned,
       totalOwed,
-      loansCount: activeLoans.length,
+      loansCount: relevantLoans.length,
       totalInvested,
       currentInvestmentValue,
-      gicsCount: activeGICs.length
+      gicsCount: relevantGICs.length
     });
   } catch (error) {
     console.error('Error in client dashboard:', error);
