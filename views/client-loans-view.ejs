@@ -14,6 +14,18 @@
       </aside>
       <!-- Content -->
       <div class="flex-grow-1 p-3">
+        <!-- Status Filter -->
+        <div class="mb-3">
+          <label for="statusFilter" class="form-label">Filter by Status:</label>
+          <select id="statusFilter" class="form-select w-auto" onchange="window.location.href='/client/loan/view?status=' + this.value">
+            <option value="approved" <%= selectedStatus === 'approved' ? 'selected' : '' %>>Approved Only</option>
+            <option value="all" <%= selectedStatus === 'all' ? 'selected' : '' %>>All Statuses</option>
+            <option value="pending" <%= selectedStatus === 'pending' ? 'selected' : '' %>>Pending</option>
+            <option value="active" <%= selectedStatus === 'active' ? 'selected' : '' %>>Active</option>
+            <option value="paid off" <%= selectedStatus === 'paid off' ? 'selected' : '' %>>Paid Off</option>
+            <option value="rejected" <%= selectedStatus === 'rejected' ? 'selected' : '' %>>Rejected</option>
+          </select>
+        </div>
         <!-- Loans Table -->
         <div class="table-responsive mt-4">
           <% if (loans && loans.length > 0) { %>
