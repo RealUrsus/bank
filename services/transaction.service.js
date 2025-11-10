@@ -195,6 +195,21 @@ const transactionService = {
       'SELECT * FROM Transactions WHERE TransferID = ?',
       [transferId]
     );
+  },
+
+  /**
+   * Get count of all pending transactions
+   * @returns {Promise<number>} Count of pending transactions
+   */
+  async getPendingTransactionsCount() {
+    const result = await db.queryOne(
+      `SELECT COUNT(*) AS count
+       FROM Transactions t
+       INNER JOIN Accounts a ON t.AccountID = a.AccountID
+       WHERE t.StatusID = ? AND a.AccountTypeID = ?`,
+      [STATUS.PENDING, 1] // 1 = Chequing account type
+    );
+    return result?.count || 0;
   }
 };
 

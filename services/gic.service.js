@@ -313,6 +313,31 @@ const gicService = {
     });
 
     return true;
+  },
+
+  /**
+   * Get GICs maturing within specified days
+   * @param {number} days - Number of days to look ahead (default: 30)
+   * @returns {Promise<Array>} Array of GICs maturing soon
+   */
+  async getMaturingGICs(days = 30) {
+    const gics = await this.getActiveGICs();
+    const maturingGICs = [];
+
+    for (const gic of gics) {
+      const maturityDate = financialService.calculateMaturityDate(gic.StartDate, gic.Term);
+      const daysUntilMaturity = Math.ceil((new Date(maturityDate) - new Date()) / (1000 * 60 * 60 * 24));
+
+      if (daysUntilMaturity >= 0 && daysUntilMaturity <= days) {
+        maturingGICs.push({
+          ...gic,
+          maturityDate,
+          daysUntilMaturity
+        });
+      }
+    }
+
+    return maturingGICs;
   }
 };
 

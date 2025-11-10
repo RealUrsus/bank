@@ -22,7 +22,22 @@ router.use(ensureAuthenticated, checkRole("ADMIN"));
 // Route handler for the page
 router.get('/', async (req, res, next) => {
     try {
-      res.render('admin', { user: req.user });
+      // Get counts for notifications
+      const pendingTransactionsCount = await transactionService.getPendingTransactionsCount();
+      const pendingLoans = await loanService.getPendingLoanRequests();
+      const pendingLoansCount = pendingLoans.length;
+      const maturingLoans = await loanService.getMaturingLoans(30);
+      const maturingGICs = await gicService.getMaturingGICs(30);
+      const maturingCount = maturingLoans.length + maturingGICs.length;
+
+      res.render('admin', {
+        user: req.user,
+        pendingTransactionsCount,
+        pendingLoansCount,
+        maturingCount,
+        maturingLoans,
+        maturingGICs
+      });
     } catch (err) {
       next(err);
     }
