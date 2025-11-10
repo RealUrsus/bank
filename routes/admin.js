@@ -1,122 +1,20 @@
 const express = require('express');
-const crypto = require('crypto');
 
 const checkRole = require('../middleware/checkRole.js');
 const configService = require('../helpers/configService.js');
 const ensureAuthenticated = require('../middleware/ensureAuth.js');
-const db = require('../utils/db.js');
+
+// Services
+const userService = require('../services/user.service');
+const transactionService = require('../services/transaction.service');
+const loanService = require('../services/loan.service');
+const gicService = require('../services/gic.service');
+const agreementService = require('../services/agreement.service');
+
+// Utils
+const { validateId, validateRequiredFields } = require('../utils/validators');
 
 const router = express.Router();
-
-// Format a date as 'YYYY-MM-DD'
-const formatDate = (date) => date.toISOString().split('T')[0];
-
-// Helper function to fetch users
-async function fetchUsers() {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT UserID, Name, Surname FROM Users WHERE RoleID = 3', (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  });
-}
-
-// Helper function to fetch a single user
-async function fetchUser(userId) {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT UserID, Username, Name, Surname, RoleID FROM Users WHERE UserID = ?', [userId], (err, row) => {
-      if (err) return reject(err);
-      resolve(row);
-    });
-  });
-}
-
-async function fetchAgreement(agreemetId) {
-  return new Promise((resolve, reject) => {
-    db.get('SELECT u.UserID, u.Name, u.Surname, a.AgreementID, a.AgreementName, a.AgreementContent, s.StatusName \
-      FROM Users u \
-        INNER JOIN Agreements a ON u.UserID = a.UserID \
-        INNER JOIN Status s ON a.StatusID = s.StatusID \
-      WHERE a.AgreementID = ?', [agreemetId], (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  });
-}
-
-async function fetchAgreements() {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT u.Name, u.Surname, a.AgreementID, a.AgreementName, s.StatusName \
-      FROM Users u \
-        INNER JOIN Agreements a ON u.UserID = a.UserID \
-        INNER JOIN Status s ON a.StatusID = s.StatusID', (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  });
-}
-
-// Helper function to fetch transactions
-async function fetchTransactions(clientId) {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT t.* FROM Transactions t INNER JOIN Accounts a ON t.AccountID = a.AccountID WHERE a.UserID = ? AND a.AccountTypeID = 1 AND t.StatusID = 1;', [clientId], (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  });
-}
-
-async function fetchLoans(clientId) {
-  return new Promise((resolve, reject) => {
-    if (clientId) {
-      db.all(`SELECT a.*, u.Name, u.Surname
-                FROM Accounts a
-                INNER JOIN Users u ON a.UserID = u.UserID
-                WHERE a.AccountTypeID = 2 AND a.UserID = ?;`, [clientId], (err, rows) => {
-        if (err) return reject(err);
-        resolve(rows);
-      });
-    } else {
-      resolve([]);
-    }
-  });
-}
-
-async function fetchLoan(loanId) {
-  return new Promise((resolve, reject) => {
-    db.get(`SELECT a.*, u.Name, u.Surname, u.UserID
-              FROM Accounts a
-              INNER JOIN Users u ON a.UserID = u.UserID
-              WHERE a.AccountID = ? AND a.AccountTypeID = 2;`, [loanId], (err, row) => {
-      if (err) return reject(err);
-      resolve(row);
-    });
-  });
-}
-
-async function fetchGICProducts() {
-  return new Promise((resolve, reject) => {
-    db.all(`SELECT * FROM GICProducts ORDER BY ProductID DESC`, (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  });
-}
-
-async function fetchGICProduct(productId) {
-  return new Promise((resolve, reject) => {
-    db.get(`SELECT * FROM GICProducts WHERE ProductID = ?`, [productId], (err, row) => {
-      if (err) return reject(err);
-      resolve(row);
-    });
-  });
-}
-
-function validationError(message) {
-  const error = new Error(message);
-  error.status = 400;
-  return error;
-}
 
 // Reducing redundancy
 router.use(ensureAuthenticated, checkRole("ADMIN"));
@@ -131,12 +29,11 @@ router.get('/', async (req, res, next) => {
   });
 
 router.route('/transactions')
-  .get(async (req, res, next) => {    
-    const clientId = req.query.clientId ? parseInt(req.query.clientId, 10) : null;
-
-    try {      
-      const options = await fetchUsers();      
-      const transactions = clientId ? await fetchTransactions(clientId) : null;
+  .get(async (req, res, next) => {
+    try {
+      const clientId = req.query.clientId ? validateId(req.query.clientId, 'clientId') : null;
+      const options = await userService.getAllClients();
+      const transactions = clientId ? await transactionService.getPendingTransactionsByUser(clientId) : null;
 
       res.render('admin-transactions', { user: req.user, options, clientId, transactions });
     } catch (err) {
@@ -144,29 +41,24 @@ router.route('/transactions')
     }
   })
   .post(async (req, res, next) => {
-    const clientId = parseInt(req.body.clientId, 10);
-
     try {
-      const options = await fetchUsers();
-      const transactions = clientId ? await fetchTransactions(clientId) : [];
+      const clientId = validateId(req.body.clientId, 'clientId');
+      const options = await userService.getAllClients();
+      const transactions = await transactionService.getPendingTransactionsByUser(clientId);
+
       res.render('admin-transactions', { user: req.user, options, clientId, transactions });
     } catch (err) {
       next(err);
     }
-  });  
+  });
 
 router.post('/transactions/update', async (req, res, next) => {
-  const { id , clientId } = req.body;
-  if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid option id'));
-
   try {
-    await new Promise((resolve, reject) => {
-      db.run('UPDATE Transactions SET StatusID = 2 WHERE TransactionID = ?', [id], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+    const { id, clientId } = req.body;
+    validateId(clientId, 'clientId');
+    validateId(id, 'transaction id');
+
+    await transactionService.approveTransaction(id);
     res.redirect(`/admin/transactions?clientId=${clientId}`);
   } catch (err) {
     next(err);
@@ -174,17 +66,12 @@ router.post('/transactions/update', async (req, res, next) => {
 });
 
 router.post('/transactions/delete', async (req, res, next) => {
-  const { id , clientId } = req.body;
-  if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid option id'));
-
   try {
-    await new Promise((resolve, reject) => {
-      db.run('DELETE FROM Transactions WHERE TransactionID = ?', [id], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+    const { id, clientId } = req.body;
+    validateId(clientId, 'clientId');
+    validateId(id, 'transaction id');
+
+    await transactionService.deleteTransaction(id);
     res.redirect(`/admin/transactions?clientId=${clientId}`);
   } catch (err) {
     next(err);
@@ -193,11 +80,10 @@ router.post('/transactions/delete', async (req, res, next) => {
 
 router.route('/loans/view')
   .get(async (req, res, next) => {
-    const clientId = req.query.clientId ? parseInt(req.query.clientId, 10) : null;
-
     try {
-      const options = await fetchUsers();
-      const loans = clientId ? await fetchLoans(clientId) : null;
+      const clientId = req.query.clientId ? validateId(req.query.clientId, 'clientId') : null;
+      const options = await userService.getAllClients();
+      const loans = clientId ? await loanService.getUserLoans(clientId) : null;
 
       res.render('admin-loans-view', { user: req.user, options, clientId, loans });
     } catch (err) {
@@ -205,11 +91,11 @@ router.route('/loans/view')
     }
   })
   .post(async (req, res, next) => {
-    const clientId = parseInt(req.body.clientId, 10);
-
     try {
-      const options = await fetchUsers();
-      const loans = clientId ? await fetchLoans(clientId) : [];
+      const clientId = validateId(req.body.clientId, 'clientId');
+      const options = await userService.getAllClients();
+      const loans = await loanService.getUserLoans(clientId);
+
       res.render('admin-loans-view', { user: req.user, options, clientId, loans });
     } catch (err) {
       next(err);
@@ -219,31 +105,29 @@ router.route('/loans/view')
 router.route('/loans/add')
   .get(async (req, res, next) => {
     try {
-      const users = await fetchUsers();
+      const users = await userService.getAllClients();
       res.render('admin-loans-add', { user: req.user, users });
     } catch (err) {
       next(err);
     }
   })
   .post(async (req, res, next) => {
-    const { clientId, amount, interest, date, term, description, paymentFrequency } = req.body;
-
-    if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-    if (!amount || !interest || !date || !term || !description || !paymentFrequency) {
-      return next(validationError('All fields are required'));
-    }
-
     try {
-      await new Promise((resolve, reject) => {
-        db.run(
-          'INSERT INTO Accounts (UserID, AccountTypeID, InterestRate, PrincipalAmount, Term, StartDate, StatusID, Description, PaymentFrequency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [clientId, 2, interest, amount, term, date, 1, description, paymentFrequency],
-          (err) => {
-            if (err) return reject(err);
-            resolve();
-          }
-        );
+      const { clientId, amount, interest, date, term, description, paymentFrequency } = req.body;
+
+      validateId(clientId, 'clientId');
+      validateRequiredFields({ amount, interest, date, term, description, paymentFrequency });
+
+      await loanService.createLoanRequest({
+        userId: clientId,
+        amount,
+        interestRate: interest,
+        term,
+        startDate: date,
+        description,
+        paymentFrequency
       });
+
       res.redirect('/admin/loans/view');
     } catch (err) {
       next(err);
@@ -253,18 +137,16 @@ router.route('/loans/add')
 router.route('/loans/edit/:loanId')
   .get(async (req, res, next) => {
     try {
-      const loanId = parseInt(req.params.loanId, 10);
+      const loanId = validateId(req.params.loanId, 'loanId');
+      const loan = await loanService.getLoan(loanId);
 
-      if (!Number.isInteger(loanId) || loanId <= 0) {
-        return next(validationError('Invalid loanId'));
-      }
-
-      const loan = await fetchLoan(loanId);
       if (!loan) {
-        return next(validationError('Loan not found'));
+        const error = new Error('Loan not found');
+        error.status = 404;
+        return next(error);
       }
 
-      const users = await fetchUsers();
+      const users = await userService.getAllClients();
       const statuses = await configService.getConfig('Status');
       res.render('admin-loans-edit', { user: req.user, loan, users, statuses });
     } catch (err) {
@@ -272,25 +154,23 @@ router.route('/loans/edit/:loanId')
     }
   })
   .post(async (req, res, next) => {
-    const { loanId, clientId, amount, interest, date, term, description, status } = req.body;
-
-    if (!Number.isInteger(parseInt(loanId, 10))) return next(validationError('Invalid loanId'));
-    if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-    if (!amount || !interest || !date || !term || !description || !status) {
-      return next(validationError('All fields are required'));
-    }
-
     try {
-      await new Promise((resolve, reject) => {
-        db.run(
-          'UPDATE Accounts SET UserID = ?, InterestRate = ?, PrincipalAmount = ?, Term = ?, StartDate = ?, Description = ?, StatusID = ? WHERE AccountID = ? AND AccountTypeID = 2',
-          [clientId, interest, amount, term, date, description, status, loanId],
-          (err) => {
-            if (err) return reject(err);
-            resolve();
-          }
-        );
+      const { loanId, clientId, amount, interest, date, term, description, status } = req.body;
+
+      validateId(loanId, 'loanId');
+      validateId(clientId, 'clientId');
+      validateRequiredFields({ amount, interest, date, term, description, status });
+
+      await loanService.updateLoan(loanId, {
+        userId: clientId,
+        interestRate: interest,
+        principalAmount: amount,
+        term,
+        startDate: date,
+        description,
+        statusId: status
       });
+
       res.redirect(`/admin/loans/view?clientId=${clientId}`);
     } catch (err) {
       next(err);
@@ -300,18 +180,7 @@ router.route('/loans/edit/:loanId')
 // View pending loan requests
 router.get('/loans/requests', async (req, res, next) => {
   try {
-    const pendingLoans = await new Promise((resolve, reject) => {
-      db.all(`SELECT a.*, u.Name, u.Surname, u.UserID, s.StatusName
-                FROM Accounts a
-                INNER JOIN Users u ON a.UserID = u.UserID
-                INNER JOIN Status s ON a.StatusID = s.StatusID
-                WHERE a.AccountTypeID = 2 AND a.StatusID = 1
-                ORDER BY a.AccountID DESC;`, (err, rows) => {
-        if (err) return reject(err);
-        resolve(rows);
-      });
-    });
-
+    const pendingLoans = await loanService.getPendingLoanRequests();
     res.render('admin-loans-requests', { user: req.user, pendingLoans });
   } catch (err) {
     next(err);
@@ -320,16 +189,9 @@ router.get('/loans/requests', async (req, res, next) => {
 
 // Approve loan request
 router.post('/loans/approve', async (req, res, next) => {
-  const { loanId } = req.body;
-  if (!Number.isInteger(parseInt(loanId, 10))) return next(validationError('Invalid loan id'));
-
   try {
-    await new Promise((resolve, reject) => {
-      db.run('UPDATE Accounts SET StatusID = 2 WHERE AccountID = ? AND AccountTypeID = 2', [loanId], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+    const loanId = validateId(req.body.loanId, 'loan id');
+    await loanService.approveLoan(loanId);
     res.redirect('/admin/loans/requests');
   } catch (err) {
     next(err);
@@ -338,16 +200,9 @@ router.post('/loans/approve', async (req, res, next) => {
 
 // Deny loan request
 router.post('/loans/deny', async (req, res, next) => {
-  const { loanId } = req.body;
-  if (!Number.isInteger(parseInt(loanId, 10))) return next(validationError('Invalid loan id'));
-
   try {
-    await new Promise((resolve, reject) => {
-      db.run('UPDATE Accounts SET StatusID = 3 WHERE AccountID = ? AND AccountTypeID = 2', [loanId], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+    const loanId = validateId(req.body.loanId, 'loan id');
+    await loanService.denyLoan(loanId);
     res.redirect('/admin/loans/requests');
   } catch (err) {
     next(err);
@@ -355,17 +210,12 @@ router.post('/loans/deny', async (req, res, next) => {
 });
 
 router.post('/loans/update', async (req, res, next) => {
-  const { id, clientId } = req.body;
-  if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid option id'));
-
   try {
-    await new Promise((resolve, reject) => {
-      db.run('UPDATE Accounts SET StatusID = 2 WHERE AccountID = ?', [id], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+    const { id, clientId } = req.body;
+    validateId(clientId, 'clientId');
+    validateId(id, 'loan id');
+
+    await loanService.approveLoan(id);
     res.redirect(`/admin/loans/view?clientId=${clientId}`);
   } catch (err) {
     next(err);
@@ -373,17 +223,12 @@ router.post('/loans/update', async (req, res, next) => {
 });
 
 router.post('/loans/delete', async (req, res, next) => {
-  const { id, clientId } = req.body;
-  if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid option id'));
-
   try {
-    await new Promise((resolve, reject) => {
-      db.run('DELETE FROM Accounts WHERE AccountID = ?', [id], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+    const { id, clientId } = req.body;
+    validateId(clientId, 'clientId');
+    validateId(id, 'loan id');
+
+    await loanService.deleteLoan(id);
     res.redirect(`/admin/loans/view?clientId=${clientId}`);
   } catch (err) {
     next(err);
@@ -393,7 +238,7 @@ router.post('/loans/delete', async (req, res, next) => {
 // GIC Product Routes
 router.get('/gics/view', async (req, res, next) => {
   try {
-    const gicProducts = await fetchGICProducts();
+    const gicProducts = await gicService.getAllGICProducts();
     res.render('admin-gics-view', { user: req.user, gicProducts });
   } catch (err) {
     next(err);
@@ -409,25 +254,18 @@ router.route('/gics/add')
     }
   })
   .post(async (req, res, next) => {
-    const { productName, interest, term, minimumAmount } = req.body;
-
-    if (!productName || !interest || !term) {
-      return next(validationError('Product name, interest rate, and term are required'));
-    }
-
-    const minAmount = minimumAmount || 100;
-
     try {
-      await new Promise((resolve, reject) => {
-        db.run(
-          'INSERT INTO GICProducts (ProductName, InterestRate, Term, MinimumAmount) VALUES (?, ?, ?, ?)',
-          [productName, interest, term, minAmount],
-          (err) => {
-            if (err) return reject(err);
-            resolve();
-          }
-        );
+      const { productName, interest, term, minimumAmount } = req.body;
+
+      validateRequiredFields({ productName, interest, term });
+
+      await gicService.createGICProduct({
+        productName,
+        interestRate: interest,
+        term,
+        minimumAmount: minimumAmount || 100
       });
+
       res.redirect('/admin/gics/view');
     } catch (err) {
       next(err);
@@ -437,15 +275,13 @@ router.route('/gics/add')
 router.route('/gics/edit/:productId')
   .get(async (req, res, next) => {
     try {
-      const productId = parseInt(req.params.productId, 10);
+      const productId = validateId(req.params.productId, 'productId');
+      const product = await gicService.getGICProduct(productId);
 
-      if (!Number.isInteger(productId) || productId <= 0) {
-        return next(validationError('Invalid productId'));
-      }
-
-      const product = await fetchGICProduct(productId);
       if (!product) {
-        return next(validationError('GIC Product not found'));
+        const error = new Error('GIC Product not found');
+        error.status = 404;
+        return next(error);
       }
 
       res.render('admin-gics-edit', { user: req.user, product });
@@ -454,24 +290,19 @@ router.route('/gics/edit/:productId')
     }
   })
   .post(async (req, res, next) => {
-    const { productId, productName, interest, term, minimumAmount } = req.body;
-
-    if (!Number.isInteger(parseInt(productId, 10))) return next(validationError('Invalid productId'));
-    if (!productName || !interest || !term || !minimumAmount) {
-      return next(validationError('All fields are required'));
-    }
-
     try {
-      await new Promise((resolve, reject) => {
-        db.run(
-          'UPDATE GICProducts SET ProductName = ?, InterestRate = ?, Term = ?, MinimumAmount = ? WHERE ProductID = ?',
-          [productName, interest, term, minimumAmount, productId],
-          (err) => {
-            if (err) return reject(err);
-            resolve();
-          }
-        );
+      const { productId, productName, interest, term, minimumAmount } = req.body;
+
+      validateId(productId, 'productId');
+      validateRequiredFields({ productName, interest, term, minimumAmount });
+
+      await gicService.updateGICProduct(productId, {
+        productName,
+        interestRate: interest,
+        term,
+        minimumAmount
       });
+
       res.redirect('/admin/gics/view');
     } catch (err) {
       next(err);
@@ -479,16 +310,9 @@ router.route('/gics/edit/:productId')
   });
 
 router.post('/gics/delete', async (req, res, next) => {
-  const { id } = req.body;
-  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid product id'));
-
   try {
-    await new Promise((resolve, reject) => {
-      db.run('DELETE FROM GICProducts WHERE ProductID = ?', [id], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+    const id = validateId(req.body.id, 'product id');
+    await gicService.deleteGICProduct(id);
     res.redirect('/admin/gics/view');
   } catch (err) {
     next(err);
@@ -496,10 +320,8 @@ router.post('/gics/delete', async (req, res, next) => {
 });
 
 router.get('/agreements/view', async (req, res, next) => {
-
   try {
-    const agreements = await fetchAgreements()
-
+    const agreements = await agreementService.getAllAgreements();
     res.render('admin-agreements-view', { user: req.user, agreements });
   } catch (err) {
     next(err);
@@ -507,37 +329,36 @@ router.get('/agreements/view', async (req, res, next) => {
 });
 
 router.route('/agreements/add')
-  .get(async (req, res, next) => {    
-    try {      
-      const options = await fetchUsers();      
+  .get(async (req, res, next) => {
+    try {
+      const options = await userService.getAllClients();
       res.render('admin-agreements-add', { user: req.user, options });
     } catch (err) {
       next(err);
     }
   })
   .post(async (req, res, next) => {
-    const { clientId, title, context } = req.body;
-    if (!Number.isInteger(parseInt(clientId, 10))) return next(validationError('Invalid clientId'));
-
     try {
-      await new Promise((resolve, reject) => {
-        db.run('INSERT INTO Agreements (UserID, AgreementName, AgreementContent, StatusID) VALUES (?, ?, ?, ?)', [clientId, title, context, 4], (err) => {
-          if (err) return reject(err);
-          resolve();
-        });
+      const { clientId, title, context } = req.body;
+      validateId(clientId, 'clientId');
+
+      await agreementService.createAgreement({
+        userId: clientId,
+        agreementName: title,
+        agreementContent: context
       });
+
       res.redirect('/admin/agreements/view');
     } catch (err) {
       next(err);
     }
-  });  
+  });
 
-  router.route('/agreements/edit/:agreementId')
+router.route('/agreements/edit/:agreementId')
   .get(async (req, res, next) => {
-
     try {
-      const agreementId = req.params.agreementId;
-      const agreement = await fetchAgreement(agreementId);
+      const agreementId = validateId(req.params.agreementId, 'agreementId');
+      const agreement = await agreementService.getAgreement(agreementId);
       const statuses = await configService.getConfig('Status');
 
       res.render('admin-agreements-edit', { user: req.user, agreement, statuses });
@@ -546,36 +367,26 @@ router.route('/agreements/add')
     }
   })
   .post(async (req, res, next) => {
-    const { id, title, context, status } = req.body;
-    if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid AgreementID'));
-
     try {
-      await new Promise((resolve, reject) => {
+      const { id, title, context, status } = req.body;
+      validateId(id, 'AgreementID');
 
-
-        db.run('UPDATE Agreements SET AgreementName = ?, AgreementContent = ?, StatusID = ? WHERE AgreementID = ?', [title, context, status, id], (err) => {
-          if (err) return reject(err);
-          resolve();
-        });
-
+      await agreementService.updateAgreement(id, {
+        agreementName: title,
+        agreementContent: context,
+        statusId: status
       });
-      res.redirect(`/admin/agreements/view`);
+
+      res.redirect('/admin/agreements/view');
     } catch (err) {
       next(err);
     }
   });
 
 router.post('/agreements/delete', async (req, res, next) => {
-  const { id } = req.body;
-  if (!Number.isInteger(parseInt(id, 10))) return next(validationError('Invalid agreement id'));
-
   try {
-    await new Promise((resolve, reject) => {
-      db.run('DELETE FROM Agreements WHERE AgreementID = ?', [id], (err) => {
-        if (err) return reject(err);
-        resolve();
-      });
-    });
+    const id = validateId(req.body.id, 'agreement id');
+    await agreementService.deleteAgreement(id);
     res.redirect('/admin/agreements/view');
   } catch (err) {
     next(err);
@@ -585,7 +396,7 @@ router.post('/agreements/delete', async (req, res, next) => {
 // Client management routes
 router.get('/clients', async (req, res, next) => {
   try {
-    const clients = await fetchUsers();
+    const clients = await userService.getAllClients();
     res.render('admin-clients', { user: req.user, clients });
   } catch (err) {
     next(err);
@@ -595,15 +406,13 @@ router.get('/clients', async (req, res, next) => {
 router.route('/clients/edit/:userId')
   .get(async (req, res, next) => {
     try {
-      const userId = parseInt(req.params.userId, 10);
+      const userId = validateId(req.params.userId, 'userId');
+      const clientData = await userService.getUser(userId);
 
-      if (!Number.isInteger(userId) || userId <= 0) {
-        return next(validationError('Invalid userId'));
-      }
-
-      const clientData = await fetchUser(userId);
       if (!clientData || clientData.RoleID !== 3) {
-        return next(validationError('Client not found'));
+        const error = new Error('Client not found');
+        error.status = 404;
+        return next(error);
       }
 
       res.render('admin-clients-edit', { user: req.user, clientData });
@@ -612,24 +421,13 @@ router.route('/clients/edit/:userId')
     }
   })
   .post(async (req, res, next) => {
-    const { userId, username, name, surname } = req.body;
-
-    if (!Number.isInteger(parseInt(userId, 10))) return next(validationError('Invalid userId'));
-    if (!username || !name || !surname) {
-      return next(validationError('All fields are required'));
-    }
-
     try {
-      await new Promise((resolve, reject) => {
-        db.run(
-          'UPDATE Users SET Username = ?, Name = ?, Surname = ? WHERE UserID = ? AND RoleID = 3',
-          [username, name, surname, userId],
-          (err) => {
-            if (err) return reject(err);
-            resolve();
-          }
-        );
-      });
+      const { userId, username, name, surname } = req.body;
+
+      validateId(userId, 'userId');
+      validateRequiredFields({ username, name, surname });
+
+      await userService.updateUser(userId, { username, name, surname });
       res.redirect('/admin/clients');
     } catch (err) {
       next(err);
@@ -643,69 +441,30 @@ router.get('/change-password', (req, res) => {
 
 // POST /admin/change-password
 router.post('/change-password', async (req, res, next) => {
-  const { currentPassword, newPassword, confirmPassword } = req.body;
-
-  // Validate input
-  if (!currentPassword || !newPassword || !confirmPassword) {
-    req.session.message = 'All fields are required.';
-    return res.redirect('/admin/change-password');
-  }
-
-  if (newPassword !== confirmPassword) {
-    req.session.message = 'New passwords do not match.';
-    return res.redirect('/admin/change-password');
-  }
-
-  if (newPassword.length < 8) {
-    req.session.message = 'New password must be at least 8 characters long.';
-    return res.redirect('/admin/change-password');
-  }
-
   try {
-    // Get user's current password hash and salt
-    const user = await new Promise((resolve, reject) => {
-      db.get('SELECT * FROM Users WHERE UserID = ?', [req.user.id], (err, row) => {
-        if (err) return reject(err);
-        if (!row) return reject(new Error('User not found'));
-        resolve(row);
-      });
-    });
+    const { currentPassword, newPassword, confirmPassword } = req.body;
 
-    // Verify current password
-    const currentHash = await new Promise((resolve, reject) => {
-      crypto.pbkdf2(currentPassword, user.Salt, 310000, 32, 'sha256', (err, hash) => {
-        if (err) return reject(err);
-        resolve(hash);
-      });
-    });
-
-    if (!crypto.timingSafeEqual(user.HashedPassword, currentHash)) {
-      req.session.message = 'Current password is incorrect.';
+    // Validate input
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      req.session.message = 'All fields are required.';
       return res.redirect('/admin/change-password');
     }
 
-    // Generate new salt and hash for new password
-    const newSalt = crypto.randomBytes(16);
-    const newHash = await new Promise((resolve, reject) => {
-      crypto.pbkdf2(newPassword, newSalt, 310000, 32, 'sha256', (err, hash) => {
-        if (err) return reject(err);
-        resolve(hash);
-      });
-    });
+    if (!userService.passwordsMatch(newPassword, confirmPassword)) {
+      req.session.message = 'New passwords do not match.';
+      return res.redirect('/admin/change-password');
+    }
 
-    // Update password in database
-    await new Promise((resolve, reject) => {
-      db.run('UPDATE Users SET HashedPassword = ?, Salt = ? WHERE UserID = ?',
-        [newHash, newSalt, req.user.id],
-        (err) => {
-          if (err) return reject(err);
-          resolve();
-        }
-      );
-    });
+    // Change password using service
+    const result = await userService.changePassword(req.user.id, currentPassword, newPassword);
 
-    req.session.message = 'Password changed successfully!';
-    res.redirect('/admin');
+    req.session.message = result.message;
+
+    if (result.success) {
+      res.redirect('/admin');
+    } else {
+      res.redirect('/admin/change-password');
+    }
   } catch (err) {
     console.error('Error changing password:', err);
     req.session.message = 'An error occurred while changing password.';
