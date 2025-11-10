@@ -256,6 +256,31 @@ const loanService = {
     }
 
     return hasMatured;
+  },
+
+  /**
+   * Get loans maturing within specified days
+   * @param {number} days - Number of days to look ahead (default: 30)
+   * @returns {Promise<Array>} Array of loans maturing soon
+   */
+  async getMaturingLoans(days = 30) {
+    const loans = await this.getActiveLoans();
+    const maturingLoans = [];
+
+    for (const loan of loans) {
+      const maturityDate = financialService.calculateMaturityDate(loan.StartDate, loan.Term);
+      const daysUntilMaturity = Math.ceil((new Date(maturityDate) - new Date()) / (1000 * 60 * 60 * 24));
+
+      if (daysUntilMaturity >= 0 && daysUntilMaturity <= days) {
+        maturingLoans.push({
+          ...loan,
+          maturityDate,
+          daysUntilMaturity
+        });
+      }
+    }
+
+    return maturingLoans;
   }
 };
 

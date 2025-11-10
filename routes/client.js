@@ -59,15 +59,52 @@ router.use(ensureAuthenticated, checkRole("CLIENT"));
 // Route handlers
 router.get('/', async (req, res) => {
   try {
-  const accountID = await getAccountID(req.user.id, "Chequing");
-  req.user["account"] = accountID;
-    res.render('client', { 
-      user: req.user
-     });
+    const accountID = await getAccountID(req.user.id, "Chequing");
+    req.user["account"] = accountID;
+
+    // Get financial summary data
+    // Savings (Chequing account balance)
+    const savingsBalance = await accountService.getApprovedBalance(accountID);
+
+    // Loans summary
+    const loans = await loanService.getUserLoans(req.user.id, true);
+    let totalLoaned = 0;
+    let totalOwed = 0;
+    loans.forEach(loan => {
+      totalLoaned += loan.PrincipalAmount;
+      const balance = loan.Balance || 0;
+      const remaining = loan.PrincipalAmount - balance;
+      if (remaining > 0) {
+        totalOwed += remaining;
+      }
+    });
+
+    // Investments (GICs) summary
+    const gics = await gicService.getUserGICs(req.user.id);
+    let totalInvested = 0;
+    let currentInvestmentValue = 0;
+    for (const gic of gics) {
+      if (gic.StatusID === 4) { // Active status
+        totalInvested += gic.PrincipalAmount;
+        const balance = await accountService.getBalance(gic.AccountID);
+        currentInvestmentValue += balance;
+      }
+    }
+
+    res.render('client', {
+      user: req.user,
+      savingsBalance,
+      totalLoaned,
+      totalOwed,
+      loansCount: loans.length,
+      totalInvested,
+      currentInvestmentValue,
+      gicsCount: gics.filter(g => g.StatusID === 4).length
+    });
   } catch (error) {
-    console.error('Error in getAccountID:', error);
+    console.error('Error in client dashboard:', error);
     res.status(500).json({ error: 'Internal server error' });
-}
+  }
 });
 
 // Default transactions route (30 days)
