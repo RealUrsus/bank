@@ -15,9 +15,9 @@
 			</aside>
 			<!-- Content -->
 			<div class="p-5 w-100">
-				<h2 class="mb-4">Admin Dashboard</h2>
-
 				<!-- Notifications Section -->
+				<% if (pendingTransactionsCount > 0 || pendingLoansCount > 0 || maturingCount > 0) { %>
+				<h2 class="mb-4">Admin Dashboard</h2>
 				<div class="row mb-4">
 					<% if (pendingTransactionsCount > 0) { %>
 					<div class="col-md-4 mb-3">
@@ -64,21 +64,11 @@
 						</div>
 					</div>
 					<% } %>
-
-					<% if (pendingTransactionsCount === 0 && pendingLoansCount === 0 && maturingCount === 0) { %>
-					<div class="col-12">
-						<div class="alert alert-success" role="alert">
-							<h5 class="alert-heading">
-								<i data-feather="check-circle"></i> All Clear!
-							</h5>
-							<p class="mb-0">No pending transactions, loan requests, or maturing accounts at this time.</p>
-						</div>
-					</div>
-					<% } %>
 				</div>
+				<% } %>
 
 				<!-- Quote Section -->
-				<div class="mt-5 pt-4 border-top">
+				<div class="<%= (pendingTransactionsCount > 0 || pendingLoansCount > 0 || maturingCount > 0) ? 'mt-5 pt-4 border-top' : '' %>">
 					<h3>И от всякого, кому дано много, много и потребуется, и кому много вверено, с того больше взыщут</h3>
 					<hr>
 					<h3>Un gran poder conlleva una gran responsabilidad</h3>
