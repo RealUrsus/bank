@@ -45,8 +45,21 @@ async function getTransactions(req, res, next) {
 // Middleware to fetch user loans
 async function fetchLoans(req, res, next) {
   try {
-    const loans = await loanService.getUserLoans(req.user.id, true);
+    const status = req.query.status || 'approved';
+    let loans;
+
+    if (status === 'all') {
+      loans = await loanService.getUserLoans(req.user.id, false);
+    } else if (status === 'approved') {
+      loans = await loanService.getUserLoans(req.user.id, true);
+    } else {
+      // Filter by specific status name
+      const allLoans = await loanService.getUserLoans(req.user.id, false);
+      loans = allLoans.filter(l => l.StatusName && l.StatusName.toLowerCase() === status.toLowerCase());
+    }
+
     res.locals.loans = loans;
+    res.locals.selectedStatus = status;
     next();
   } catch (err) {
     next(err);
@@ -82,8 +95,8 @@ router.get('/', async (req, res) => {
     // Savings (Chequing account balance)
     const savingsBalance = await accountService.getApprovedBalance(accountID);
 
-    // Loans summary - include all non-pending, non-rejected loans
-    const relevantLoans = loans.filter(l => l.StatusID !== 1 && l.StatusID !== 3); // Exclude Pending(1) and Rejected(3)
+    // Loans summary - include only approved/active loans (exclude pending, rejected, paid off)
+    const relevantLoans = loans.filter(l => l.StatusID !== 1 && l.StatusID !== 3 && l.StatusID !== 6); // Exclude Pending(1), Rejected(3), Paid Off(6)
     let totalLoaned = 0;
     let totalOwed = 0;
     for (const loan of relevantLoans) {
@@ -200,6 +213,15 @@ router.get('/loan/view/:loanId', async (req, res, next) => {
     const loanId = validateId(req.params.loanId, 'loanId');
 
     const account = await accountService.getAccount(loanId);
+
+    // Security check: Ensure the loan belongs to the logged-in user
+    if (!account || account.UserID !== req.user.id) {
+      return res.status(403).render('error', {
+        message: 'Access denied',
+        error: { status: 403, stack: '' }
+      });
+    }
+
     const transactions = await transactionService.getTransactions(loanId);
     const balance = await accountService.getBalance(loanId);
 
@@ -346,7 +368,7 @@ router.post('/transfer', async (req, res, next) => {
 
 router.get('/agreements', async (req, res, next) => {
   try {
-    const agreements = await agreementService.getAllAgreements();
+    const agreements = await agreementService.getUserAgreements(req.user.id);
     res.render('client-agreements', { user: req.user, agreements });
   } catch (err) {
       next(err);
@@ -357,6 +379,15 @@ router.get('/agreements/:agreementId', async (req, res, next) => {
   try {
     const agreementId = validateId(req.params.agreementId, 'agreementId');
     const agreement = await agreementService.getAgreement(agreementId);
+
+    // Security check: Ensure the agreement belongs to the logged-in user
+    if (!agreement || agreement.UserID !== req.user.id) {
+      return res.status(403).render('error', {
+        message: 'Access denied',
+        error: { status: 403, stack: '' }
+      });
+    }
+
     res.render('client-agreements-view', { user: req.user, agreement });
   } catch (err) {
       next(err);

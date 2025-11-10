@@ -29,7 +29,7 @@ const loanService = {
   /**
    * Get all loans for a user
    * @param {number} userId - User ID
-   * @param {boolean} approvedOnly - Only return approved/paid off loans
+   * @param {boolean} approvedOnly - Only return approved loans (excludes paid off)
    * @returns {Promise<Array>} Array of loans
    */
   async getUserLoans(userId, approvedOnly = false) {
@@ -39,7 +39,7 @@ const loanService = {
          FROM Accounts a
          INNER JOIN Status s ON a.StatusID = s.StatusID
          WHERE a.UserID = ? AND a.AccountTypeID = ?
-           AND (s.StatusName = 'Approved' OR s.StatusName = 'Paid Off')
+           AND s.StatusName = 'Approved'
          ORDER BY a.StartDate ASC`,
         [userId, ACCOUNT_TYPES.LOAN]
       );
