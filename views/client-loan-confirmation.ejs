@@ -15,11 +15,22 @@
 				<%- include('partials/client/sidebar'); %>
 			</aside>
 			<!-- Content -->
-			<div class="p-5">
-				<p>Dear <%= user.name %>, your Loan Confirmation ID is <b><%= confirmationId %></b></p>
-				<hr>				
-				<p>Your loan request is currently under review by Bank Administration. We will notify you of their decision as soon as possible.</p>
-			</div>			
+			<div class="flex-grow-1 p-3">
+				<div class="d-flex justify-content-between align-items-center mb-4">
+					<h3 class="mb-0">Loan Confirmation</h3>
+					<a href="/client/loan/view" class="btn btn-outline-secondary btn-sm">
+						<i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> Back to Loans
+					</a>
+				</div>
+
+				<div class="card">
+					<div class="card-body">
+						<p>Dear <%= user.name %>, your Loan Confirmation ID is <b><%= confirmationId %></b></p>
+						<hr>
+						<p>Your loan request is currently under review by Bank Administration. We will notify you of their decision as soon as possible.</p>
+					</div>
+				</div>
+			</div>
 		</main>
 		<footer>
 			<%- include('partials/footer'); %>
