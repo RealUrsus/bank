@@ -15,16 +15,17 @@
       </aside>
       <!-- Content -->
       <div class="flex-grow-1 p-3">
-        <section>
-          <div class="btn-toolbar mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="mb-0">My Transactions</h3>
+          <div class="btn-toolbar">
             <!-- Enter Transaction Button -->
-            <button type="button" class="btn btn-sm btn-outline-secondary me-2" data-bs-toggle="modal" data-bs-target="#enter-transaction">
-              <i data-feather="edit" class="me-1"></i> Enter Transaction
+            <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#enter-transaction">
+              <i data-feather="plus-circle" class="me-1"></i> New Transaction
             </button>
             <!-- Dropdown for Transactions Period -->
             <div class="dropdown">
-              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                <i data-feather="calendar" class="me-1"></i> Transactions Period
+              <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                <i data-feather="calendar" class="me-1"></i> Period
               </button>
               <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <li><a class="dropdown-item" href="/client/transactions/7">Last 7 Days</a></li>
@@ -34,68 +35,253 @@
               </ul>
             </div>
           </div>
-        </section>
+        </div>
+
         <!-- Modals -->
         <modals>
           <%- include('partials/client/add-transaction-form'); %>
         </modals>
+
+        <!-- Summary Section -->
+        <% if (transactions && transactions.length > 0) {
+          const totalDeposits = transactions.filter(t => t.TransactionTypeID === 1).reduce((sum, t) => sum + t.Amount, 0);
+          const totalWithdrawals = transactions.filter(t => t.TransactionTypeID === 2).reduce((sum, t) => sum + t.Amount, 0);
+          const approvedCount = transactions.filter(t => t.StatusID === 2).length;
+          const pendingCount = transactions.filter(t => t.StatusID === 1).length;
+        %>
+        <div class="summary-card shadow-sm">
+          <div class="row">
+            <div class="col-md-3 summary-metric">
+              <div class="summary-metric-value"><%= transactions.length %></div>
+              <div class="summary-metric-label">Total Transactions</div>
+            </div>
+            <div class="col-md-3 summary-metric">
+              <div class="summary-metric-value">$<%= totalDeposits.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+              <div class="summary-metric-label">Total Deposits</div>
+            </div>
+            <div class="col-md-3 summary-metric">
+              <div class="summary-metric-value">$<%= totalWithdrawals.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+              <div class="summary-metric-label">Total Withdrawals</div>
+            </div>
+            <div class="col-md-3 summary-metric">
+              <div class="summary-metric-value"><%= approvedCount %> / <%= pendingCount %></div>
+              <div class="summary-metric-label">Approved / Pending</div>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Search Box -->
+        <div class="mb-3 search-box">
+          <div class="input-group">
+            <span class="input-group-text bg-white">
+              <i data-feather="search" style="width: 16px; height: 16px;"></i>
+            </span>
+            <input type="text" class="form-control" id="searchTransactions" placeholder="Search by description, amount, or category...">
+          </div>
+        </div>
+
         <!-- Transaction Table -->
         <div class="table-responsive mt-4">
           <% if (transactions && transactions.length > 0) { %>
-          <table class="table table-striped table-sm align-middle">
-            <thead>
+          <table class="table table-hover align-middle" id="transactionsTable">
+            <thead class="table-light">
               <tr>
-                <th>Date</th>
-                <th>Deposit</th>
-                <th>Withdrawal</th>
-                <th>TransferID</th>
+                <th class="sortable" data-sort="date">
+                  Date <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                </th>
+                <th class="sortable" data-sort="type">
+                  Type <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                </th>
+                <th class="sortable text-end" data-sort="amount">
+                  Amount <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                </th>
+                <th class="sortable" data-sort="category">
+                  Category <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                </th>
                 <th>Description</th>
-                <th class="text-center">Approved</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Transfer ID</th>
               </tr>
             </thead>
             <tbody>
-              <% for (const transaction of transactions) { %>
-              <tr>
-                <td><%= transaction.Date %></td>
-                <td><%= transaction.TransactionTypeID === 1 ? transaction.Amount : '' %></td>
-                <td><%= transaction.TransactionTypeID === 2 ? '-' + transaction.Amount : '' %></td>
-                <td><%= transaction.TransferID %></td>
-                <td><%= transaction.Description %></td>
+              <% for (const transaction of transactions) {
+                const transactionDate = new Date(transaction.Date);
+                const formattedDate = transactionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                const isDeposit = transaction.TransactionTypeID === 1;
+                const isApproved = transaction.StatusID === 2;
+              %>
+              <tr data-date="<%= transaction.Date %>"
+                  data-type="<%= isDeposit ? 'deposit' : 'withdrawal' %>"
+                  data-amount="<%= transaction.Amount %>"
+                  data-category="<%= transaction.Category || '' %>">
+                <td><%= formattedDate %></td>
+                <td>
+                  <span class="badge <%= isDeposit ? 'bg-success' : 'bg-danger' %>">
+                    <i data-feather="<%= isDeposit ? 'arrow-down-circle' : 'arrow-up-circle' %>" style="width: 14px; height: 14px;"></i>
+                    <%= isDeposit ? 'Deposit' : 'Withdrawal' %>
+                  </span>
+                </td>
+                <td class="text-end fw-bold <%= isDeposit ? 'text-success' : 'text-danger' %>">
+                  <%= isDeposit ? '+' : '-' %>$<%= transaction.Amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                </td>
+                <td>
+                  <% if (transaction.Category) { %>
+                    <span class="badge bg-secondary"><%= transaction.Category %></span>
+                  <% } else { %>
+                    <span class="text-muted fst-italic">—</span>
+                  <% } %>
+                </td>
+                <td><%= transaction.Description || '—' %></td>
                 <td class="text-center">
-                  <img src="/images/<%= transaction.StatusID === 2 ? 'success' : 'failure' %>.png" 
-                       alt="<%= transaction.StatusID === 2 ? 'Transaction approved' : 'Transaction is waiting for approval' %>"
-                       width="16" height="16">
+                  <span class="status-badge <%= isApproved ? 'status-approved' : 'status-pending' %>">
+                    <%= isApproved ? 'Approved' : 'Pending' %>
+                  </span>
+                </td>
+                <td class="text-center">
+                  <% if (transaction.TransferID) { %>
+                    <span class="badge bg-info">#<%= transaction.TransferID %></span>
+                  <% } else { %>
+                    <span class="text-muted">—</span>
+                  <% } %>
                 </td>
               </tr>
               <% } %>
             </tbody>
           </table>
+          <% } else { %>
+          <!-- Empty State -->
+          <div class="text-center py-5">
+            <i data-feather="inbox" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+            <h4 class="text-muted">No Transactions Found</h4>
+            <p class="text-muted">You haven't made any transactions yet.</p>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enter-transaction">
+              <i data-feather="plus-circle" class="me-1"></i> Create Your First Transaction
+            </button>
+          </div>
           <% } %>
-          <hr>
-          <!-- Summary Table -->
-          <table class="table table-hover w-auto ms-auto">
-            <tbody>
-              <% if (typeof balance !== 'undefined' && balance !== null) { %>
-              <tr>
-                <th scope="row">Total Amount:</th>
-                <td><%= balance.toFixed(2) %></td>
-              </tr>
-              <% } %>
-              <% if (typeof approved_balance !== 'undefined' && approved_balance !== null && approved_balance !== balance) { %>
-              <tr>
-                <th scope="row">Total Approved Amount:</th>
-                <td><%= approved_balance.toFixed(2) %></td>
-              </tr>
-              <% } %>
-            </tbody>
-          </table>
         </div>
+
+        <!-- Account Balance Summary -->
+        <% if (transactions && transactions.length > 0) { %>
+        <div class="card mt-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Account Balance</h5>
+            <div class="row text-center">
+              <div class="col-md-6">
+                <div class="mb-2 text-muted">Current Balance</div>
+                <div class="h4 text-primary">$<%= balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+              </div>
+              <% if (approved_balance !== balance) { %>
+              <div class="col-md-6">
+                <div class="mb-2 text-muted">Approved Balance</div>
+                <div class="h4 text-success">$<%= approved_balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+              </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+        <% } %>
       </div>
     </main>
     <footer>
       <%- include('partials/footer'); %>
     </footer>
     <script src="/js/feather.min.js"></script>
-    <script>feather.replace()</script>
+    <script>
+      feather.replace();
+
+      // Search functionality
+      const searchInput = document.getElementById('searchTransactions');
+      const transactionsTable = document.getElementById('transactionsTable');
+
+      if (searchInput && transactionsTable) {
+        searchInput.addEventListener('input', (e) => {
+          const searchTerm = e.target.value.toLowerCase();
+          const rows = transactionsTable.querySelectorAll('tbody tr');
+          let visibleCount = 0;
+
+          rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const isVisible = text.includes(searchTerm);
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
+          });
+
+          // Show "no results" message if no rows match
+          const existingNoResults = document.getElementById('noSearchResults');
+          if (existingNoResults) {
+            existingNoResults.remove();
+          }
+
+          if (visibleCount === 0 && searchTerm !== '') {
+            const noResults = document.createElement('div');
+            noResults.id = 'noSearchResults';
+            noResults.className = 'alert alert-info text-center mt-3';
+            noResults.innerHTML = '<i data-feather="search" style="width: 24px; height: 24px;"></i><br>No transactions match your search term: <strong>' + searchTerm + '</strong>';
+            transactionsTable.parentElement.appendChild(noResults);
+            feather.replace();
+          }
+        });
+      }
+
+      // Sorting functionality
+      let sortDirection = {};
+
+      document.querySelectorAll('.sortable').forEach(header => {
+        header.style.cursor = 'pointer';
+        const sortKey = header.dataset.sort;
+        sortDirection[sortKey] = 'asc';
+
+        header.addEventListener('click', () => {
+          const table = transactionsTable;
+          const tbody = table.querySelector('tbody');
+          const rows = Array.from(tbody.querySelectorAll('tr'));
+
+          // Toggle sort direction
+          sortDirection[sortKey] = sortDirection[sortKey] === 'asc' ? 'desc' : 'asc';
+          const direction = sortDirection[sortKey];
+
+          // Sort rows
+          rows.sort((a, b) => {
+            let aVal, bVal;
+
+            switch(sortKey) {
+              case 'date':
+                aVal = new Date(a.dataset.date);
+                bVal = new Date(b.dataset.date);
+                break;
+              case 'type':
+                aVal = a.dataset.type;
+                bVal = b.dataset.type;
+                break;
+              case 'amount':
+                aVal = parseFloat(a.dataset.amount);
+                bVal = parseFloat(b.dataset.amount);
+                break;
+              case 'category':
+                aVal = a.dataset.category.toLowerCase();
+                bVal = b.dataset.category.toLowerCase();
+                break;
+            }
+
+            if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+            return 0;
+          });
+
+          // Re-append sorted rows
+          rows.forEach(row => tbody.appendChild(row));
+
+          // Update header icons
+          document.querySelectorAll('.sortable i').forEach(icon => {
+            icon.setAttribute('data-feather', 'chevrons-up-down');
+          });
+          const icon = header.querySelector('i');
+          icon.setAttribute('data-feather', direction === 'asc' ? 'chevron-up' : 'chevron-down');
+          feather.replace();
+        });
+      });
+    </script>
   </body>
 </html>

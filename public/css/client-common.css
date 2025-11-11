@@ -108,6 +108,26 @@
   cursor: pointer;
 }
 
+/* Sortable Table Headers */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.sortable:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sortable i {
+  opacity: 0.5;
+  vertical-align: middle;
+}
+
+.sortable:hover i {
+  opacity: 1;
+}
+
 /* Page Title */
 .page-title {
   margin-bottom: 1.5rem;
