@@ -1,0 +1,139 @@
+/**
+ * Common styles for all client pages
+ * Provides consistent UI elements including status badges,
+ * summary cards, search boxes, and interactive table styling
+ */
+
+/* Status Badges */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-approved {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-rejected {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+.status-paid-off {
+  background-color: #cfe2ff;
+  color: #084298;
+}
+
+.status-active {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.status-closed {
+  background-color: #e2e3e5;
+  color: #41464b;
+}
+
+/* Search Box */
+.search-box {
+  max-width: 400px;
+}
+
+/* Summary Card */
+.summary-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-metric {
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.summary-metric-value {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.summary-metric-label {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* Filter Button Groups */
+.btn-check:checked + .btn-outline-primary {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.btn-check:checked + .btn-outline-warning {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.btn-check:checked + .btn-outline-success {
+  background-color: #198754;
+  color: white;
+}
+
+.btn-check:checked + .btn-outline-info {
+  background-color: #0dcaf0;
+  color: #000;
+}
+
+.btn-check:checked + .btn-outline-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Interactive Tables */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.025);
+  cursor: pointer;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+/* Page Title */
+.page-title {
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+  color: #adb5bd;
+  margin-bottom: 1.5rem;
+}

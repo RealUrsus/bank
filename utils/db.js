@@ -63,6 +63,13 @@ db.serialize(() => {
     }
   });
 
+  // Migration: Add Category column to Transactions table if it doesn't exist
+  db.run(`ALTER TABLE Transactions ADD COLUMN Category TEXT DEFAULT NULL`, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding Category column:', err);
+    }
+  });
+
   db.run(`CREATE TABLE IF NOT EXISTS Users (
       UserID INTEGER PRIMARY KEY AUTOINCREMENT,
       Username TEXT NOT NULL UNIQUE,

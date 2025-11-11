@@ -78,6 +78,27 @@ const DATE_CONFIG = {
   MAX_TRANSACTION_PERIOD_DAYS: 365
 };
 
+// Transaction Categories
+const TRANSACTION_CATEGORIES = [
+  'Food',
+  'Beverages',
+  'Grocery',
+  'Entertainment',
+  'Paycheck',
+  'Gifts',
+  'Clothes',
+  'Books',
+  'Education',
+  'Medical',
+  'Transportation',
+  'Utilities',
+  'Rent',
+  'Insurance',
+  'Savings',
+  'Investment',
+  'Other'
+];
+
 module.exports = {
   ACCOUNT_TYPES,
   ACCOUNT_TYPE_NAMES,
@@ -88,5 +109,6 @@ module.exports = {
   STATUS,
   STATUS_NAMES,
   PASSWORD_CONFIG,
-  DATE_CONFIG
+  DATE_CONFIG,
+  TRANSACTION_CATEGORIES
 };
