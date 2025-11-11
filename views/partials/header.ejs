@@ -1,52 +1,50 @@
+<%
+  const isAuthenticated = typeof user !== 'undefined';
+  const isAdmin = isAuthenticated && user.role === 1;
+  const isClient = isAuthenticated && user.role === 3;
+%>
 <nav class="navbar navbar-expand-sm bg-light navbar-light">
   <div class="container-fluid">
     <a href="/" class="navbar-brand d-flex align-items-center gap-3">
-      <img
-        src="/images/bank.png"
-        height="45"
-        alt="Bank Logo"
-        loading="lazy"
-      />
+      <img src="/images/bank.png" height="45" alt="Bank Logo" loading="lazy" />
       <strong class="navbar-text lead mb-0">First Home Bank</strong>
     </a>
 
-    <div class="ms-auto">
-      <ul class="navbar-nav d-flex flex-row align-items-center gap-2">
-        <% if (typeof user === 'undefined') { %>
-          <li class="nav-item">
-            <a class="nav-link px-3" href="/">
-              <i data-feather="home" style="width: 16px; height: 16px;"></i>
-              <span class="ms-1">Home</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link px-3" href="/login">
-              <i data-feather="log-in" style="width: 16px; height: 16px;"></i>
-              <span class="ms-1">Login</span>
-            </a>
-          </li>
-        <% } else if (user.role == 1) { %>
-          <li class="nav-item">
-            <a class="nav-link px-3" href="/admin">
-              <i data-feather="shield" style="width: 16px; height: 16px;"></i>
-              <span class="ms-1">Admin Home</span>
-            </a>
-          </li>
-        <% } else if (user.role == 3) { %>
-          <li class="nav-item">
-            <a class="nav-link px-3" href="/client">
-              <i data-feather="user" style="width: 16px; height: 16px;"></i>
-              <span class="ms-1">Dashboard</span>
-            </a>
-          </li>
-        <% } %>
+    <ul class="navbar-nav d-flex flex-row align-items-center gap-2 ms-auto">
+      <% if (!isAuthenticated) { %>
+        <li class="nav-item">
+          <a class="nav-link px-3" href="/">
+            <i data-feather="home" style="width: 16px; height: 16px;"></i>
+            <span class="ms-1">Home</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3" href="/login">
+            <i data-feather="log-in" style="width: 16px; height: 16px;"></i>
+            <span class="ms-1">Login</span>
+          </a>
+        </li>
         <li class="nav-item">
           <a class="nav-link px-3" href="/about">
             <i data-feather="info" style="width: 16px; height: 16px;"></i>
             <span class="ms-1">About</span>
           </a>
         </li>
-      </ul>
-    </div>
+      <% } else if (isAdmin) { %>
+        <li class="nav-item">
+          <a class="nav-link px-3" href="/admin">
+            <i data-feather="shield" style="width: 16px; height: 16px;"></i>
+            <span class="ms-1">Admin Home</span>
+          </a>
+        </li>
+      <% } else if (isClient) { %>
+        <li class="nav-item">
+          <a class="nav-link px-3" href="/client">
+            <i data-feather="user" style="width: 16px; height: 16px;"></i>
+            <span class="ms-1">Dashboard</span>
+          </a>
+        </li>
+      <% } %>
+    </ul>
   </div>
 </nav>
