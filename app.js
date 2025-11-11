@@ -5,7 +5,7 @@ const app = express();
 const session = require('express-session');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const csrf = require('csurf');
+const { csrfSync } = require('csrf-sync');
 // const helmet = require('helmet');
 const passport = require('passport');
 const SQLiteStore = require('connect-sqlite3')(session);
@@ -46,13 +46,21 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(csrf());
-app.use((req, res, next) => {
-  if (['GET', 'POST', 'PUT', 'DELETE'].includes(req.method)) {
-    res.locals.csrfToken = req.csrfToken();
+const { csrfSynchronisedProtection } = csrfSync({
+  getTokenFromRequest: (req) => {
+    return req.body._csrf || req.query._csrf || req.headers['x-csrf-token'];
+  },
+  size: 64,
+  ignoredMethods: ["GET", "HEAD", "OPTIONS"],
+  cookie: {
+    name: "_csrf",
+    httpOnly: true,
+    sameSite: "strict",
+    path: "/"
   }
-  next();
 });
+
+app.use(csrfSynchronisedProtection);
 
 (async () => {
   try {
@@ -73,7 +81,7 @@ app.use((req, res, next) => {
     // ✅ Global error handler (after all routes)
     app.use((err, req, res, next) => {
       // Handle CSRF token errors by redirecting to login
-      if (err.code === 'EBADCSRFTOKEN' || (err.message && err.message.includes('csrf'))) {
+      if (err.code === 'EBADCSRFTOKEN' || (err.message && (err.message.includes('csrf') || err.message.includes('CSRF')))) {
         req.session.message = 'Your session has expired. Please log in again.';
         return res.redirect('/login');
       }
