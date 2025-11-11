@@ -15,37 +15,74 @@
 			</aside>
         <!-- Content -->
         <div class="flex-grow-1 p-3">
-          <% if (agreements && agreements.length > 0) { %>
-          <table class="table table-bordered table-striped" id="agreementsTable">
-            <thead>
-              <tr>
-                <th class="col-md-3 themed-grid-col sortable" data-column="agreementId" style="cursor: pointer;">
-                  Agreement ID <span class="sort-icon">⇅</span>
-                </th>
-                <th class="col-md-6 themed-grid-col sortable" data-column="agreementName" style="cursor: pointer;">
-                  Agreement <span class="sort-icon">⇅</span>
-                </th>
-                <th class="col-md-3 themed-grid-col sortable" data-column="status" style="cursor: pointer;">
-                  Status <span class="sort-icon">⇅</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody id="agreementsTableBody">
-              <% agreements.forEach(agreement => { %>
-                  <tr data-agreement-id="<%= agreement.AgreementID %>" data-agreement-name="<%= agreement.AgreementName %>" data-status="<%= agreement.StatusName %>">
-                    <td><%= agreement.AgreementID %></td>
-                    <td><a href="/client/agreements/<%= agreement.AgreementID%>"><%= agreement.AgreementName %></a></td>
-                    <td><%= agreement.StatusName %></td>
-                  </tr>
-              <% }) %>
-            </tbody>
-          </table>
-          <% } else { %>
-          <div class="alert alert-info" role="alert">
-            <h5 class="alert-heading">No agreements found</h5>
-            <p>You currently have no agreements in the system.</p>
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0">My Agreements</h3>
           </div>
-          <% } %>
+
+          <!-- Search Box -->
+          <div class="mb-3 search-box">
+            <div class="input-group">
+              <span class="input-group-text bg-white">
+                <i data-feather="search" style="width: 16px; height: 16px;"></i>
+              </span>
+              <input type="text" class="form-control" id="searchAgreements" placeholder="Search by agreement name or ID...">
+            </div>
+          </div>
+
+          <!-- Agreements Table -->
+          <div class="table-responsive mt-4">
+            <% if (agreements && agreements.length > 0) { %>
+            <table class="table table-hover align-middle" id="agreementsTable">
+              <thead class="table-light">
+                <tr>
+                  <th class="sortable" data-column="agreementId">
+                    Agreement ID <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  </th>
+                  <th class="sortable" data-column="agreementName">
+                    Agreement Name <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  </th>
+                  <th class="sortable text-center" data-column="status">
+                    Status <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="agreementsTableBody">
+                <% agreements.forEach(agreement => {
+                  const statusClass = agreement.StatusName ? 'status-' + agreement.StatusName.toLowerCase().replace(/\s+/g, '-') : '';
+                %>
+                <tr class="clickable-row"
+                    onclick="window.location.href='/client/agreements/<%= agreement.AgreementID%>'"
+                    data-agreement-id="<%= agreement.AgreementID %>"
+                    data-agreement-name="<%= agreement.AgreementName %>"
+                    data-status="<%= agreement.StatusName %>">
+                  <td>
+                    <a href="/client/agreements/<%= agreement.AgreementID%>" class="fw-bold text-decoration-none">
+                      #<%= agreement.AgreementID %>
+                    </a>
+                  </td>
+                  <td>
+                    <a href="/client/agreements/<%= agreement.AgreementID%>" class="text-decoration-none">
+                      <%= agreement.AgreementName %>
+                    </a>
+                  </td>
+                  <td class="text-center">
+                    <span class="status-badge <%= statusClass %>">
+                      <%= agreement.StatusName %>
+                    </span>
+                  </td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+            <% } else { %>
+            <!-- Empty State -->
+            <div class="text-center py-5">
+              <i data-feather="file-text" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+              <h4 class="text-muted">No Agreements Found</h4>
+              <p class="text-muted">You currently have no agreements in the system.</p>
+            </div>
+            <% } %>
+          </div>
         </div>
     </main>
 
@@ -53,44 +90,58 @@
       <%- include('partials/footer'); %>
     </footer>
     <script src="/js/feather.min.js"></script>
-    <script>feather.replace()</script>
     <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        const table = document.getElementById("agreementsTable");
-        if (!table) return;
+      feather.replace();
 
-        const tbody = document.getElementById("agreementsTableBody");
-        const headers = document.querySelectorAll(".sortable");
-        let currentSort = { column: null, ascending: true };
+      // Search functionality
+      const searchInput = document.getElementById('searchAgreements');
+      const agreementsTable = document.getElementById('agreementsTable');
 
-        headers.forEach(header => {
-          header.addEventListener("click", function() {
-            const column = this.getAttribute("data-column");
+      if (searchInput && agreementsTable) {
+        searchInput.addEventListener('input', (e) => {
+          const searchTerm = e.target.value.toLowerCase();
+          const rows = agreementsTable.querySelectorAll('tbody tr');
+          let visibleCount = 0;
 
-            // Toggle sort direction if clicking the same column
-            if (currentSort.column === column) {
-              currentSort.ascending = !currentSort.ascending;
-            } else {
-              currentSort.column = column;
-              currentSort.ascending = true;
-            }
-
-            // Update sort icons
-            headers.forEach(h => {
-              const icon = h.querySelector(".sort-icon");
-              if (h === header) {
-                icon.textContent = currentSort.ascending ? "↑" : "↓";
-              } else {
-                icon.textContent = "⇅";
-              }
-            });
-
-            // Sort the table
-            sortTable(column, currentSort.ascending);
+          rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const isVisible = text.includes(searchTerm);
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
           });
-        });
 
-        function sortTable(column, ascending) {
+          // Show "no results" message if no rows match
+          const existingNoResults = document.getElementById('noSearchResults');
+          if (existingNoResults) {
+            existingNoResults.remove();
+          }
+
+          if (visibleCount === 0 && searchTerm !== '') {
+            const noResults = document.createElement('div');
+            noResults.id = 'noSearchResults';
+            noResults.className = 'alert alert-info text-center mt-3';
+            noResults.innerHTML = '<i data-feather="search" style="width: 24px; height: 24px;"></i><br>No agreements match your search term: <strong>' + searchTerm + '</strong>';
+            agreementsTable.parentElement.appendChild(noResults);
+            feather.replace();
+          }
+        });
+      }
+
+      // Sorting functionality
+      const tbody = document.getElementById("agreementsTableBody");
+      const headers = document.querySelectorAll(".sortable");
+      let sortDirection = {};
+
+      headers.forEach(header => {
+        const column = header.getAttribute("data-column");
+        sortDirection[column] = 'asc';
+
+        header.addEventListener("click", function() {
+          // Toggle sort direction
+          sortDirection[column] = sortDirection[column] === 'asc' ? 'desc' : 'asc';
+          const direction = sortDirection[column];
+
+          // Get rows and sort
           const rows = Array.from(tbody.querySelectorAll("tr"));
 
           rows.sort((a, b) => {
@@ -113,14 +164,22 @@
                 return 0;
             }
 
-            if (aValue < bValue) return ascending ? -1 : 1;
-            if (aValue > bValue) return ascending ? 1 : -1;
+            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
             return 0;
           });
 
           // Re-append rows in sorted order
           rows.forEach(row => tbody.appendChild(row));
-        }
+
+          // Update header icons
+          document.querySelectorAll('.sortable i').forEach(icon => {
+            icon.setAttribute('data-feather', 'chevrons-up-down');
+          });
+          const icon = header.querySelector('i');
+          icon.setAttribute('data-feather', direction === 'asc' ? 'chevron-up' : 'chevron-down');
+          feather.replace();
+        });
       });
     </script>
   </body>

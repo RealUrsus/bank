@@ -42,35 +42,6 @@
           <%- include('partials/client/add-transaction-form'); %>
         </modals>
 
-        <!-- Summary Section -->
-        <% if (transactions && transactions.length > 0) {
-          const totalDeposits = transactions.filter(t => t.TransactionTypeID === 1).reduce((sum, t) => sum + t.Amount, 0);
-          const totalWithdrawals = transactions.filter(t => t.TransactionTypeID === 2).reduce((sum, t) => sum + t.Amount, 0);
-          const approvedCount = transactions.filter(t => t.StatusID === 2).length;
-          const pendingCount = transactions.filter(t => t.StatusID === 1).length;
-        %>
-        <div class="summary-card shadow-sm">
-          <div class="row">
-            <div class="col-md-3 summary-metric">
-              <div class="summary-metric-value"><%= transactions.length %></div>
-              <div class="summary-metric-label">Total Transactions</div>
-            </div>
-            <div class="col-md-3 summary-metric">
-              <div class="summary-metric-value">$<%= totalDeposits.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
-              <div class="summary-metric-label">Total Deposits</div>
-            </div>
-            <div class="col-md-3 summary-metric">
-              <div class="summary-metric-value">$<%= totalWithdrawals.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
-              <div class="summary-metric-label">Total Withdrawals</div>
-            </div>
-            <div class="col-md-3 summary-metric">
-              <div class="summary-metric-value"><%= approvedCount %> / <%= pendingCount %></div>
-              <div class="summary-metric-label">Approved / Pending</div>
-            </div>
-          </div>
-        </div>
-        <% } %>
-
         <!-- Search Box -->
         <div class="mb-3 search-box">
           <div class="input-group">
