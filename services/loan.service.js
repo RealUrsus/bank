@@ -35,7 +35,7 @@ const loanService = {
   async getUserLoans(userId, approvedOnly = false) {
     if (approvedOnly) {
       return await db.queryMany(
-        `SELECT a.*, s.StatusName AS Status
+        `SELECT a.*, s.StatusName
          FROM Accounts a
          INNER JOIN Status s ON a.StatusID = s.StatusID
          WHERE a.UserID = ? AND a.AccountTypeID = ?
