@@ -15,7 +15,7 @@ const userService = require('../services/user.service');
 // Utils
 const { formatDate } = require('../utils/formatters');
 const { validateId, validateDateNotFuture, validateRequiredFields, validateAmount, validatePeriod } = require('../utils/validators');
-const { DATE_CONFIG } = require('../services/constants');
+const { DATE_CONFIG, TRANSACTION_CATEGORIES } = require('../services/constants');
 
 const router = express.Router();
 
@@ -140,7 +140,7 @@ router.get('/transactions', getTransactions, async (req, res) => {
   res.locals.filter = null;
   const balance = await accountService.getBalance(req.user.account);
   const approved_balance = await accountService.getApprovedBalance(req.user.account);
-  res.render('client-transactions', { user: req.user, balance, approved_balance });
+  res.render('client-transactions', { user: req.user, balance, approved_balance, categories: TRANSACTION_CATEGORIES });
 });
 
 // Transactions route with period parameter
@@ -148,14 +148,14 @@ router.get('/transactions/:period', getTransactions, async (req, res) => {
   res.locals.filter = null;
   const balance = await accountService.getBalance(req.user.account);
   const approved_balance = await accountService.getApprovedBalance(req.user.account);
-  res.render('client-transactions', { user: req.user, balance, approved_balance });
+  res.render('client-transactions', { user: req.user, balance, approved_balance, categories: TRANSACTION_CATEGORIES });
 });
 
 router.post('/transactions/add', async (req, res, next) => {
   try {
-    const { amount, type, date, description } = req.body;
+    const { amount, type, date, description, category } = req.body;
 
-    validateRequiredFields({ amount, type, date, description });
+    validateRequiredFields({ amount, type, date, category });
     validateDateNotFuture(date);
     const validAmount = validateAmount(amount);
 
@@ -164,7 +164,8 @@ router.post('/transactions/add', async (req, res, next) => {
       transactionTypeId: type,
       amount: validAmount,
       date,
-      description
+      description: description || '',
+      category
     });
 
     res.redirect('/client/transactions');

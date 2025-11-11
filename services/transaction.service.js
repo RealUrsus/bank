@@ -20,6 +20,7 @@ const transactionService = {
       amount,
       date,
       description,
+      category = null,
       transferId = null,
       statusId = STATUS.PENDING
     } = transactionData;
@@ -27,9 +28,9 @@ const transactionService = {
     const result = await db.run(
       `INSERT INTO Transactions (
         AccountID, TransactionTypeID, Amount, Date,
-        Description, TransferID, StatusID
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [accountId, transactionTypeId, amount, date, description, transferId, statusId]
+        Description, Category, TransferID, StatusID
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [accountId, transactionTypeId, amount, date, description, category, transferId, statusId]
     );
 
     return result.lastID;

@@ -26,8 +26,17 @@
             <input type="date" class="form-control" id="date" name="date">
           </div>
           <div class="mb-3">
-            <label for="description" class="form-label required">Transaction Description:</label>
-            <textarea class="form-control" id="description" name="description"></textarea>
+            <label for="category" class="form-label required">Category:</label>
+            <select name="category" id="category" class="form-select">
+              <option value="">-- Select Category --</option>
+              <% categories.forEach(cat => { %>
+                <option value="<%= cat %>"><%= cat %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Description:</label>
+            <textarea class="form-control" id="description" name="description" placeholder="Optional: Add additional details about this transaction"></textarea>
           </div>
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         </form>
@@ -50,9 +59,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const formData = new FormData(form);
     let isValid = true;
 
-    // Validate form fields
-    form.querySelectorAll('input, textarea, select').forEach((field) => {
-      if (!field.value.trim()) {
+    // Validate required form fields (exclude description as it's optional)
+    form.querySelectorAll('input:not(#description), select').forEach((field) => {
+      if (field.id !== 'description' && !field.value.trim()) {
         isValid = false;
         field.classList.add('is-invalid');
       } else {
