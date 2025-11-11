@@ -1,6 +1,6 @@
 {
   "name": "first_home_bank",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "First Home Bank for kids",
   "keywords": [
@@ -13,7 +13,7 @@
     "email": "polar@bear.com",
     "url": "https://www.polarbear.me/"
   },
-  "homepage": "https://github.com/",
+  "homepage": "https://github.com/RealUrsus",
   "license": "Unlicense",
   "scripts": {
     "start": "node app.js",
@@ -29,6 +29,8 @@
     "express": "latest",
     "express-favicon": "latest",
     "express-session": "latest",
+    "express-rate-limit":"latest",
+    "express-validator": "latest",
     "helmet": "latest",
     "http-errors": "latest",
     "node-cron": "latest",

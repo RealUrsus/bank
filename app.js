@@ -30,7 +30,12 @@ app.use(session({
   secret: require("crypto").randomBytes(32).toString("hex"),
   store: new SQLiteStore({ db: 'sessions.db', dir: './var/db' }),
   resave: false,           // don't save session if unmodified
-  saveUninitialized: false // don't create session until something stored
+  saveUninitialized: false, // don't create session until something stored
+  cookie: {
+    httpOnly: true,                               // Prevent XSS
+    sameSite: 'strict',                           // CSRF protection
+    maxAge: 24 * 60 * 60 * 1000                   // 24 hours
+  }
 }));
 
 app.use(passport.authenticate('session'));
