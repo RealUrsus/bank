@@ -41,6 +41,7 @@
                 <th>TID</th>
                 <th style="width: 120px;">Date</th>
                 <th>Amount</th>
+                <th>Category</th>
                 <th>Description</th>
                 <th style="width: 140px; text-align: center;">Action</th>
               </tr>
@@ -51,12 +52,19 @@
                 <td><%= transaction.TransactionID %></td>
                 <td><%= transaction.Date %></td>
                 <td><%= transaction.TransactionTypeID === 2? '-' + transaction.Amount : transaction.Amount %></td>
+                <td>
+                  <% if (transaction.Category) { %>
+                    <span class="badge bg-secondary"><%= transaction.Category %></span>
+                  <% } else { %>
+                    <span class="text-muted fst-italic">—</span>
+                  <% } %>
+                </td>
                 <td><%= transaction.Description %></td>
                 <td class="text-center">
                   <div class="btn-group" role="group">
                     <form action="/admin/transactions/update" method="POST" class="d-inline">
                       <input type="hidden" name="id" value="<%= transaction.TransactionID %>">
-                      <input type="hidden" name="clientId" value="<%= clientId %>">								
+                      <input type="hidden" name="clientId" value="<%= clientId %>">
                       <button type="submit" class="btn btn-primary btn-sm">Approve</button>
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     </form>
