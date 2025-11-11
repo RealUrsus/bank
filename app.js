@@ -64,8 +64,12 @@ app.use(csrfSynchronisedProtection);
 
 // Make CSRF token available to all views
 app.use((req, res, next) => {
-  res.locals.csrfToken = generateToken(req, res);
-  next();
+  try {
+    res.locals.csrfToken = generateToken(req, res);
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 (async () => {
@@ -86,6 +90,14 @@ app.use((req, res, next) => {
 
     // ✅ Global error handler (after all routes)
     app.use((err, req, res, next) => {
+      // Log all errors for debugging
+      console.error('Error caught:', {
+        code: err.code,
+        message: err.message,
+        url: req.url,
+        method: req.method
+      });
+
       // Handle CSRF token errors by redirecting to login
       if (err.code === 'EBADCSRFTOKEN' || (err.message && (err.message.includes('csrf') || err.message.includes('CSRF')))) {
         req.session.message = 'Your session has expired. Please log in again.';
