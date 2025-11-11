@@ -103,6 +103,25 @@
   margin-right: 0.25rem;
 }
 
+/* Collapsible Card Header */
+.card-header[role="button"] {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header[role="button"]:hover {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+.card-header .card-title {
+  user-select: none;
+}
+
+.card-header .card-title svg {
+  transition: transform 0.2s;
+}
+
 /* Search Box */
 .search-box {
   max-width: 400px;

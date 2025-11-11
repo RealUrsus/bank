@@ -205,83 +205,89 @@
 
           <!-- Transaction Details -->
           <div class="card">
-            <div class="card-body">
-              <h5 class="card-title mb-3">
-                <i data-feather="list" style="width: 20px; height: 20px;"></i>
-                Transaction Details
+            <div class="card-header bg-white" role="button" data-bs-toggle="collapse" data-bs-target="#transactionDetailsCollapse" aria-expanded="false" aria-controls="transactionDetailsCollapse">
+              <h5 class="card-title mb-0 d-flex justify-content-between align-items-center">
+                <span>
+                  <i data-feather="list" style="width: 20px; height: 20px;"></i>
+                  Transaction Details
+                </span>
+                <i data-feather="chevron-down" style="width: 20px; height: 20px;" id="collapseIcon"></i>
               </h5>
-
-              <!-- Search Box -->
-              <div class="mb-3 search-box">
-                <div class="input-group">
-                  <span class="input-group-text bg-white">
-                    <i data-feather="search" style="width: 16px; height: 16px;"></i>
-                  </span>
-                  <input type="text" class="form-control" id="searchTransactions" placeholder="Search transactions...">
+            </div>
+            <div class="collapse" id="transactionDetailsCollapse">
+              <div class="card-body">
+                <!-- Search Box -->
+                <div class="mb-3 search-box">
+                  <div class="input-group">
+                    <span class="input-group-text bg-white">
+                      <i data-feather="search" style="width: 16px; height: 16px;"></i>
+                    </span>
+                    <input type="text" class="form-control" id="searchTransactions" placeholder="Search transactions...">
+                  </div>
                 </div>
-              </div>
 
-              <% if (reportData.transactions && reportData.transactions.length > 0) { %>
-              <div class="table-responsive">
-                <table class="table table-hover align-middle" id="transactionsTable">
-                  <thead class="table-light">
-                    <tr>
-                      <th class="sortable" data-sort="date">
-                        Date <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
-                      </th>
-                      <th class="sortable" data-sort="type">
-                        Type <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
-                      </th>
-                      <th class="sortable text-end" data-sort="amount">
-                        Amount <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
-                      </th>
-                      <th class="sortable" data-sort="category">
-                        Category <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
-                      </th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% reportData.transactions.forEach(transaction => {
-                      const transactionDate = new Date(transaction.Date);
-                      const formattedDate = transactionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                      const isDeposit = transaction.TransactionTypeID === 1;
-                    %>
-                    <tr data-date="<%= transaction.Date %>"
-                        data-type="<%= isDeposit ? 'deposit' : 'withdrawal' %>"
-                        data-amount="<%= transaction.Amount %>"
-                        data-category="<%= transaction.Category || '' %>">
-                      <td><%= formattedDate %></td>
-                      <td>
-                        <span class="badge <%= isDeposit ? 'bg-success' : 'bg-danger' %>">
-                          <i data-feather="<%= isDeposit ? 'arrow-down-circle' : 'arrow-up-circle' %>" style="width: 14px; height: 14px;"></i>
-                          <%= isDeposit ? 'Income' : 'Expense' %>
-                        </span>
-                      </td>
-                      <td class="text-end fw-bold <%= isDeposit ? 'text-success' : 'text-danger' %>">
-                        <%= isDeposit ? '+' : '-' %>$<%= transaction.Amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
-                      </td>
-                      <td>
-                        <% if (transaction.Category) { %>
-                          <span class="badge bg-secondary"><%= transaction.Category %></span>
-                        <% } else { %>
-                          <span class="text-muted fst-italic">—</span>
-                        <% } %>
-                      </td>
-                      <td><%= transaction.Description || '—' %></td>
-                    </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
+                <% if (reportData.transactions && reportData.transactions.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle" id="transactionsTable">
+                    <thead class="table-light">
+                      <tr>
+                        <th class="sortable" data-sort="date">
+                          Date <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        </th>
+                        <th class="sortable" data-sort="type">
+                          Type <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        </th>
+                        <th class="sortable text-end" data-sort="amount">
+                          Amount <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        </th>
+                        <th class="sortable" data-sort="category">
+                          Category <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        </th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% reportData.transactions.forEach(transaction => {
+                        const transactionDate = new Date(transaction.Date);
+                        const formattedDate = transactionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                        const isDeposit = transaction.TransactionTypeID === 1;
+                      %>
+                      <tr data-date="<%= transaction.Date %>"
+                          data-type="<%= isDeposit ? 'deposit' : 'withdrawal' %>"
+                          data-amount="<%= transaction.Amount %>"
+                          data-category="<%= transaction.Category || '' %>">
+                        <td><%= formattedDate %></td>
+                        <td>
+                          <span class="badge <%= isDeposit ? 'bg-success' : 'bg-danger' %>">
+                            <i data-feather="<%= isDeposit ? 'arrow-down-circle' : 'arrow-up-circle' %>" style="width: 14px; height: 14px;"></i>
+                            <%= isDeposit ? 'Income' : 'Expense' %>
+                          </span>
+                        </td>
+                        <td class="text-end fw-bold <%= isDeposit ? 'text-success' : 'text-danger' %>">
+                          <%= isDeposit ? '+' : '-' %>$<%= transaction.Amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                        </td>
+                        <td>
+                          <% if (transaction.Category) { %>
+                            <span class="badge bg-secondary"><%= transaction.Category %></span>
+                          <% } else { %>
+                            <span class="text-muted fst-italic">—</span>
+                          <% } %>
+                        </td>
+                        <td><%= transaction.Description || '—' %></td>
+                      </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+                <% } else { %>
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                  <i data-feather="inbox" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+                  <h4 class="text-muted">No Transactions Found</h4>
+                  <p class="text-muted">Try adjusting your filters to see more results.</p>
+                </div>
+                <% } %>
               </div>
-              <% } else { %>
-              <!-- Empty State -->
-              <div class="text-center py-5">
-                <i data-feather="inbox" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
-                <h4 class="text-muted">No Transactions Found</h4>
-                <p class="text-muted">Try adjusting your filters to see more results.</p>
-              </div>
-              <% } %>
             </div>
           </div>
         <% } %>
@@ -293,6 +299,22 @@
     <script src="/js/feather.min.js"></script>
     <script>
       feather.replace();
+
+      // Toggle collapse icon for Transaction Details
+      const transactionDetailsCollapse = document.getElementById('transactionDetailsCollapse');
+      const collapseIcon = document.getElementById('collapseIcon');
+
+      if (transactionDetailsCollapse && collapseIcon) {
+        transactionDetailsCollapse.addEventListener('show.bs.collapse', () => {
+          collapseIcon.setAttribute('data-feather', 'chevron-up');
+          feather.replace();
+        });
+
+        transactionDetailsCollapse.addEventListener('hide.bs.collapse', () => {
+          collapseIcon.setAttribute('data-feather', 'chevron-down');
+          feather.replace();
+        });
+      }
 
       // Toggle custom date range visibility
       const timeframeSelect = document.getElementById('timeframe');
