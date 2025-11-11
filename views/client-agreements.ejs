@@ -15,17 +15,23 @@
         <!-- Content -->
         <div class="flex-grow-1 p-3">
           <% if (agreements && agreements.length > 0) { %>
-          <table class="table table-bordered table-striped">
+          <table class="table table-bordered table-striped" id="agreementsTable">
             <thead>
               <tr>
-                <th class="col-md-3 themed-grid-col">Agreement ID</th>
-                <th class="col-md-6 themed-grid-col">Agreement</th>
-                <th class="col-md-3 themed-grid-col">Status</th>
+                <th class="col-md-3 themed-grid-col sortable" data-column="agreementId" style="cursor: pointer;">
+                  Agreement ID <span class="sort-icon">⇅</span>
+                </th>
+                <th class="col-md-6 themed-grid-col sortable" data-column="agreementName" style="cursor: pointer;">
+                  Agreement <span class="sort-icon">⇅</span>
+                </th>
+                <th class="col-md-3 themed-grid-col sortable" data-column="status" style="cursor: pointer;">
+                  Status <span class="sort-icon">⇅</span>
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="agreementsTableBody">
               <% agreements.forEach(agreement => { %>
-                  <tr>
+                  <tr data-agreement-id="<%= agreement.AgreementID %>" data-agreement-name="<%= agreement.AgreementName %>" data-status="<%= agreement.StatusName %>">
                     <td><%= agreement.AgreementID %></td>
                     <td><a href="/client/agreements/<%= agreement.AgreementID%>"><%= agreement.AgreementName %></a></td>
                     <td><%= agreement.StatusName %></td>
@@ -47,5 +53,74 @@
     </footer>
     <script src="/js/feather.min.js"></script>
     <script>feather.replace()</script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const table = document.getElementById("agreementsTable");
+        if (!table) return;
+
+        const tbody = document.getElementById("agreementsTableBody");
+        const headers = document.querySelectorAll(".sortable");
+        let currentSort = { column: null, ascending: true };
+
+        headers.forEach(header => {
+          header.addEventListener("click", function() {
+            const column = this.getAttribute("data-column");
+
+            // Toggle sort direction if clicking the same column
+            if (currentSort.column === column) {
+              currentSort.ascending = !currentSort.ascending;
+            } else {
+              currentSort.column = column;
+              currentSort.ascending = true;
+            }
+
+            // Update sort icons
+            headers.forEach(h => {
+              const icon = h.querySelector(".sort-icon");
+              if (h === header) {
+                icon.textContent = currentSort.ascending ? "↑" : "↓";
+              } else {
+                icon.textContent = "⇅";
+              }
+            });
+
+            // Sort the table
+            sortTable(column, currentSort.ascending);
+          });
+        });
+
+        function sortTable(column, ascending) {
+          const rows = Array.from(tbody.querySelectorAll("tr"));
+
+          rows.sort((a, b) => {
+            let aValue, bValue;
+
+            switch(column) {
+              case "agreementId":
+                aValue = parseInt(a.getAttribute("data-agreement-id"));
+                bValue = parseInt(b.getAttribute("data-agreement-id"));
+                break;
+              case "agreementName":
+                aValue = a.getAttribute("data-agreement-name").toLowerCase();
+                bValue = b.getAttribute("data-agreement-name").toLowerCase();
+                break;
+              case "status":
+                aValue = a.getAttribute("data-status").toLowerCase();
+                bValue = b.getAttribute("data-status").toLowerCase();
+                break;
+              default:
+                return 0;
+            }
+
+            if (aValue < bValue) return ascending ? -1 : 1;
+            if (aValue > bValue) return ascending ? 1 : -1;
+            return 0;
+          });
+
+          // Re-append rows in sorted order
+          rows.forEach(row => tbody.appendChild(row));
+        }
+      });
+    </script>
   </body>
 </html>
