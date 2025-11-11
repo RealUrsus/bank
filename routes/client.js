@@ -367,6 +367,48 @@ router.post('/transfer', async (req, res, next) => {
 });
 
 
+router.get('/reports', async (req, res, next) => {
+  try {
+    const accountID = await getAccountID(req.user.id, "Chequing");
+    req.user["account"] = accountID;
+
+    // Extract filters from query parameters
+    const { category, transactionType, startDate, endDate, timeframe } = req.query;
+
+    // Handle predefined timeframes
+    let filters = { category, transactionType };
+
+    if (timeframe === 'all') {
+      // No date filters for all time
+      filters.startDate = null;
+      filters.endDate = null;
+    } else if (timeframe === 'custom' && startDate && endDate) {
+      // Custom date range
+      filters.startDate = startDate;
+      filters.endDate = endDate;
+    } else if (timeframe && timeframe.includes('-')) {
+      // Month format: YYYY-MM
+      const [year, month] = timeframe.split('-');
+      const startOfMonth = new Date(year, month - 1, 1);
+      const endOfMonth = new Date(year, month, 0);
+      filters.startDate = formatDate(startOfMonth);
+      filters.endDate = formatDate(endOfMonth);
+    }
+
+    // Generate report
+    const reportData = await transactionService.generateReport(accountID, filters);
+
+    res.render('client-reports', {
+      user: req.user,
+      reportData,
+      filters: req.query,
+      categories: TRANSACTION_CATEGORIES
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/agreements', async (req, res, next) => {
   try {
     const agreements = await agreementService.getUserAgreements(req.user.id);
