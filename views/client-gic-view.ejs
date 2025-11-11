@@ -29,8 +29,13 @@
           const term = parseFloat(account.Term);
           const interestAmount = (principal * interestRate * (term / 12)) / 100;
           const balanceAtMaturity = principal + interestAmount;
-          const currentBalance = typeof balance !== 'undefined' && balance !== null ? parseFloat(balance) : 0;
           const startDate = account.StartDate;
+
+          // Calculate end date
+          const startDateObj = new Date(startDate);
+          const endDateObj = new Date(startDateObj);
+          endDateObj.setMonth(endDateObj.getMonth() + term);
+          const endDate = endDateObj.toISOString().split('T')[0];
         %>
 
         <!-- GIC Details Card -->
@@ -61,19 +66,19 @@
               <div class="col-md-6 mb-3">
                 <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
                   <div>
-                    <small class="text-muted d-block">Current Balance</small>
-                    <h4 class="mb-0">$<%= currentBalance.toFixed(2) %></h4>
+                    <small class="text-muted d-block">Annual Interest Rate</small>
+                    <h4 class="mb-0"><%= interestRate.toFixed(2) %>%</h4>
                   </div>
-                  <i data-feather="credit-card" class="text-info" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="percent" class="text-warning" style="width: 32px; height: 32px;"></i>
                 </div>
               </div>
               <div class="col-md-6 mb-3">
                 <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
                   <div>
-                    <small class="text-muted d-block">Annual Interest Rate</small>
-                    <h4 class="mb-0"><%= interestRate.toFixed(2) %>%</h4>
+                    <small class="text-muted d-block">Term</small>
+                    <h4 class="mb-0"><%= term %> months</h4>
                   </div>
-                  <i data-feather="percent" class="text-warning" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="calendar" class="text-info" style="width: 32px; height: 32px;"></i>
                 </div>
               </div>
             </div>
@@ -82,71 +87,17 @@
 
             <div class="row">
               <div class="col-md-4">
-                <small class="text-muted d-block">Term</small>
-                <strong><%= term %> months</strong>
-              </div>
-              <div class="col-md-4">
                 <small class="text-muted d-block">Start Date</small>
                 <strong><%= startDate %></strong>
+              </div>
+              <div class="col-md-4">
+                <small class="text-muted d-block">End Date</small>
+                <strong><%= endDate %></strong>
               </div>
               <div class="col-md-4">
                 <small class="text-muted d-block">Maturity Calculation</small>
                 <strong>$<%= principal.toFixed(2) %> + $<%= interestAmount.toFixed(2) %> interest</strong>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Transactions Section -->
-        <div class="card">
-          <div class="card-header bg-light">
-            <h5 class="mb-0">Transactions</h5>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <% if (transactions && transactions.length > 0) { %>
-              <table class="table table-hover align-middle">
-                <thead class="table-light">
-                  <tr>
-                    <th>Date</th>
-                    <th>Deposit</th>
-                    <th>Withdrawal</th>
-                    <th>TransferID</th>
-                    <th>Description</th>
-                    <th class="text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% for (const transaction of transactions) { %>
-                  <tr>
-                    <td><%= transaction.Date %></td>
-                    <td class="text-success"><%= transaction.TransactionTypeID === 1 ? '$' + transaction.Amount : '' %></td>
-                    <td class="text-danger"><%= transaction.TransactionTypeID === 2 ? '-$' + transaction.Amount : '' %></td>
-                    <td><%= transaction.TransferID %></td>
-                    <td><%= transaction.Description %></td>
-                    <td class="text-center">
-                      <% if (transaction.StatusID === 2) { %>
-                        <span class="badge bg-success">
-                          <i data-feather="check" style="width: 12px; height: 12px;"></i> Approved
-                        </span>
-                      <% } else { %>
-                        <span class="badge bg-warning">
-                          <i data-feather="clock" style="width: 12px; height: 12px;"></i> Pending
-                        </span>
-                      <% } %>
-                    </td>
-                  </tr>
-                  <% } %>
-                </tbody>
-              </table>
-              <% } else { %>
-              <!-- Empty State -->
-              <div class="text-center py-5">
-                <i data-feather="file-text" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
-                <h4 class="text-muted">No Transactions Found</h4>
-                <p class="text-muted">There are no transactions for this GIC investment yet.</p>
-              </div>
-              <% } %>
             </div>
           </div>
         </div>
