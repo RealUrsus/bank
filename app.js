@@ -46,7 +46,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const { csrfSynchronisedProtection } = csrfSync({
+const { csrfSynchronisedProtection, generateToken } = csrfSync({
   getTokenFromRequest: (req) => {
     return req.body._csrf || req.query._csrf || req.headers['x-csrf-token'];
   },
@@ -61,6 +61,12 @@ const { csrfSynchronisedProtection } = csrfSync({
 });
 
 app.use(csrfSynchronisedProtection);
+
+// Make CSRF token available to all views
+app.use((req, res, next) => {
+  res.locals.csrfToken = generateToken(req, res);
+  next();
+});
 
 (async () => {
   try {
