@@ -23,7 +23,7 @@
   "dependencies": {
     "connect-sqlite3": "latest",
     "cookie-parser": "latest",
-    "csurf": "^1.2.2",
+    "csrf-sync": "^4.0.4",
     "debug": "latest",
     "ejs": "latest",
     "express": "latest",
