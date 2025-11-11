@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<%- include('partials/head'); %>
+		<link rel="stylesheet" href="/css/sidebar.css">
+		<style>
+			.help-section {
+				margin-bottom: 2rem;
+				padding: 1.5rem;
+				background-color: #f8f9fa;
+				border-left: 4px solid #0d6efd;
+				border-radius: 0.25rem;
+			}
+			.help-section h3 {
+				color: #0d6efd;
+				margin-bottom: 1rem;
+			}
+			.help-section h4 {
+				color: #495057;
+				margin-top: 1.5rem;
+				margin-bottom: 0.75rem;
+			}
+			.process-step {
+				margin-left: 1rem;
+				padding: 0.5rem 0;
+			}
+			.code-block {
+				background-color: #e9ecef;
+				padding: 0.75rem;
+				border-radius: 0.25rem;
+				font-family: monospace;
+				margin: 0.5rem 0;
+			}
+			.alert-process {
+				margin: 1rem 0;
+				padding: 1rem;
+				border-radius: 0.25rem;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<%- include('partials/header'); %>
+		</header>
+
+		<main class="container-fluid d-flex flex-nowrap">
+			<aside class="border">
+				<%- include('partials/admin/sidebar'); %>
+			</aside>
+			<!-- Content -->
+			<div class="p-5 w-100">
+				<h2 class="mb-4"><i data-feather="help-circle"></i> Admin Help - Daily Processes</h2>
+				<p class="lead">This page provides documentation for daily processes, loan and investment management, and maturity handling.</p>
+
+				<!-- Daily Automated Tasks Section -->
+				<div class="help-section">
+					<h3><i data-feather="clock"></i> Daily Automated Tasks</h3>
+					<p>The system runs automated tasks every day at <strong>midnight (12:00 AM)</strong> to process interest calculations and check maturity status for all accounts.</p>
+
+					<h4>1. Loan Interest Processing</h4>
+					<div class="process-step">
+						<p><strong>Process:</strong> <code>processLoanInterest()</code></p>
+						<p><strong>Frequency:</strong> Daily at midnight</p>
+						<p><strong>What happens:</strong></p>
+						<ul>
+							<li>System retrieves all <span class="badge bg-success">APPROVED</span> loans</li>
+							<li>Calculates daily interest using simple interest formula: <code>Principal × (Annual Rate / 100 / 365)</code></li>
+							<li>Creates a <span class="badge bg-danger">WITHDRAWAL</span> transaction for the interest amount</li>
+							<li>Transaction is marked as <span class="badge bg-secondary">SYSTEM</span> and automatically approved</li>
+							<li>This reduces the loan balance (making it more negative)</li>
+						</ul>
+						<div class="alert alert-info alert-process">
+							<strong>Example:</strong> Loan with $10,000 principal at 5% APR<br>
+							Daily interest = $10,000 × (5 / 100 / 365) = $1.37<br>
+							A withdrawal of $1.37 is recorded each day
+						</div>
+					</div>
+
+					<h4>2. Loan Payoff Checks</h4>
+					<div class="process-step">
+						<p><strong>Process:</strong> <code>checkLoanPayoffs()</code></p>
+						<p><strong>Frequency:</strong> Daily at midnight</p>
+						<p><strong>What happens:</strong></p>
+						<ul>
+							<li>System checks if loan balance ≥ principal amount</li>
+							<li>If condition is met, loan status changes to <span class="badge bg-success">PAID_OFF</span></li>
+							<li>Loan stops accruing interest once marked as paid off</li>
+						</ul>
+						<div class="alert alert-success alert-process">
+							<strong>Note:</strong> Clients must make deposits to their loan account to pay it off. Once the total deposits equal or exceed the principal, the loan is automatically marked as paid off.
+						</div>
+					</div>
+
+					<h4>3. Loan Maturity Checks</h4>
+					<div class="process-step">
+						<p><strong>Process:</strong> <code>checkLoanMaturity()</code></p>
+						<p><strong>Frequency:</strong> Daily at midnight</p>
+						<p><strong>What happens:</strong></p>
+						<ul>
+							<li>System checks if current date ≥ (start date + term in months)</li>
+							<li>Matured loans are logged to the console</li>
+							<li>30-day notification appears on admin dashboard for loans nearing maturity</li>
+							<li><strong>Important:</strong> Loans continue accruing interest after maturity until fully paid off</li>
+						</ul>
+					</div>
+
+					<h4>4. GIC/Investment Interest Processing</h4>
+					<div class="process-step">
+						<p><strong>Process:</strong> <code>processGICInterest()</code></p>
+						<p><strong>Frequency:</strong> Daily at midnight</p>
+						<p><strong>What happens:</strong></p>
+						<ul>
+							<li>System retrieves all <span class="badge bg-success">APPROVED</span> GIC accounts</li>
+							<li>Calculates daily interest using simple interest formula</li>
+							<li>Creates a <span class="badge bg-success">DEPOSIT</span> transaction for the interest amount</li>
+							<li>Transaction is marked as <span class="badge bg-secondary">SYSTEM</span> and automatically approved</li>
+							<li>This increases the GIC balance</li>
+						</ul>
+					</div>
+
+					<h4>5. GIC Maturity Processing</h4>
+					<div class="process-step">
+						<p><strong>Process:</strong> <code>checkGICMaturity()</code></p>
+						<p><strong>Frequency:</strong> Daily at midnight</p>
+						<p><strong>What happens:</strong></p>
+						<ul>
+							<li>System checks if current date ≥ maturity date</li>
+							<li>If matured, automatically processes the GIC maturity (see next section)</li>
+							<li>30-day notification appears on admin dashboard for GICs nearing maturity</li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- Maturity Actions Section -->
+				<div class="help-section">
+					<h3><i data-feather="calendar"></i> Actions at Maturity</h3>
+
+					<h4>Loan Maturity Process</h4>
+					<div class="process-step">
+						<p><strong>When:</strong> Start Date + Term (in months) = Maturity Date</p>
+						<p><strong>Automatic Actions:</strong></p>
+						<ul>
+							<li>System logs the matured loan for admin review</li>
+							<li>Loan appears in "Maturing Accounts" notification 30 days before maturity</li>
+							<li><strong>No automatic status change occurs</strong></li>
+							<li>Loan continues to accrue interest until paid off</li>
+						</ul>
+						<p><strong>Manual Actions Required:</strong></p>
+						<ul>
+							<li>Review matured loans that are not paid off</li>
+							<li>Contact client for payment if needed</li>
+							<li>Client must deposit funds to pay off the loan</li>
+							<li>System automatically marks as <span class="badge bg-success">PAID_OFF</span> when balance ≥ principal</li>
+						</ul>
+						<div class="alert alert-warning alert-process">
+							<strong>Important:</strong> Loans do not automatically close at maturity. They continue accruing interest until the client pays them off in full.
+						</div>
+					</div>
+
+					<h4>GIC/Investment Maturity Process</h4>
+					<div class="process-step">
+						<p><strong>When:</strong> Start Date + Term (in months) = Maturity Date</p>
+						<p><strong>Automatic Actions (fully automated):</strong></p>
+						<ol>
+							<li>System calculates total maturity value using <strong>compound interest</strong>:
+								<div class="code-block">
+									Maturity Value = Principal × (1 + Annual Rate / 12)<sup>Number of Months</sup>
+								</div>
+							</li>
+							<li>Creates a <span class="badge bg-success">DEPOSIT</span> transaction to client's chequing account for the full maturity value</li>
+							<li>Updates GIC status to <span class="badge bg-secondary">CLOSED</span></li>
+							<li>All operations performed in a database transaction (atomic)</li>
+						</ol>
+						<p><strong>Manual Actions Required:</strong></p>
+						<ul>
+							<li><strong>None</strong> - GIC maturity is fully automated</li>
+							<li>Admin should monitor for any errors in the automated process</li>
+							<li>Client is notified that funds have been transferred back to their chequing account</li>
+						</ul>
+						<div class="alert alert-success alert-process">
+							<strong>Example:</strong> $5,000 GIC at 3% APR for 12 months<br>
+							Maturity Value = $5,000 × (1 + 0.03/12)<sup>12</sup> = $5,152.02<br>
+							$5,152.02 is automatically deposited to client's chequing account
+						</div>
+					</div>
+				</div>
+
+				<!-- Account Status Guide -->
+				<div class="help-section">
+					<h3><i data-feather="tag"></i> Account Status Guide</h3>
+
+					<h4>Loan Statuses</h4>
+					<div class="process-step">
+						<ul>
+							<li><span class="badge bg-warning">PENDING</span> - Awaiting admin approval (new loan request)</li>
+							<li><span class="badge bg-success">APPROVED</span> - Active loan accruing daily interest</li>
+							<li><span class="badge bg-danger">REJECTED</span> - Loan request denied by admin</li>
+							<li><span class="badge bg-success">PAID_OFF</span> - Loan fully paid, no longer accruing interest</li>
+						</ul>
+					</div>
+
+					<h4>GIC Statuses</h4>
+					<div class="process-step">
+						<ul>
+							<li><span class="badge bg-success">APPROVED</span> - Active investment accruing daily interest</li>
+							<li><span class="badge bg-secondary">CLOSED</span> - GIC has matured and funds returned to chequing</li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- Daily Workflow Section -->
+				<div class="help-section">
+					<h3><i data-feather="check-circle"></i> Recommended Daily Admin Workflow</h3>
+
+					<div class="process-step">
+						<h4>Morning Review (9:00 AM)</h4>
+						<ol>
+							<li><strong>Check Dashboard Notifications:</strong>
+								<ul>
+									<li>Review pending transactions at <a href="/admin/transactions">/admin/transactions</a></li>
+									<li>Review pending loan requests at <a href="/admin/loans/requests">/admin/loans/requests</a></li>
+									<li>Review maturing accounts (loans and GICs within 30 days)</li>
+								</ul>
+							</li>
+							<li><strong>Process Pending Transactions:</strong>
+								<ul>
+									<li>Approve or reject client-initiated transactions</li>
+									<li>Verify transaction details and amounts</li>
+								</ul>
+							</li>
+							<li><strong>Process Loan Requests:</strong>
+								<ul>
+									<li>Review client credit history and account status</li>
+									<li>Approve or deny loan requests</li>
+									<li>Once approved, loan starts accruing interest from start date</li>
+								</ul>
+							</li>
+						</ol>
+
+						<h4>End of Day Review (5:00 PM)</h4>
+						<ol>
+							<li><strong>Review Maturing Loans:</strong>
+								<ul>
+									<li>Contact clients with loans maturing soon</li>
+									<li>Follow up on loans past maturity that are not paid off</li>
+								</ul>
+							</li>
+							<li><strong>Monitor System Health:</strong>
+								<ul>
+									<li>Check server logs for any errors in daily tasks</li>
+									<li>Verify automated interest calculations completed successfully</li>
+								</ul>
+							</li>
+						</ol>
+
+						<h4>Monthly Review</h4>
+						<ol>
+							<li>Review all active loans and investments</li>
+							<li>Generate reports on interest accrued and paid</li>
+							<li>Review client accounts for any anomalies</li>
+							<li>Update GIC product offerings and interest rates as needed</li>
+						</ol>
+					</div>
+				</div>
+
+				<!-- Important URLs Section -->
+				<div class="help-section">
+					<h3><i data-feather="link"></i> Important Admin Links</h3>
+
+					<div class="process-step">
+						<h4>Transaction Management</h4>
+						<ul>
+							<li><a href="/admin/transactions">/admin/transactions</a> - Review and approve pending transactions</li>
+						</ul>
+
+						<h4>Loan Management</h4>
+						<ul>
+							<li><a href="/admin/loans/view">/admin/loans/view</a> - View loans by client</li>
+							<li><a href="/admin/loans/requests">/admin/loans/requests</a> - Review pending loan requests</li>
+							<li><a href="/admin/loans/add">/admin/loans/add</a> - Create a new loan</li>
+						</ul>
+
+						<h4>Investment (GIC) Management</h4>
+						<ul>
+							<li><a href="/admin/gics/view">/admin/gics/view</a> - View and manage GIC products</li>
+							<li><a href="/admin/gics/add">/admin/gics/add</a> - Create a new GIC product</li>
+						</ul>
+
+						<h4>Client Management</h4>
+						<ul>
+							<li><a href="/admin/clients">/admin/clients</a> - View and edit client information</li>
+							<li><a href="/admin/agreements/view">/admin/agreements/view</a> - View client agreements</li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- Technical Details Section -->
+				<div class="help-section">
+					<h3><i data-feather="cpu"></i> Technical Details</h3>
+
+					<div class="process-step">
+						<h4>Interest Calculation Methods</h4>
+						<p><strong>Loans:</strong> Simple Interest (daily accrual)</p>
+						<div class="code-block">
+							Daily Interest = Principal × (Annual Rate / 100 / 365) × Days
+						</div>
+
+						<p class="mt-3"><strong>GICs at Maturity:</strong> Compound Interest (monthly compounding)</p>
+						<div class="code-block">
+							Maturity Value = Principal × (1 + Annual Rate / 12)<sup>Term in Months</sup>
+						</div>
+
+						<h4 class="mt-4">Maturity Date Calculation</h4>
+						<div class="code-block">
+							Maturity Date = Start Date + Term (in months)
+						</div>
+
+						<h4 class="mt-4">Cron Schedule</h4>
+						<div class="code-block">
+							Schedule: 0 0 * * * (Every day at midnight)<br>
+							Location: /jobs/dailyTasks.js<br>
+							Loaded in: /app.js line 14
+						</div>
+
+						<h4 class="mt-4">Key Service Files</h4>
+						<ul>
+							<li><code>/services/loan.service.js</code> - Loan business logic</li>
+							<li><code>/services/gic.service.js</code> - GIC/investment business logic</li>
+							<li><code>/services/financial.service.js</code> - Interest calculations</li>
+							<li><code>/jobs/dailyTasks.js</code> - Automated daily processes</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</main>
+		<footer>
+			<%- include('partials/footer'); %>
+		</footer>
+
+		<!-- Icons -->
+		<script src="/js/feather.min.js"></script>
+		<script>feather.replace()</script>
+	</body>
+</html>

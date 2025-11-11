@@ -54,6 +54,15 @@ router.get('/', async (req, res, next) => {
     }
   });
 
+// Admin help page with process documentation
+router.get('/help', async (req, res, next) => {
+  try {
+    res.render('admin-help', { user: req.user });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.route('/transactions')
   .get(async (req, res, next) => {
     try {
