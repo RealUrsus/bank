@@ -16,17 +16,17 @@
 			<!-- Content -->
 			<div class="p-5 w-100">
 				<!-- Notifications Section -->
-				<% if (pendingTransactionsCount > 0 || pendingLoansCount > 0 || maturingCount > 0) { %>
+				<% if ((typeof pendingTransactionsCount !== 'undefined' && pendingTransactionsCount > 0) || (typeof pendingLoansCount !== 'undefined' && pendingLoansCount > 0) || (typeof maturingCount !== 'undefined' && maturingCount > 0)) { %>
 				<h2 class="mb-4">Admin Dashboard</h2>
 				<div class="row mb-4">
-					<% if (pendingTransactionsCount > 0) { %>
+					<% if (typeof pendingTransactionsCount !== 'undefined' && pendingTransactionsCount > 0) { %>
 					<div class="col-md-4 mb-3">
 						<div class="alert alert-warning" role="alert">
 							<h5 class="alert-heading">
 								<i data-feather="alert-circle"></i> Pending Transactions
 							</h5>
 							<p class="mb-2">You have <strong><%= pendingTransactionsCount %></strong> transaction(s) awaiting approval.</p>
-							<% if (transactionClients.length > 0) { %>
+							<% if (typeof transactionClients !== 'undefined' && transactionClients.length > 0) { %>
 								<p class="mb-2 small text-muted">
 									<strong>From clients:</strong><br>
 									<%= transactionClients.slice(0, 3).join(', ') %>
@@ -40,14 +40,14 @@
 					</div>
 					<% } %>
 
-					<% if (pendingLoansCount > 0) { %>
+					<% if (typeof pendingLoansCount !== 'undefined' && pendingLoansCount > 0) { %>
 					<div class="col-md-4 mb-3">
 						<div class="alert alert-info" role="alert">
 							<h5 class="alert-heading">
 								<i data-feather="file-text"></i> Pending Loan Requests
 							</h5>
 							<p class="mb-2">You have <strong><%= pendingLoansCount %></strong> loan request(s) awaiting approval.</p>
-							<% if (loanClients.length > 0) { %>
+							<% if (typeof loanClients !== 'undefined' && loanClients.length > 0) { %>
 								<p class="mb-2 small text-muted">
 									<strong>From clients:</strong><br>
 									<%= loanClients.slice(0, 3).join(', ') %>
@@ -61,7 +61,7 @@
 					</div>
 					<% } %>
 
-					<% if (maturingCount > 0) { %>
+					<% if (typeof maturingCount !== 'undefined' && maturingCount > 0) { %>
 					<div class="col-md-4 mb-3">
 						<div class="alert alert-primary" role="alert">
 							<h5 class="alert-heading">
@@ -69,10 +69,10 @@
 							</h5>
 							<p class="mb-2">
 								<strong><%= maturingCount %></strong> account(s) maturing within 30 days.
-								<% if (maturingLoans.length > 0) { %>
+								<% if (typeof maturingLoans !== 'undefined' && maturingLoans.length > 0) { %>
 									<br><small><%= maturingLoans.length %> loan(s)</small>
 								<% } %>
-								<% if (maturingGICs.length > 0) { %>
+								<% if (typeof maturingGICs !== 'undefined' && maturingGICs.length > 0) { %>
 									<br><small><%= maturingGICs.length %> investment(s)</small>
 								<% } %>
 							</p>
@@ -86,7 +86,7 @@
 				<% } %>
 
 				<!-- Quote Section -->
-				<div class="<%= (pendingTransactionsCount > 0 || pendingLoansCount > 0 || maturingCount > 0) ? 'mt-5 pt-4 border-top' : '' %>">
+				<div class="<%= ((typeof pendingTransactionsCount !== 'undefined' && pendingTransactionsCount > 0) || (typeof pendingLoansCount !== 'undefined' && pendingLoansCount > 0) || (typeof maturingCount !== 'undefined' && maturingCount > 0)) ? 'mt-5 pt-4 border-top' : '' %>">
 					<h3>И от всякого, кому дано много, много и потребуется, и кому много вверено, с того больше взыщут</h3>
 					<hr>
 					<h3>Un gran poder conlleva una gran responsabilidad</h3>
@@ -106,7 +106,7 @@
 							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<% if (maturingLoans.length > 0) { %>
+							<% if (typeof maturingLoans !== 'undefined' && maturingLoans.length > 0) { %>
 							<h6>Loans</h6>
 							<div class="table-responsive mb-4">
 								<table class="table table-sm">
@@ -134,7 +134,7 @@
 							</div>
 							<% } %>
 
-							<% if (maturingGICs.length > 0) { %>
+							<% if (typeof maturingGICs !== 'undefined' && maturingGICs.length > 0) { %>
 							<h6>Investments (GICs)</h6>
 							<div class="table-responsive">
 								<table class="table table-sm">
