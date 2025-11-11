@@ -10,21 +10,26 @@
 			<%- include('partials/header'); %>
 		</header>
 
-		<main class="container-fluid d-flex">
-			<aside class="border bg-light p-3">
+		<main class="container-fluid d-flex flex-nowrap">
+			<aside class="border">
 				<%- include('partials/client/sidebar'); %>
 			</aside>
-			<div class="container p-3">
+			<div class="flex-grow-1 p-3">
+				<div class="d-flex justify-content-between align-items-center mb-4">
+					<h3 class="mb-0">Agreement #<%= agreement.AgreementID %></h3>
+					<a href="/client/agreements" class="btn btn-outline-secondary btn-sm">
+						<i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> Back to Agreements
+					</a>
+				</div>
 
-				<div class="mb-3">
-					<b>Agreement #</b> <%= agreement.AgreementID %>
-				</div>
-				<div class="mb-3">
-					<h5>Agreement Title:</h5> <%= agreement.AgreementName %>
-				</div>
-				<div class="mb-3">
-					<h5>Agreement Content: </h5>
-					<textarea readonly class="form-control" name="context" rows="15" style="white-space: pre-wrap;"><%= agreement.AgreementContent %></textarea>
+				<div class="card">
+					<div class="card-header bg-light">
+						<h5 class="mb-0"><%= agreement.AgreementName %></h5>
+					</div>
+					<div class="card-body">
+						<h6 class="text-muted mb-2">Agreement Content:</h6>
+						<textarea readonly class="form-control" name="context" rows="15" style="white-space: pre-wrap;"><%= agreement.AgreementContent %></textarea>
+					</div>
 				</div>
 			</div>
 		</main>
