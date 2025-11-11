@@ -227,6 +227,92 @@ const transactionService = {
        ORDER BY t.CreatedAt DESC`,
       [STATUS.PENDING, 1] // 1 = Chequing account type
     );
+  },
+
+  /**
+   * Generate report data based on filters
+   * @param {number} accountId - Account ID
+   * @param {object} filters - Report filters
+   * @param {string} filters.category - Category filter (optional)
+   * @param {string} filters.transactionType - Transaction type filter: 'income' or 'expense' (optional)
+   * @param {string} filters.startDate - Start date (YYYY-MM-DD) (optional)
+   * @param {string} filters.endDate - End date (YYYY-MM-DD) (optional)
+   * @returns {Promise<object>} Report data with aggregated statistics
+   */
+  async generateReport(accountId, filters = {}) {
+    const { category, transactionType, startDate, endDate } = filters;
+
+    // Build WHERE clause based on filters
+    const whereConditions = ['AccountID = ?', 'StatusID = ?'];
+    const params = [accountId, STATUS.APPROVED]; // Only approved transactions
+
+    if (category) {
+      whereConditions.push('Category = ?');
+      params.push(category);
+    }
+
+    if (transactionType === 'income') {
+      whereConditions.push('TransactionTypeID = ?');
+      params.push(TRANSACTION_TYPES.DEPOSIT);
+    } else if (transactionType === 'expense') {
+      whereConditions.push('TransactionTypeID = ?');
+      params.push(TRANSACTION_TYPES.WITHDRAWAL);
+    }
+
+    if (startDate && endDate) {
+      whereConditions.push('Date >= ?');
+      whereConditions.push('Date <= ?');
+      params.push(startDate, endDate);
+    }
+
+    const whereClause = whereConditions.join(' AND ');
+
+    // Get all matching transactions
+    const transactions = await db.queryMany(
+      `SELECT * FROM Transactions WHERE ${whereClause} ORDER BY Date DESC`,
+      params
+    );
+
+    // Calculate aggregated statistics
+    let totalIncome = 0;
+    let totalExpense = 0;
+    const categoryBreakdown = {};
+
+    transactions.forEach(t => {
+      if (t.TransactionTypeID === TRANSACTION_TYPES.DEPOSIT) {
+        totalIncome += t.Amount;
+      } else if (t.TransactionTypeID === TRANSACTION_TYPES.WITHDRAWAL) {
+        totalExpense += t.Amount;
+      }
+
+      // Category breakdown
+      if (t.Category) {
+        if (!categoryBreakdown[t.Category]) {
+          categoryBreakdown[t.Category] = {
+            income: 0,
+            expense: 0,
+            count: 0
+          };
+        }
+        categoryBreakdown[t.Category].count++;
+        if (t.TransactionTypeID === TRANSACTION_TYPES.DEPOSIT) {
+          categoryBreakdown[t.Category].income += t.Amount;
+        } else if (t.TransactionTypeID === TRANSACTION_TYPES.WITHDRAWAL) {
+          categoryBreakdown[t.Category].expense += t.Amount;
+        }
+      }
+    });
+
+    return {
+      transactions,
+      summary: {
+        totalIncome,
+        totalExpense,
+        netAmount: totalIncome - totalExpense,
+        transactionCount: transactions.length
+      },
+      categoryBreakdown
+    };
   }
 };
 

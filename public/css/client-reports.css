@@ -1,0 +1,218 @@
+/* Client Reports Page Styles */
+
+/* Report Summary Cards */
+.report-summary-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid;
+  height: 100%;
+}
+
+.report-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.income-card {
+  border-left-color: #28a745;
+}
+
+.expense-card {
+  border-left-color: #dc3545;
+}
+
+.net-card {
+  border-left-color: #17a2b8;
+}
+
+.count-card {
+  border-left-color: #6c757d;
+}
+
+.report-summary-icon {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+}
+
+.income-card .report-summary-icon {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.expense-card .report-summary-icon {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.net-card .report-summary-icon {
+  background: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
+}
+
+.count-card .report-summary-icon {
+  background: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}
+
+.report-summary-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.report-summary-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.report-summary-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #212529;
+  line-height: 1.2;
+}
+
+/* Filter Form Enhancements */
+.card-title {
+  font-weight: 600;
+  color: #495057;
+}
+
+.card-title svg {
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+/* Search Box */
+.search-box {
+  max-width: 400px;
+}
+
+.search-box .input-group-text {
+  border-right: 0;
+}
+
+.search-box .form-control {
+  border-left: 0;
+}
+
+.search-box .form-control:focus {
+  border-color: #ced4da;
+  box-shadow: none;
+}
+
+/* Table Enhancements */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.sortable:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sortable svg {
+  vertical-align: middle;
+  opacity: 0.5;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+/* Badge Styling */
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+/* Empty State */
+.text-center.py-5 svg {
+  opacity: 0.3;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .report-summary-card {
+    margin-bottom: 1rem;
+  }
+
+  .report-summary-value {
+    font-size: 1.25rem;
+  }
+
+  .report-summary-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+}
+
+/* Custom Date Range Inputs */
+#customDateRange .form-control {
+  font-size: 0.875rem;
+}
+
+/* Button Enhancements */
+.btn svg {
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+/* Animation for cards appearing */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-summary-card,
+.card {
+  animation: slideUp 0.3s ease-out;
+}
+
+.report-summary-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.report-summary-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.report-summary-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.report-summary-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
