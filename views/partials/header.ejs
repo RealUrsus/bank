@@ -1,32 +1,52 @@
 <nav class="navbar navbar-expand-sm bg-light navbar-light">
   <div class="container-fluid">
-      <a href="/" class="navbar-brand d-flex" style="gap: 40px;">
-        <img 
-          src="/images/bank.png"
-          height="45"
-          alt="Bank Logo"
-          loading="lazy"
-        />
-        <strong class="navbar-text lead"> First Home Bank </strong>
-      </a>      
-  </div>  
-  <div>
-      <ul class="navbar-nav d-flex flex-row align-items-center">
+    <a href="/" class="navbar-brand d-flex align-items-center gap-3">
+      <img
+        src="/images/bank.png"
+        height="45"
+        alt="Bank Logo"
+        loading="lazy"
+      />
+      <strong class="navbar-text lead mb-0">First Home Bank</strong>
+    </a>
+
+    <div class="ms-auto">
+      <ul class="navbar-nav d-flex flex-row align-items-center gap-2">
         <% if (typeof user === 'undefined') { %>
-          <li class="nav-item"><a class="nav-link active" href="/">Home</a></li>
-        <% } else if (user.role == 1) {%>
-          <li class="nav-item"><a class="nav-link" href="/admin">
-            <span class="ms-1 navbar-text text-nowrap">Admin Home</span></a>
+          <li class="nav-item">
+            <a class="nav-link px-3" href="/">
+              <i data-feather="home" style="width: 16px; height: 16px;"></i>
+              <span class="ms-1">Home</span>
+            </a>
           </li>
-        <% } else if (user.role == 3) {%>
-          <li class="nav-item"><a class="nav-link" href="/client">
-            <span class="ms-1 navbar-text text-nowrap">Client Home</span></a>
+          <li class="nav-item">
+            <a class="nav-link px-3" href="/login">
+              <i data-feather="log-in" style="width: 16px; height: 16px;"></i>
+              <span class="ms-1">Login</span>
+            </a>
           </li>
-        <%}%>
-        <% if (typeof user === 'undefined') { %>
-          <li class="nav-item"><a class="nav-link active" href="/login">Login</a></li>          
+        <% } else if (user.role == 1) { %>
+          <li class="nav-item">
+            <a class="nav-link px-3" href="/admin">
+              <i data-feather="shield" style="width: 16px; height: 16px;"></i>
+              <span class="ms-1">Admin Home</span>
+            </a>
+          </li>
+        <% } else if (user.role == 3) { %>
+          <li class="nav-item">
+            <a class="nav-link px-3" href="/client">
+              <i data-feather="user" style="width: 16px; height: 16px;"></i>
+              <span class="ms-1">Dashboard</span>
+            </a>
+          </li>
         <% } %>
-        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+        <li class="nav-item">
+          <a class="nav-link px-3" href="/about">
+            <i data-feather="info" style="width: 16px; height: 16px;"></i>
+            <span class="ms-1">About</span>
+          </a>
+        </li>
       </ul>
+    </div>
   </div>
 </nav>
