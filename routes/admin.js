@@ -13,6 +13,7 @@ const agreementService = require('../services/agreement.service');
 
 // Utils
 const { validateId, validateRequiredFields } = require('../utils/validators');
+const { TRANSACTION_CATEGORIES } = require('../services/constants');
 
 const router = express.Router();
 
