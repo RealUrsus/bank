@@ -1,168 +1,156 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<%- include('partials/head'); %>
-		<link rel="stylesheet" href="/css/sidebar.css">
-	</head>
-	<body>
-		<header>
-			<%- include('partials/header'); %>
-		</header>
-
-		<main class="container-fluid d-flex flex-nowrap">
-			<aside class="border">
-				<%- include('partials/admin/sidebar'); %>
-			</aside>
-        <!-- Content -->
-        <div class="flex-grow-1 p-5">
-          <% if (agreements && agreements.length > 0) { %>
-          <input class="form-control mb-3" id="myInput" type="text" placeholder="Search..">
-
-          <%
-            // Group agreements by client
-            const clientGroups = {};
-            agreements.forEach(agreement => {
-              const clientKey = `${agreement.Name} ${agreement.Surname}`;
-              const clientId = agreement.ClientID || clientKey;
-              if (!clientGroups[clientId]) {
-                clientGroups[clientId] = {
-                  name: agreement.Name,
-                  surname: agreement.Surname,
-                  agreements: []
-                };
-              }
-              clientGroups[clientId].agreements.push(agreement);
-            });
-
-            const clientKeys = Object.keys(clientGroups).sort((a, b) => {
-              const nameA = `${clientGroups[a].name} ${clientGroups[a].surname}`.toLowerCase();
-              const nameB = `${clientGroups[b].name} ${clientGroups[b].surname}`.toLowerCase();
-              return nameA.localeCompare(nameB);
-            });
-          %>
-
-          <div class="accordion" id="clientAgreementsAccordion">
-            <% clientKeys.forEach((clientId, index) => {
-              const client = clientGroups[clientId];
-              const collapseId = `collapse-${index}`;
-            %>
-              <div class="accordion-item mb-3" data-client-name="<%= client.name.toLowerCase() %> <%= client.surname.toLowerCase() %>">
-                <h2 class="accordion-header" id="heading-<%= index %>">
-                  <button class="accordion-button <%= index !== 0 ? 'collapsed' : '' %>" type="button" data-bs-toggle="collapse" data-bs-target="#<%= collapseId %>" aria-expanded="<%= index === 0 ? 'true' : 'false' %>" aria-controls="<%= collapseId %>">
-                    <strong><%= client.name %> <%= client.surname %></strong>
-                    <span class="badge bg-primary ms-2"><%= client.agreements.length %> agreement<%= client.agreements.length !== 1 ? 's' : '' %></span>
-                  </button>
-                </h2>
-                <div id="<%= collapseId %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>" aria-labelledby="heading-<%= index %>" data-bs-parent="#clientAgreementsAccordion">
-                  <div class="accordion-body p-0">
-                    <table class="table table-bordered table-striped mb-0">
-                      <thead>
-                        <tr>
-                          <th>Agreement</th>
-                          <th>Status</th>
-                          <th style="width: 200px; text-align: center;">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <% client.agreements.forEach(agreement => { %>
-                          <tr>
-                            <td><%= agreement.AgreementName %></td>
-                            <td>
-                              <% if (agreement.StatusName === 'Active') { %>
-                                <span class="badge bg-success"><%= agreement.StatusName %></span>
-                              <% } else if (agreement.StatusName === 'Pending') { %>
-                                <span class="badge bg-warning text-dark"><%= agreement.StatusName %></span>
-                              <% } else if (agreement.StatusName === 'Closed' || agreement.StatusName === 'Cancelled') { %>
-                                <span class="badge bg-secondary"><%= agreement.StatusName %></span>
-                              <% } else { %>
-                                <span class="badge bg-info text-dark"><%= agreement.StatusName %></span>
-                              <% } %>
-                            </td>
-                            <td class="text-center">
-                              <div class="btn-group" role="group">
-                                <a href="/admin/agreements/edit/<%= agreement.AgreementID %>" class="btn btn-primary btn-sm">Edit</a>
-                                <form action="/admin/agreements/delete" method="POST" class="d-inline">
-                                  <input type="hidden" name="id" value="<%= agreement.AgreementID %>">
-                                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this agreement?')">Delete</button>
-                                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                </form>
-                              </div>
-                            </td>
-                          </tr>
-                        <% }) %>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            <% }) %>
-          </div>
-          <% } else { %>
-          <div class="alert alert-info" role="alert">
-            <h5 class="alert-heading">No agreements found</h5>
-            <p>There are currently no agreements in the system.</p>
-          </div>
-          <% } %>
+  <head>
+    <%- include('partials/head'); %>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/client-common.css">
+  </head>
+  <body>
+    <header>
+      <%- include('partials/header'); %>
+    </header>
+    <main class="container-fluid d-flex flex-nowrap">
+      <aside class="border">
+        <%- include('partials/admin/sidebar'); %>
+      </aside>
+      <!-- Content -->
+      <div class="flex-grow-1 p-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="mb-0">Client Agreements</h3>
         </div>
-              
-          <script>
-            document.addEventListener("DOMContentLoaded", function() {
-              var input = document.getElementById("myInput");
-              var debounceTimer;
 
-              input.addEventListener("keyup", function() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function() {
-                  var filter = input.value.toLowerCase();
-                  var accordionItems = document.querySelectorAll(".accordion-item");
-                  var hasVisibleResults = false;
+        <!-- Client Selection -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i data-feather="user" style="width: 20px; height: 20px;"></i>
+              Select Client
+            </h5>
+            <form method="GET" action="/admin/agreements/view">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                  <label for="clientId" class="form-label">Client</label>
+                  <select class="form-select" id="clientId" name="clientId">
+                    <option value="">-- All Clients --</option>
+                    <% clients.forEach(client => { %>
+                      <option value="<%= client.UserID %>" <%= client.UserID == clientId ? 'selected' : '' %>>
+                        <%= client.Name %> <%= client.Surname %> (#<%= client.UserID %>)
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <button type="submit" class="btn btn-primary w-100">
+                    <i data-feather="search" style="width: 16px; height: 16px;"></i>
+                    Load Agreements
+                  </button>
+                </div>
+                <% if (clientId) { %>
+                <div class="col-md-3">
+                  <a href="/admin/agreements/view" class="btn btn-outline-secondary w-100">
+                    <i data-feather="x" style="width: 16px; height: 16px;"></i>
+                    Show All
+                  </a>
+                </div>
+                <% } %>
+              </div>
+            </form>
+          </div>
+        </div>
 
-                  accordionItems.forEach(function(item) {
-                    var clientName = item.getAttribute("data-client-name") || "";
-                    var rows = item.querySelectorAll("tbody tr");
-                    var hasVisibleRows = false;
+        <% if (clientId && selectedClient) { %>
+        <!-- Selected Client Info -->
+        <div class="alert alert-info mb-4">
+          <strong>Viewing agreements for:</strong> <%= selectedClient.Name %> <%= selectedClient.Surname %> (ID: #<%= selectedClient.UserID %>)
+        </div>
+        <% } %>
 
-                    // Check if client name matches
-                    var clientMatches = !filter || clientName.includes(filter);
-
-                    rows.forEach(function(row) {
-                      var text = row.textContent.toLowerCase();
-                      var rowMatches = !filter || text.includes(filter);
-                      var shouldShow = clientMatches || rowMatches;
-                      row.style.display = shouldShow ? "" : "none";
-                      if (shouldShow) {
-                        hasVisibleRows = true;
-                      }
-                    });
-
-                    // Show/hide entire accordion item based on matches
-                    item.style.display = (clientMatches || hasVisibleRows) ? "" : "none";
-
-                    if (clientMatches || hasVisibleRows) {
-                      hasVisibleResults = true;
-                      // Expand accordion if there's a filter and it has matches
-                      if (filter) {
-                        var collapse = item.querySelector(".accordion-collapse");
-                        if (collapse && !collapse.classList.contains("show")) {
-                          var bsCollapse = new bootstrap.Collapse(collapse, { show: true });
-                        }
-                      }
-                    }
-                  });
-                }, 200);
-              });
-            });
-          </script>
+        <!-- Agreements Display -->
+        <% if (agreements && agreements.length > 0) { %>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i data-feather="file-text" style="width: 20px; height: 20px;"></i>
+              Agreements <span class="badge bg-primary"><%= agreements.length %></span>
+            </h5>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Agreement ID</th>
+                    <th>Client</th>
+                    <th>Agreement Name</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% agreements.forEach(agreement => { %>
+                  <tr>
+                    <td><strong>#<%= agreement.AgreementID %></strong></td>
+                    <td><%= agreement.Name %> <%= agreement.Surname %></td>
+                    <td><%= agreement.AgreementName %></td>
+                    <td>
+                      <% if (agreement.StatusName === 'Active') { %>
+                        <span class="badge bg-success"><%= agreement.StatusName %></span>
+                      <% } else if (agreement.StatusName === 'Pending') { %>
+                        <span class="badge bg-warning text-dark"><%= agreement.StatusName %></span>
+                      <% } else if (agreement.StatusName === 'Closed' || agreement.StatusName === 'Cancelled') { %>
+                        <span class="badge bg-secondary"><%= agreement.StatusName %></span>
+                      <% } else { %>
+                        <span class="badge bg-info text-dark"><%= agreement.StatusName %></span>
+                      <% } %>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group" role="group">
+                        <a href="/admin/agreements/edit/<%= agreement.AgreementID %>" class="btn btn-secondary btn-sm">
+                          <i data-feather="edit" style="width: 14px; height: 14px;"></i>
+                          Edit
+                        </a>
+                        <form action="/admin/agreements/delete" method="POST" class="d-inline">
+                          <input type="hidden" name="id" value="<%= agreement.AgreementID %>">
+                          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this agreement?')">
+                            <i data-feather="trash-2" style="width: 14px; height: 14px;"></i>
+                            Delete
+                          </button>
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <% } else { %>
+        <!-- Empty State -->
+        <div class="card">
+          <div class="card-body">
+            <div class="text-center py-5">
+              <i data-feather="inbox" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+              <h4 class="text-muted">No Agreements Found</h4>
+              <% if (clientId) { %>
+                <p class="text-muted">This client has no agreements.</p>
+              <% } else { %>
+                <p class="text-muted">There are currently no agreements in the system.</p>
+              <% } %>
+              <a href="/admin/agreements/add" class="btn btn-primary">
+                <i data-feather="plus-circle" style="width: 16px; height: 16px;"></i>
+                Create New Agreement
+              </a>
+            </div>
+          </div>
+        </div>
+        <% } %>
+      </div>
     </main>
-		  
-		<footer>
-			<%- include('partials/footer'); %>
-		</footer>
-
+    <footer>
+      <%- include('partials/footer'); %>
+    </footer>
     <!-- Icons -->
-    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
-    <script>
-      feather.replace()
-    </script>
-	</body>
+    <script src="/js/feather.min.js"></script>
+    <script>feather.replace()</script>
+  </body>
 </html>

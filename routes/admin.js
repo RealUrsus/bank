@@ -64,29 +64,17 @@ router.get('/help', async (req, res, next) => {
   }
 });
 
-router.route('/transactions')
-  .get(async (req, res, next) => {
-    try {
-      const clientId = req.query.clientId ? validateId(req.query.clientId, 'clientId') : null;
-      const options = await userService.getAllClients();
-      const transactions = clientId ? await transactionService.getPendingTransactionsByUser(clientId) : null;
+router.get('/transactions', async (req, res, next) => {
+  try {
+    const clientId = req.query.clientId ? validateId(req.query.clientId, 'clientId') : null;
+    const options = await userService.getAllClients();
+    const transactions = clientId ? await transactionService.getPendingTransactionsByUser(clientId) : null;
 
-      res.render('admin-transactions', { user: req.user, options, clientId, transactions });
-    } catch (err) {
-      next(err);
-    }
-  })
-  .post(async (req, res, next) => {
-    try {
-      const clientId = validateId(req.body.clientId, 'clientId');
-      const options = await userService.getAllClients();
-      const transactions = await transactionService.getPendingTransactionsByUser(clientId);
-
-      res.render('admin-transactions', { user: req.user, options, clientId, transactions });
-    } catch (err) {
-      next(err);
-    }
-  });
+    res.render('admin-transactions', { user: req.user, options, clientId, transactions });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.post('/transactions/update', async (req, res, next) => {
   try {
@@ -357,8 +345,22 @@ router.post('/gics/delete', async (req, res, next) => {
 
 router.get('/agreements/view', async (req, res, next) => {
   try {
-    const agreements = await agreementService.getAllAgreements();
-    res.render('admin-agreements-view', { user: req.user, agreements });
+    const clients = await userService.getAllClients();
+    const clientId = req.query.clientId ? validateId(req.query.clientId, 'clientId') : null;
+
+    let agreements;
+    let selectedClient = null;
+
+    if (clientId) {
+      // Get agreements for specific client
+      agreements = await agreementService.getUserAgreements(clientId);
+      selectedClient = clients.find(c => c.UserID === clientId);
+    } else {
+      // Get all agreements
+      agreements = await agreementService.getAllAgreements();
+    }
+
+    res.render('admin-agreements-view', { user: req.user, agreements, clients, clientId, selectedClient });
   } catch (err) {
     next(err);
   }
