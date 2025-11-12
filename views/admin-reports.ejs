@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head'); %>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/client-common.css">
+    <link rel="stylesheet" href="/css/client-reports.css">
+  </head>
+  <body>
+    <header>
+      <%- include('partials/header'); %>
+    </header>
+    <main class="container-fluid d-flex flex-nowrap">
+      <aside class="border">
+        <%- include('partials/admin/sidebar'); %>
+      </aside>
+      <!-- Content -->
+      <div class="flex-grow-1 p-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="mb-0">Client Transaction Reports</h3>
+        </div>
+
+        <!-- Client Selection -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i data-feather="user" style="width: 20px; height: 20px;"></i>
+              Select Client
+            </h5>
+            <form method="GET" action="/admin/reports">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                  <label for="clientId" class="form-label">Client</label>
+                  <select class="form-select" id="clientId" name="clientId" required>
+                    <option value="">-- Select a Client --</option>
+                    <% clients.forEach(client => { %>
+                      <option value="<%= client.UserID %>" <%= selectedClient && selectedClient.UserID === client.UserID ? 'selected' : '' %>>
+                        <%= client.Name %> <%= client.Surname %> (#<%= client.UserID %>)
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <button type="submit" class="btn btn-primary w-100">
+                    <i data-feather="search" style="width: 16px; height: 16px;"></i>
+                    Load Client Data
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <% if (selectedClient) { %>
+        <!-- Selected Client Info -->
+        <div class="alert alert-info mb-4">
+          <strong>Viewing reports for:</strong> <%= selectedClient.Name %> <%= selectedClient.Surname %> (ID: #<%= selectedClient.UserID %>)
+        </div>
+
+        <!-- Filter Form -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i data-feather="filter" style="width: 20px; height: 20px;"></i>
+              Report Filters
+            </h5>
+            <form id="reportForm" method="GET" action="/admin/reports">
+              <input type="hidden" name="clientId" value="<%= selectedClient.UserID %>">
+              <div class="row g-3">
+                <!-- Transaction Type Filter -->
+                <div class="col-md-3">
+                  <label for="transactionType" class="form-label">Transaction Type</label>
+                  <select class="form-select" id="transactionType" name="transactionType">
+                    <option value="">All Transactions</option>
+                    <option value="income" <%= filters.transactionType === 'income' ? 'selected' : '' %>>Income Only</option>
+                    <option value="expense" <%= filters.transactionType === 'expense' ? 'selected' : '' %>>Expenses Only</option>
+                  </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="col-md-3">
+                  <label for="category" class="form-label">Category</label>
+                  <select class="form-select" id="category" name="category">
+                    <option value="">All Categories</option>
+                    <% categories.forEach(cat => { %>
+                      <option value="<%= cat %>" <%= filters.category === cat ? 'selected' : '' %>><%= cat %></option>
+                    <% }) %>
+                  </select>
+                </div>
+
+                <!-- Timeframe Filter -->
+                <div class="col-md-3">
+                  <label for="timeframe" class="form-label">Timeframe</label>
+                  <select class="form-select" id="timeframe" name="timeframe">
+                    <option value="all" <%= filters.timeframe === 'all' ? 'selected' : '' %>>All Time</option>
+                    <option value="2025-09" <%= filters.timeframe === '2025-09' ? 'selected' : '' %>>September 2025</option>
+                    <option value="2025-10" <%= filters.timeframe === '2025-10' ? 'selected' : '' %>>October 2025</option>
+                    <option value="2025-11" <%= filters.timeframe === '2025-11' ? 'selected' : '' %>>November 2025</option>
+                    <option value="custom" <%= filters.timeframe === 'custom' ? 'selected' : '' %>>Custom Range</option>
+                  </select>
+                </div>
+
+                <!-- Custom Date Range (shown when Custom is selected) -->
+                <div class="col-md-3" id="customDateRange" style="display: <%= filters.timeframe === 'custom' ? 'block' : 'none' %>;">
+                  <label class="form-label">Date Range</label>
+                  <div class="d-flex gap-2">
+                    <input type="date" class="form-control form-control-sm" id="startDate" name="startDate" value="<%= filters.startDate || '' %>">
+                    <input type="date" class="form-control form-control-sm" id="endDate" name="endDate" value="<%= filters.endDate || '' %>">
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <button type="submit" class="btn btn-primary">
+                  <i data-feather="bar-chart-2" style="width: 16px; height: 16px;"></i>
+                  Generate Report
+                </button>
+                <a href="/admin/reports?clientId=<%= selectedClient.UserID %>" class="btn btn-outline-secondary">
+                  <i data-feather="x" style="width: 16px; height: 16px;"></i>
+                  Clear Filters
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <% if (reportData) { %>
+          <!-- Summary Cards -->
+          <div class="row mb-4">
+            <div class="col-md-3">
+              <div class="report-summary-card income-card">
+                <div class="report-summary-icon">
+                  <i data-feather="trending-up"></i>
+                </div>
+                <div class="report-summary-content">
+                  <div class="report-summary-label">Total Income</div>
+                  <div class="report-summary-value">$<%= reportData.summary.totalIncome.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="report-summary-card expense-card">
+                <div class="report-summary-icon">
+                  <i data-feather="trending-down"></i>
+                </div>
+                <div class="report-summary-content">
+                  <div class="report-summary-label">Total Expenses</div>
+                  <div class="report-summary-value">$<%= reportData.summary.totalExpense.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="report-summary-card net-card">
+                <div class="report-summary-icon">
+                  <i data-feather="<%= reportData.summary.netAmount >= 0 ? 'arrow-up-circle' : 'arrow-down-circle' %>"></i>
+                </div>
+                <div class="report-summary-content">
+                  <div class="report-summary-label">Net Amount</div>
+                  <div class="report-summary-value <%= reportData.summary.netAmount >= 0 ? 'text-success' : 'text-danger' %>">
+                    <%= reportData.summary.netAmount >= 0 ? '+' : '' %>$<%= reportData.summary.netAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="report-summary-card count-card">
+                <div class="report-summary-icon">
+                  <i data-feather="hash"></i>
+                </div>
+                <div class="report-summary-content">
+                  <div class="report-summary-label">Total Transactions</div>
+                  <div class="report-summary-value"><%= reportData.summary.transactionCount %></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Breakdown -->
+          <% if (Object.keys(reportData.categoryBreakdown).length > 0) { %>
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title mb-3">
+                <i data-feather="pie-chart" style="width: 20px; height: 20px;"></i>
+                Category Breakdown
+              </h5>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle" id="categoryTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="sortable" data-sort="category">
+                        Category <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                      </th>
+                      <th class="sortable text-end" data-sort="income">
+                        Income <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                      </th>
+                      <th class="sortable text-end" data-sort="expense">
+                        Expenses <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                      </th>
+                      <th class="sortable text-end" data-sort="net">
+                        Net <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                      </th>
+                      <th class="sortable text-center" data-sort="count">
+                        Transaction Count <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% Object.entries(reportData.categoryBreakdown).forEach(([category, data]) => {
+                      const netAmount = data.income - data.expense;
+                    %>
+                    <tr data-category="<%= category %>"
+                        data-income="<%= data.income %>"
+                        data-expense="<%= data.expense %>"
+                        data-net="<%= netAmount %>"
+                        data-count="<%= data.count %>">
+                      <td><span class="badge bg-secondary"><%= category %></span></td>
+                      <td class="text-end text-success fw-bold">
+                        <% if (data.income > 0) { %>
+                          +$<%= data.income.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                        <% } else { %>
+                          <span class="text-muted">—</span>
+                        <% } %>
+                      </td>
+                      <td class="text-end text-danger fw-bold">
+                        <% if (data.expense > 0) { %>
+                          -$<%= data.expense.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                        <% } else { %>
+                          <span class="text-muted">—</span>
+                        <% } %>
+                      </td>
+                      <td class="text-end fw-bold <%= netAmount >= 0 ? 'text-success' : 'text-danger' %>">
+                        <%= netAmount >= 0 ? '+' : '' %>$<%= netAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                      </td>
+                      <td class="text-center"><span class="badge bg-info"><%= data.count %></span></td>
+                    </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <% } %>
+
+          <!-- Transaction Details -->
+          <div class="card">
+            <div class="card-header bg-white" role="button" data-bs-toggle="collapse" data-bs-target="#transactionDetailsCollapse" aria-expanded="false" aria-controls="transactionDetailsCollapse">
+              <h5 class="card-title mb-0 d-flex justify-content-between align-items-center">
+                <span>
+                  <i data-feather="list" style="width: 20px; height: 20px;"></i>
+                  Transaction Details
+                </span>
+                <i data-feather="chevron-down" style="width: 20px; height: 20px;" id="collapseIcon"></i>
+              </h5>
+            </div>
+            <div class="collapse" id="transactionDetailsCollapse">
+              <div class="card-body">
+                <!-- Search Box -->
+                <div class="mb-3 search-box">
+                  <div class="input-group">
+                    <span class="input-group-text bg-white">
+                      <i data-feather="search" style="width: 16px; height: 16px;"></i>
+                    </span>
+                    <input type="text" class="form-control" id="searchTransactions" placeholder="Search transactions...">
+                  </div>
+                </div>
+
+                <% if (reportData.transactions && reportData.transactions.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle" id="transactionsTable">
+                    <thead class="table-light">
+                      <tr>
+                        <th class="sortable" data-sort="date">
+                          Date <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        </th>
+                        <th class="sortable" data-sort="type">
+                          Type <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        </th>
+                        <th class="sortable text-end" data-sort="amount">
+                          Amount <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        </th>
+                        <th class="sortable" data-sort="category">
+                          Category <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        </th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% reportData.transactions.forEach(transaction => {
+                        const transactionDate = new Date(transaction.Date);
+                        const formattedDate = transactionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                        const isDeposit = transaction.TransactionTypeID === 1;
+                      %>
+                      <tr data-date="<%= transaction.Date %>"
+                          data-type="<%= isDeposit ? 'deposit' : 'withdrawal' %>"
+                          data-amount="<%= transaction.Amount %>"
+                          data-category="<%= transaction.Category || '' %>">
+                        <td><%= formattedDate %></td>
+                        <td>
+                          <span class="badge <%= isDeposit ? 'bg-success' : 'bg-danger' %>">
+                            <i data-feather="<%= isDeposit ? 'arrow-down-circle' : 'arrow-up-circle' %>" style="width: 14px; height: 14px;"></i>
+                            <%= isDeposit ? 'Income' : 'Expense' %>
+                          </span>
+                        </td>
+                        <td class="text-end fw-bold <%= isDeposit ? 'text-success' : 'text-danger' %>">
+                          <%= isDeposit ? '+' : '-' %>$<%= transaction.Amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                        </td>
+                        <td>
+                          <% if (transaction.Category) { %>
+                            <span class="badge bg-secondary"><%= transaction.Category %></span>
+                          <% } else { %>
+                            <span class="text-muted fst-italic">—</span>
+                          <% } %>
+                        </td>
+                        <td><%= transaction.Description || '—' %></td>
+                      </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+                <% } else { %>
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                  <i data-feather="inbox" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+                  <h4 class="text-muted">No Transactions Found</h4>
+                  <p class="text-muted">Try adjusting your filters to see more results.</p>
+                </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% } %>
+        <% } else { %>
+        <!-- No Client Selected -->
+        <div class="text-center py-5">
+          <i data-feather="user-check" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+          <h4 class="text-muted">Select a Client</h4>
+          <p class="text-muted">Please select a client from the dropdown above to view their transaction reports.</p>
+        </div>
+        <% } %>
+      </div>
+    </main>
+    <footer>
+      <%- include('partials/footer'); %>
+    </footer>
+    <script src="/js/feather.min.js"></script>
+    <script>
+      feather.replace();
+
+      // Toggle collapse icon for Transaction Details
+      const transactionDetailsCollapse = document.getElementById('transactionDetailsCollapse');
+      const collapseIcon = document.getElementById('collapseIcon');
+
+      if (transactionDetailsCollapse && collapseIcon) {
+        transactionDetailsCollapse.addEventListener('show.bs.collapse', () => {
+          collapseIcon.setAttribute('data-feather', 'chevron-up');
+          feather.replace();
+        });
+
+        transactionDetailsCollapse.addEventListener('hide.bs.collapse', () => {
+          collapseIcon.setAttribute('data-feather', 'chevron-down');
+          feather.replace();
+        });
+      }
+
+      // Toggle custom date range visibility
+      const timeframeSelect = document.getElementById('timeframe');
+      const customDateRange = document.getElementById('customDateRange');
+
+      if (timeframeSelect && customDateRange) {
+        timeframeSelect.addEventListener('change', (e) => {
+          customDateRange.style.display = e.target.value === 'custom' ? 'block' : 'none';
+        });
+      }
+
+      // Search functionality
+      const searchInput = document.getElementById('searchTransactions');
+      const transactionsTable = document.getElementById('transactionsTable');
+
+      if (searchInput && transactionsTable) {
+        searchInput.addEventListener('input', (e) => {
+          const searchTerm = e.target.value.toLowerCase();
+          const rows = transactionsTable.querySelectorAll('tbody tr');
+          let visibleCount = 0;
+
+          rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const isVisible = text.includes(searchTerm);
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
+          });
+
+          const existingNoResults = document.getElementById('noSearchResults');
+          if (existingNoResults) {
+            existingNoResults.remove();
+          }
+
+          if (visibleCount === 0 && searchTerm !== '') {
+            const noResults = document.createElement('div');
+            noResults.id = 'noSearchResults';
+            noResults.className = 'alert alert-info text-center mt-3';
+            noResults.innerHTML = '<i data-feather="search" style="width: 24px; height: 24px;"></i><br>No transactions match your search term: <strong>' + searchTerm + '</strong>';
+            transactionsTable.parentElement.appendChild(noResults);
+            feather.replace();
+          }
+        });
+      }
+
+      // Sorting functionality for transaction table
+      const setupSorting = (tableId) => {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+
+        let sortDirection = {};
+
+        table.querySelectorAll('.sortable').forEach(header => {
+          header.style.cursor = 'pointer';
+          const sortKey = header.dataset.sort;
+          sortDirection[sortKey] = 'asc';
+
+          header.addEventListener('click', () => {
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            sortDirection[sortKey] = sortDirection[sortKey] === 'asc' ? 'desc' : 'asc';
+            const direction = sortDirection[sortKey];
+
+            rows.sort((a, b) => {
+              let aVal, bVal;
+
+              switch(sortKey) {
+                case 'date':
+                  aVal = new Date(a.dataset.date);
+                  bVal = new Date(b.dataset.date);
+                  break;
+                case 'type':
+                  aVal = a.dataset.type;
+                  bVal = b.dataset.type;
+                  break;
+                case 'amount':
+                  aVal = parseFloat(a.dataset.amount);
+                  bVal = parseFloat(b.dataset.amount);
+                  break;
+                case 'category':
+                  aVal = (a.dataset.category || '').toLowerCase();
+                  bVal = (b.dataset.category || '').toLowerCase();
+                  break;
+                case 'income':
+                  aVal = parseFloat(a.dataset.income || 0);
+                  bVal = parseFloat(b.dataset.income || 0);
+                  break;
+                case 'expense':
+                  aVal = parseFloat(a.dataset.expense || 0);
+                  bVal = parseFloat(b.dataset.expense || 0);
+                  break;
+                case 'net':
+                  aVal = parseFloat(a.dataset.net || 0);
+                  bVal = parseFloat(b.dataset.net || 0);
+                  break;
+                case 'count':
+                  aVal = parseInt(a.dataset.count || 0);
+                  bVal = parseInt(b.dataset.count || 0);
+                  break;
+              }
+
+              if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+              if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+              return 0;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+
+            table.querySelectorAll('.sortable i').forEach(icon => {
+              icon.setAttribute('data-feather', 'chevrons-up-down');
+            });
+            const icon = header.querySelector('i');
+            icon.setAttribute('data-feather', direction === 'asc' ? 'chevron-up' : 'chevron-down');
+            feather.replace();
+          });
+        });
+      };
+
+      setupSorting('transactionsTable');
+      setupSorting('categoryTable');
+    </script>
+  </body>
+</html>

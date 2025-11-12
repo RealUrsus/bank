@@ -469,6 +469,66 @@ router.route('/clients/edit/:userId')
     }
   });
 
+// Admin reports route with client selection
+router.get('/reports', async (req, res, next) => {
+  try {
+    const clients = await userService.getAllClients();
+    const clientId = req.query.clientId ? validateId(req.query.clientId, 'clientId') : null;
+
+    let reportData = null;
+    let selectedClient = null;
+
+    if (clientId) {
+      // Get client's chequing account
+      const accountService = require('../services/account.service');
+      const getAccountID = require('../middleware/getAccountID.js');
+      const { formatDate } = require('../utils/formatters');
+
+      const accountID = await getAccountID(clientId, "Chequing");
+
+      // Extract filters from query parameters
+      const { category, transactionType, startDate, endDate, timeframe } = req.query;
+
+      // Handle predefined timeframes
+      let filters = { category, transactionType };
+
+      if (timeframe === 'all') {
+        // No date filters for all time
+        filters.startDate = null;
+        filters.endDate = null;
+      } else if (timeframe === 'custom' && startDate && endDate) {
+        // Custom date range
+        filters.startDate = startDate;
+        filters.endDate = endDate;
+      } else if (timeframe && timeframe.includes('-')) {
+        // Month format: YYYY-MM
+        const [year, month] = timeframe.split('-');
+        const startOfMonth = new Date(year, month - 1, 1);
+        const endOfMonth = new Date(year, month, 0);
+        filters.startDate = formatDate(startOfMonth);
+        filters.endDate = formatDate(endOfMonth);
+      }
+
+      // Generate report
+      reportData = await transactionService.generateReport(accountID, filters);
+
+      // Get selected client info
+      selectedClient = clients.find(c => c.UserID === clientId);
+    }
+
+    res.render('admin-reports', {
+      user: req.user,
+      clients,
+      selectedClient,
+      reportData,
+      filters: req.query,
+      categories: TRANSACTION_CATEGORIES
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /admin/change-password
 router.get('/change-password', (req, res) => {
   res.render('change-password', { user: req.user, userRole: 'admin' });
