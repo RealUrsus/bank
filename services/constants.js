@@ -87,6 +87,7 @@ const TRANSACTION_CATEGORIES = [
   'Paycheck',
   'Gifts',
   'Clothes',
+  'Cosmetics',
   'Books',
   'Education',
   'Medical',
