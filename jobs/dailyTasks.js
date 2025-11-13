@@ -3,6 +3,29 @@ const loanService = require('../services/loan.service');
 const gicService = require('../services/gic.service');
 
 /**
+ * Disburse approved loans on their start date
+ */
+async function disburseLoanFunds() {
+  console.log('[Daily Task] Disbursing loan funds for loans reaching start date...');
+  const activeLoans = await loanService.getActiveLoans();
+  let disbursedCount = 0;
+
+  for (const loan of activeLoans) {
+    try {
+      const wasDisbursed = await loanService.disburseLoan(loan.AccountID);
+      if (wasDisbursed) {
+        disbursedCount++;
+        console.log(`Loan ${loan.AccountID} funds disbursed to chequing account`);
+      }
+    } catch (error) {
+      console.error(`Error disbursing loan ${loan.AccountID}:`, error);
+    }
+  }
+
+  console.log(`[Daily Task] Disbursed ${disbursedCount} loan(s)`);
+}
+
+/**
  * Process loan interest payments based on payment frequency (monthly or annual)
  */
 async function processLoanInterest() {
@@ -103,6 +126,9 @@ async function runDailyTasks() {
   console.log('='.repeat(50));
 
   try {
+    // Disburse loan funds first (before interest processing)
+    await disburseLoanFunds();
+
     // Process loan operations
     await processLoanInterest();
     await checkLoanPayoffs();
@@ -127,6 +153,7 @@ cron.schedule('0 0 * * *', async () => {
 // Export for manual testing
 module.exports = {
   runDailyTasks,
+  disburseLoanFunds,
   processLoanInterest,
   checkLoanPayoffs,
   checkLoanMaturity,
