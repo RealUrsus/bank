@@ -189,20 +189,6 @@ const gicService = {
   },
 
   /**
-   * Calculate accrued interest for a GIC
-   * @param {object} gic - GIC object
-   * @param {number} days - Number of days since last accrual
-   * @returns {number} Interest amount
-   */
-  calculateGICInterest(gic, days = 1) {
-    return financialService.calculateAccruedInterest(
-      gic.PrincipalAmount,
-      gic.InterestRate,
-      days
-    );
-  },
-
-  /**
    * Calculate maturity value for a GIC
    * @param {object} gic - GIC object
    * @returns {number} Maturity value
@@ -213,34 +199,6 @@ const gicService = {
       gic.InterestRate,
       gic.Term
     );
-  },
-
-  /**
-   * Process daily interest for a GIC
-   * Creates a system transaction for interest
-   * @param {number} gicId - GIC ID
-   * @returns {Promise<number|null>} Transaction ID or null if not applicable
-   */
-  async processDailyInterest(gicId) {
-    const gic = await this.getGIC(gicId);
-    if (!gic || gic.StatusID !== STATUS.APPROVED) {
-      return null;
-    }
-
-    const interest = this.calculateGICInterest(gic, 1);
-
-    if (interest > 0) {
-      const transactionId = await transactionService.createSystemTransaction({
-        accountId: gicId,
-        transactionTypeId: TRANSACTION_TYPES.DEPOSIT,
-        amount: interest,
-        description: `Daily interest accrual (${gic.InterestRate}% APR)`
-      });
-
-      return transactionId;
-    }
-
-    return null;
   },
 
   /**
@@ -274,9 +232,9 @@ const gicService = {
       return false;
     }
 
-    // Calculate total value with interest
+    // Calculate total maturity value using compound interest formula:
+    // Maturity Value = Principal × (1 + Annual Rate / 12)^Number of Months
     const maturityValue = this.calculateGICMaturityValue(gic);
-    const totalInterest = maturityValue - gic.PrincipalAmount;
 
     // Get user's chequing account
     const chequingAccount = await db.queryOne(
@@ -289,26 +247,17 @@ const gicService = {
       throw new Error('User chequing account not found');
     }
 
+    // Perform all operations atomically
     await db.transaction(async () => {
-      // Add final interest if any
-      if (totalInterest > 0) {
-        await transactionService.createSystemTransaction({
-          accountId: gicId,
-          transactionTypeId: TRANSACTION_TYPES.DEPOSIT,
-          amount: totalInterest,
-          description: `GIC maturity interest (Total: $${maturityValue.toFixed(2)})`
-        });
-      }
-
-      // Transfer maturity value back to chequing
+      // Deposit full maturity value to chequing account
       await transactionService.createSystemTransaction({
         accountId: chequingAccount.AccountID,
         transactionTypeId: TRANSACTION_TYPES.DEPOSIT,
         amount: maturityValue,
-        description: `GIC maturity - ${gic.ProductName || 'Investment'}`
+        description: `GIC maturity - ${gic.ProductName || 'Investment'} (Principal: $${gic.PrincipalAmount.toFixed(2)}, Maturity: $${maturityValue.toFixed(2)})`
       });
 
-      // Mark GIC as closed
+      // Update GIC status to CLOSED
       await accountService.updateAccountStatus(gicId, STATUS.CLOSED);
     });
 
