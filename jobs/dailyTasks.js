@@ -3,21 +3,26 @@ const loanService = require('../services/loan.service');
 const gicService = require('../services/gic.service');
 
 /**
- * Process daily interest accrual for all active loans
+ * Process loan interest payments based on payment frequency (monthly or annual)
  */
 async function processLoanInterest() {
-  console.log('[Daily Task] Processing loan interest...');
+  console.log('[Daily Task] Processing loan interest payments...');
   const activeLoans = await loanService.getActiveLoans();
+  let processedCount = 0;
 
   for (const loan of activeLoans) {
     try {
-      await loanService.processDailyInterest(loan.AccountID);
+      const transactionId = await loanService.processLoanInterest(loan.AccountID);
+      if (transactionId) {
+        processedCount++;
+        console.log(`Interest payment processed for loan ${loan.AccountID}`);
+      }
     } catch (error) {
       console.error(`Error processing interest for loan ${loan.AccountID}:`, error);
     }
   }
 
-  console.log(`[Daily Task] Processed interest for ${activeLoans.length} loans`);
+  console.log(`[Daily Task] Processed ${processedCount} loan interest payments`);
 }
 
 /**
@@ -44,7 +49,7 @@ async function checkLoanPayoffs() {
 }
 
 /**
- * Check for loan maturity and process accordingly
+ * Check for loan maturity, log to file, and withdraw remaining balance from checking
  */
 async function checkLoanMaturity() {
   console.log('[Daily Task] Checking loan maturity...');
@@ -53,17 +58,17 @@ async function checkLoanMaturity() {
 
   for (const loan of activeLoans) {
     try {
-      const hasMatured = await loanService.checkLoanMaturity(loan.AccountID);
-      if (hasMatured) {
+      const wasProcessed = await loanService.checkLoanMaturity(loan.AccountID);
+      if (wasProcessed) {
         maturedCount++;
-        console.log(`Loan ${loan.AccountID} has reached maturity`);
+        console.log(`Loan ${loan.AccountID} has matured - logged and final payment withdrawn`);
       }
     } catch (error) {
-      console.error(`Error checking maturity for loan ${loan.AccountID}:`, error);
+      console.error(`Error processing maturity for loan ${loan.AccountID}:`, error);
     }
   }
 
-  console.log(`[Daily Task] Found ${maturedCount} matured loans`);
+  console.log(`[Daily Task] Processed ${maturedCount} matured loans`);
 }
 
 /**

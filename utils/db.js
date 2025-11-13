@@ -63,6 +63,13 @@ db.serialize(() => {
     }
   });
 
+  // Migration: Add LastInterestPaymentDate column to Accounts table if it doesn't exist
+  db.run(`ALTER TABLE Accounts ADD COLUMN LastInterestPaymentDate DATE DEFAULT NULL`, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding LastInterestPaymentDate column:', err);
+    }
+  });
+
   // Migration: Add Category column to Transactions table if it doesn't exist
   db.run(`ALTER TABLE Transactions ADD COLUMN Category TEXT DEFAULT NULL`, (err) => {
     if (err && !err.message.includes('duplicate column')) {

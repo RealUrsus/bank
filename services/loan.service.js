@@ -201,37 +201,87 @@ const loanService = {
   },
 
   /**
-   * Process daily interest for a loan
-   * Creates a system transaction for interest
+   * Process loan interest based on payment frequency
+   * Charges interest monthly or annually from checking account
    * @param {number} loanId - Loan ID
    * @returns {Promise<number|null>} Transaction ID or null if not applicable
    */
-  async processDailyInterest(loanId) {
+  async processLoanInterest(loanId) {
     const loan = await this.getLoan(loanId);
     if (!loan || loan.StatusID !== STATUS.APPROVED) {
       return null;
     }
 
-    const interest = this.calculateAccruedInterest(loan, 1);
+    // Determine if interest payment is due based on payment frequency
+    const now = new Date();
+    const lastPayment = loan.LastInterestPaymentDate
+      ? new Date(loan.LastInterestPaymentDate)
+      : new Date(loan.StartDate);
 
-    if (interest > 0) {
-      const transactionId = await transactionService.createSystemTransaction({
-        accountId: loanId,
-        transactionTypeId: TRANSACTION_TYPES.WITHDRAWAL,
-        amount: interest,
-        description: `Daily interest accrual (${loan.InterestRate}% APR)`
-      });
+    let isDue = false;
+    let interestAmount = 0;
+    let periodDescription = '';
 
-      return transactionId;
+    if (loan.PaymentFrequency === 'Monthly') {
+      // Check if a month has passed
+      const monthsSinceLastPayment = (now.getFullYear() - lastPayment.getFullYear()) * 12 +
+                                     (now.getMonth() - lastPayment.getMonth());
+      if (monthsSinceLastPayment >= 1) {
+        isDue = true;
+        // Calculate monthly interest: (Principal * Annual Rate) / 12
+        interestAmount = (loan.PrincipalAmount * loan.InterestRate / 100) / 12;
+        periodDescription = 'Monthly';
+      }
+    } else if (loan.PaymentFrequency === 'Annual') {
+      // Check if a year has passed
+      const yearsSinceLastPayment = now.getFullYear() - lastPayment.getFullYear();
+      const monthDiff = now.getMonth() - lastPayment.getMonth();
+      const dayDiff = now.getDate() - lastPayment.getDate();
+      if (yearsSinceLastPayment > 1 || (yearsSinceLastPayment === 1 && (monthDiff > 0 || (monthDiff === 0 && dayDiff >= 0)))) {
+        isDue = true;
+        // Calculate annual interest: Principal * Annual Rate
+        interestAmount = loan.PrincipalAmount * loan.InterestRate / 100;
+        periodDescription = 'Annual';
+      }
     }
 
-    return null;
+    if (!isDue || interestAmount <= 0) {
+      return null;
+    }
+
+    // Get user's checking account
+    const chequingAccount = await db.queryOne(
+      `SELECT AccountID FROM Accounts
+       WHERE UserID = ? AND AccountTypeID = ?`,
+      [loan.UserID, ACCOUNT_TYPES.CHEQUING]
+    );
+
+    if (!chequingAccount) {
+      throw new Error('User chequing account not found');
+    }
+
+    // Create withdrawal from checking account (even if balance goes negative)
+    const transactionId = await transactionService.createSystemTransaction({
+      accountId: chequingAccount.AccountID,
+      transactionTypeId: TRANSACTION_TYPES.WITHDRAWAL,
+      amount: interestAmount,
+      description: `${periodDescription} loan interest payment - Loan #${loanId} (${loan.InterestRate}% APR)`
+    });
+
+    // Update LastInterestPaymentDate
+    await db.run(
+      `UPDATE Accounts SET LastInterestPaymentDate = ? WHERE AccountID = ?`,
+      [now.toISOString().split('T')[0], loanId]
+    );
+
+    return transactionId;
   },
 
   /**
    * Check loan maturity and process accordingly
+   * Logs matured loans and withdraws remaining balance from checking account
    * @param {number} loanId - Loan ID
-   * @returns {Promise<boolean>} True if loan has matured
+   * @returns {Promise<boolean>} True if loan has matured and was processed
    */
   async checkLoanMaturity(loanId) {
     const loan = await this.getLoan(loanId);
@@ -244,18 +294,54 @@ const loanService = {
       loan.Term
     );
 
-    if (hasMatured) {
-      // Check if loan is paid off
-      const isPaidOff = await this.checkLoanPayoff(loanId);
-
-      if (!isPaidOff) {
-        // Loan has matured but not paid off - could add notifications here
-        // For now, just return true to indicate maturity
-        return true;
-      }
+    if (!hasMatured) {
+      return false;
     }
 
-    return hasMatured;
+    // Calculate remaining balance owed on the loan
+    const currentBalance = await accountService.getBalance(loanId);
+    const remainingBalance = loan.PrincipalAmount - currentBalance;
+
+    // Log to loans.log file
+    const fs = require('fs');
+    const path = require('path');
+    const logDir = path.join(__dirname, '..', 'var', 'log');
+    const logFile = path.join(logDir, 'loans.log');
+
+    const logEntry = `[${new Date().toISOString()}] Loan ${loanId} matured - User: ${loan.Name} ${loan.Surname} (ID: ${loan.UserID}), Principal: $${loan.PrincipalAmount.toFixed(2)}, Balance Paid: $${currentBalance.toFixed(2)}, Remaining: $${remainingBalance.toFixed(2)}\n`;
+
+    // Ensure log directory exists
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+
+    fs.appendFileSync(logFile, logEntry);
+
+    // Get user's checking account
+    const chequingAccount = await db.queryOne(
+      `SELECT AccountID FROM Accounts
+       WHERE UserID = ? AND AccountTypeID = ?`,
+      [loan.UserID, ACCOUNT_TYPES.CHEQUING]
+    );
+
+    if (!chequingAccount) {
+      throw new Error('User chequing account not found');
+    }
+
+    // Withdraw remaining loan balance from checking account (even if it goes negative)
+    if (remainingBalance > 0) {
+      await transactionService.createSystemTransaction({
+        accountId: chequingAccount.AccountID,
+        transactionTypeId: TRANSACTION_TYPES.WITHDRAWAL,
+        amount: remainingBalance,
+        description: `Loan maturity - Final payment for Loan #${loanId} (Remaining: $${remainingBalance.toFixed(2)})`
+      });
+    }
+
+    // Note: Not updating loan status here as per requirements
+    // Client must apply for a new loan
+
+    return true;
   },
 
   /**
