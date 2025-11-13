@@ -197,6 +197,11 @@ router.post('/loan/add', async (req, res, next) => {
 
     res.redirect(`/client/loan/${loanId}`);
   } catch (err) {
+    // Handle validation errors with user-friendly messages
+    if (err.status === 400) {
+      req.session.message = err.message;
+      return res.redirect('/client/loan/add');
+    }
     next(err);
   }
 });

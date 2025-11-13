@@ -154,6 +154,11 @@ router.route('/loans/add')
 
       res.redirect('/admin/loans/view');
     } catch (err) {
+      // Handle validation errors with user-friendly messages
+      if (err.status === 400) {
+        req.session.message = err.message;
+        return res.redirect('/admin/loans/add');
+      }
       next(err);
     }
   });
