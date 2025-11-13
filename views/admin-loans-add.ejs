@@ -16,6 +16,13 @@
       <!-- Content -->
       <div class="p-3">
         <h2 class="mb-3">Add New Loan</h2>
+        <% if (typeof locals.session !== 'undefined' && locals.session.message) { %>
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          <%= locals.session.message %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <% locals.session.message = null; %>
+        <% } %>
         <form action="/admin/loans/add" method="post" class="row g-2 align-items-center">
           <div class="input-group mb-3">
             <div class="form-floating mb-3">
