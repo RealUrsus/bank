@@ -55,24 +55,35 @@
 				<!-- Daily Automated Tasks Section -->
 				<div class="help-section">
 					<h3><i data-feather="clock"></i> Daily Automated Tasks</h3>
-					<p>The system runs automated tasks every day at <strong>midnight (12:00 AM)</strong> to process interest calculations and check maturity status for all accounts.</p>
+					<p>The system runs automated tasks every day at <strong>midnight UTC (12:00 AM)</strong> to process interest payments and check maturity status for all accounts.</p>
 
 					<h4>1. Loan Interest Processing</h4>
 					<div class="process-step">
 						<p><strong>Process:</strong> <code>processLoanInterest()</code></p>
-						<p><strong>Frequency:</strong> Daily at midnight</p>
+						<p><strong>Frequency:</strong> Daily at midnight (processes payments on due dates only)</p>
 						<p><strong>What happens:</strong></p>
 						<ul>
 							<li>System retrieves all <span class="badge bg-success">APPROVED</span> loans</li>
-							<li>Calculates daily interest using simple interest formula: <code>Principal × (Annual Rate / 100 / 365)</code></li>
-							<li>Creates a <span class="badge bg-danger">WITHDRAWAL</span> transaction for the interest amount</li>
+							<li>For each loan, checks if an interest payment is due based on <strong>Payment Frequency</strong>:
+								<ul>
+									<li><strong>Monthly:</strong> Payment due on the same day each month (e.g., loan starts Jan 15 → payments on Feb 15, Mar 15, etc.)</li>
+									<li><strong>Annual:</strong> Payment due on the same date each year (e.g., Jan 15, 2024 → Jan 15, 2025)</li>
+								</ul>
+							</li>
+							<li>If payment is due, calculates interest amount:
+								<ul>
+									<li><strong>Monthly:</strong> <code>(Principal × Annual Rate / 100) / 12</code></li>
+									<li><strong>Annual:</strong> <code>Principal × Annual Rate / 100</code></li>
+								</ul>
+							</li>
+							<li>Creates a <span class="badge bg-danger">WITHDRAWAL</span> from client's <strong>chequing account</strong> for the interest amount</li>
 							<li>Transaction is marked as <span class="badge bg-secondary">SYSTEM</span> and automatically approved</li>
-							<li>This reduces the loan balance (making it more negative)</li>
 						</ul>
 						<div class="alert alert-info alert-process">
-							<strong>Example:</strong> Loan with $10,000 principal at 5% APR<br>
-							Daily interest = $10,000 × (5 / 100 / 365) = $1.37<br>
-							A withdrawal of $1.37 is recorded each day
+							<strong>Example:</strong> Loan of $10,000 at 5% APR with Monthly payment frequency<br>
+							Start date: January 15, 2024<br>
+							Monthly interest = ($10,000 × 5 / 100) / 12 = $41.67<br>
+							Payments withdrawn on: Feb 15, Mar 15, Apr 15, etc.
 						</div>
 					</div>
 
@@ -84,50 +95,49 @@
 						<ul>
 							<li>System checks if loan balance ≥ principal amount</li>
 							<li>If condition is met, loan status changes to <span class="badge bg-success">PAID_OFF</span></li>
-							<li>Loan stops accruing interest once marked as paid off</li>
+							<li>Loan stops processing interest payments once marked as paid off</li>
 						</ul>
 						<div class="alert alert-success alert-process">
 							<strong>Note:</strong> Clients must make deposits to their loan account to pay it off. Once the total deposits equal or exceed the principal, the loan is automatically marked as paid off.
 						</div>
 					</div>
 
-					<h4>3. Loan Maturity Checks</h4>
+					<h4>3. Loan Maturity Processing</h4>
 					<div class="process-step">
 						<p><strong>Process:</strong> <code>checkLoanMaturity()</code></p>
 						<p><strong>Frequency:</strong> Daily at midnight</p>
 						<p><strong>What happens:</strong></p>
 						<ul>
 							<li>System checks if current date ≥ (start date + term in months)</li>
-							<li>Matured loans are logged to the console</li>
+							<li>For matured loans, the system automatically:
+								<ol>
+									<li>Logs maturity event to <code>/var/log/loans.log</code></li>
+									<li>Calculates remaining unpaid balance (Principal - Amount Paid)</li>
+									<li>Withdraws remaining balance from client's chequing account as final payment</li>
+									<li>Updates loan status to <span class="badge bg-secondary">CLOSED</span></li>
+									<li>Logs closure event</li>
+								</ol>
+							</li>
 							<li>30-day notification appears on admin dashboard for loans nearing maturity</li>
-							<li><strong>Important:</strong> Loans continue accruing interest after maturity until fully paid off</li>
 						</ul>
+						<div class="alert alert-warning alert-process">
+							<strong>Important:</strong> At maturity, the system automatically withdraws any remaining unpaid balance from the client's chequing account and closes the loan. Ensure clients have sufficient funds before maturity date.
+						</div>
 					</div>
 
-					<h4>4. GIC/Investment Interest Processing</h4>
-					<div class="process-step">
-						<p><strong>Process:</strong> <code>processGICInterest()</code></p>
-						<p><strong>Frequency:</strong> Daily at midnight</p>
-						<p><strong>What happens:</strong></p>
-						<ul>
-							<li>System retrieves all <span class="badge bg-success">APPROVED</span> GIC accounts</li>
-							<li>Calculates daily interest using simple interest formula</li>
-							<li>Creates a <span class="badge bg-success">DEPOSIT</span> transaction for the interest amount</li>
-							<li>Transaction is marked as <span class="badge bg-secondary">SYSTEM</span> and automatically approved</li>
-							<li>This increases the GIC balance</li>
-						</ul>
-					</div>
-
-					<h4>5. GIC Maturity Processing</h4>
+					<h4>4. GIC Maturity Processing</h4>
 					<div class="process-step">
 						<p><strong>Process:</strong> <code>checkGICMaturity()</code></p>
 						<p><strong>Frequency:</strong> Daily at midnight</p>
 						<p><strong>What happens:</strong></p>
 						<ul>
-							<li>System checks if current date ≥ maturity date</li>
-							<li>If matured, automatically processes the GIC maturity (see next section)</li>
+							<li>System checks if current date ≥ maturity date for each GIC</li>
+							<li>If matured, automatically processes the GIC (see next section for details)</li>
 							<li>30-day notification appears on admin dashboard for GICs nearing maturity</li>
 						</ul>
+						<div class="alert alert-info alert-process">
+							<strong>Note:</strong> GICs do NOT process interest on a daily basis. Interest is calculated using compound interest formula only at maturity.
+						</div>
 					</div>
 				</div>
 
@@ -135,51 +145,65 @@
 				<div class="help-section">
 					<h3><i data-feather="calendar"></i> Actions at Maturity</h3>
 
-					<h4>Loan Maturity Process</h4>
+					<h4>Loan Maturity Process (Fully Automated)</h4>
 					<div class="process-step">
 						<p><strong>When:</strong> Start Date + Term (in months) = Maturity Date</p>
 						<p><strong>Automatic Actions:</strong></p>
-						<ul>
-							<li>System logs the matured loan for admin review</li>
-							<li>Loan appears in "Maturing Accounts" notification 30 days before maturity</li>
-							<li><strong>No automatic status change occurs</strong></li>
-							<li>Loan continues to accrue interest until paid off</li>
-						</ul>
+						<ol>
+							<li>System logs maturity event to <code>/var/log/loans.log</code> with:
+								<ul>
+									<li>Loan ID and user details</li>
+									<li>Principal amount</li>
+									<li>Balance paid so far</li>
+									<li>Remaining balance owed</li>
+								</ul>
+							</li>
+							<li>Calculates remaining unpaid balance:
+								<div class="code-block">
+									Remaining = Principal Amount - Balance Paid
+								</div>
+							</li>
+							<li>Withdraws remaining balance from client's <strong>chequing account</strong> as final payment</li>
+							<li>Updates loan status to <span class="badge bg-secondary">CLOSED</span></li>
+							<li>Logs closure event to loans.log</li>
+							<li>All operations performed atomically (within a database transaction)</li>
+						</ol>
 						<p><strong>Manual Actions Required:</strong></p>
 						<ul>
-							<li>Review matured loans that are not paid off</li>
-							<li>Contact client for payment if needed</li>
-							<li>Client must deposit funds to pay off the loan</li>
-							<li>System automatically marks as <span class="badge bg-success">PAID_OFF</span> when balance ≥ principal</li>
+							<li><strong>Monitoring only</strong> - Ensure daily tasks complete successfully</li>
+							<li>Review logs for any errors during maturity processing</li>
+							<li>Clients should be notified 30 days before maturity to ensure adequate chequing balance</li>
 						</ul>
 						<div class="alert alert-warning alert-process">
-							<strong>Important:</strong> Loans do not automatically close at maturity. They continue accruing interest until the client pays them off in full.
+							<strong>Critical:</strong> At maturity, the system automatically withdraws any unpaid balance from the client's chequing account. If the account has insufficient funds, it will go negative. Admins should monitor the "Maturing Accounts" dashboard notification and contact clients to ensure adequate funds.
 						</div>
 					</div>
 
-					<h4>GIC/Investment Maturity Process</h4>
+					<h4>GIC/Investment Maturity Process (Fully Automated)</h4>
 					<div class="process-step">
 						<p><strong>When:</strong> Start Date + Term (in months) = Maturity Date</p>
-						<p><strong>Automatic Actions (fully automated):</strong></p>
+						<p><strong>Automatic Actions:</strong></p>
 						<ol>
-							<li>System calculates total maturity value using <strong>compound interest</strong>:
+							<li>System logs maturity event to <code>/var/log/gic.log</code></li>
+							<li>Calculates maturity value using <strong>compound interest with monthly compounding</strong>:
 								<div class="code-block">
-									Maturity Value = Principal × (1 + Annual Rate / 12)<sup>Number of Months</sup>
+									Maturity Value = Principal × (1 + Annual Rate / 12)<sup>Term in Months</sup>
 								</div>
 							</li>
-							<li>Creates a <span class="badge bg-success">DEPOSIT</span> transaction to client's chequing account for the full maturity value</li>
+							<li>Deposits full maturity value to client's <strong>chequing account</strong></li>
 							<li>Updates GIC status to <span class="badge bg-secondary">CLOSED</span></li>
-							<li>All operations performed in a database transaction (atomic)</li>
+							<li>Logs payoff event with maturity value and interest earned</li>
+							<li>All operations performed atomically (within a database transaction)</li>
 						</ol>
 						<p><strong>Manual Actions Required:</strong></p>
 						<ul>
 							<li><strong>None</strong> - GIC maturity is fully automated</li>
 							<li>Admin should monitor for any errors in the automated process</li>
-							<li>Client is notified that funds have been transferred back to their chequing account</li>
 						</ul>
 						<div class="alert alert-success alert-process">
 							<strong>Example:</strong> $5,000 GIC at 3% APR for 12 months<br>
 							Maturity Value = $5,000 × (1 + 0.03/12)<sup>12</sup> = $5,152.02<br>
+							Interest Earned = $152.02<br>
 							$5,152.02 is automatically deposited to client's chequing account
 						</div>
 					</div>
@@ -193,16 +217,17 @@
 					<div class="process-step">
 						<ul>
 							<li><span class="badge bg-warning">PENDING</span> - Awaiting admin approval (new loan request)</li>
-							<li><span class="badge bg-success">APPROVED</span> - Active loan accruing daily interest</li>
+							<li><span class="badge bg-success">APPROVED</span> - Active loan processing periodic interest payments</li>
 							<li><span class="badge bg-danger">REJECTED</span> - Loan request denied by admin</li>
-							<li><span class="badge bg-success">PAID_OFF</span> - Loan fully paid, no longer accruing interest</li>
+							<li><span class="badge bg-success">PAID_OFF</span> - Loan fully paid before maturity, no longer processing payments</li>
+							<li><span class="badge bg-secondary">CLOSED</span> - Loan has reached maturity and final payment processed</li>
 						</ul>
 					</div>
 
 					<h4>GIC Statuses</h4>
 					<div class="process-step">
 						<ul>
-							<li><span class="badge bg-success">APPROVED</span> - Active investment accruing daily interest</li>
+							<li><span class="badge bg-success">APPROVED</span> - Active investment (interest calculated at maturity, not daily)</li>
 							<li><span class="badge bg-secondary">CLOSED</span> - GIC has matured and funds returned to chequing</li>
 						</ul>
 					</div>
@@ -300,33 +325,53 @@
 
 					<div class="process-step">
 						<h4>Interest Calculation Methods</h4>
-						<p><strong>Loans:</strong> Simple Interest (daily accrual)</p>
+						<p><strong>Loan Interest Payments:</strong> Based on payment frequency (not daily accrual)</p>
 						<div class="code-block">
-							Daily Interest = Principal × (Annual Rate / 100 / 365) × Days
+							Monthly Interest = (Principal × Annual Rate / 100) / 12<br>
+							Annual Interest = Principal × Annual Rate / 100
 						</div>
+						<p class="text-muted small">Payments are withdrawn from chequing account on the anniversary day each month/year.</p>
 
-						<p class="mt-3"><strong>GICs at Maturity:</strong> Compound Interest (monthly compounding)</p>
+						<p class="mt-3"><strong>GIC Maturity Value:</strong> Compound Interest (monthly compounding)</p>
 						<div class="code-block">
-							Maturity Value = Principal × (1 + Annual Rate / 12)<sup>Term in Months</sup>
+							Maturity Value = Principal × (1 + Annual Rate / 12)<sup>Term in Months</sup><br>
+							Interest Earned = Maturity Value - Principal
 						</div>
+						<p class="text-muted small">Interest is NOT calculated daily; it's only computed at maturity using compound interest.</p>
 
 						<h4 class="mt-4">Maturity Date Calculation</h4>
 						<div class="code-block">
-							Maturity Date = Start Date + Term (in months)
+							Maturity Date = Start Date + Term (in months)<br>
+							Example: Jan 15, 2024 + 12 months = Jan 15, 2025
+						</div>
+
+						<h4 class="mt-4">Payment Frequency Logic</h4>
+						<div class="code-block">
+							Monthly: Payment on same day each month (e.g., 15th of every month)<br>
+							Annual: Payment on same date each year (e.g., Jan 15 annually)<br>
+							<br>
+							Check: monthsElapsed > 0 AND today.date === startDate.date
 						</div>
 
 						<h4 class="mt-4">Cron Schedule</h4>
 						<div class="code-block">
-							Schedule: 0 0 * * * (Every day at midnight)<br>
+							Schedule: 0 0 * * * (Every day at midnight UTC)<br>
 							Location: /jobs/dailyTasks.js<br>
 							Loaded in: /app.js line 14
 						</div>
 
+						<h4 class="mt-4">Log Files</h4>
+						<ul>
+							<li><code>/var/log/loans.log</code> - Loan maturity and closure events</li>
+							<li><code>/var/log/gic.log</code> - GIC maturity and payoff events</li>
+						</ul>
+
 						<h4 class="mt-4">Key Service Files</h4>
 						<ul>
-							<li><code>/services/loan.service.js</code> - Loan business logic</li>
+							<li><code>/services/loan.service.js</code> - Loan business logic and interest processing</li>
 							<li><code>/services/gic.service.js</code> - GIC/investment business logic</li>
-							<li><code>/services/financial.service.js</code> - Interest calculations</li>
+							<li><code>/services/financial.service.js</code> - Financial calculations and maturity checks</li>
+							<li><code>/services/maturity-logger.service.js</code> - Unified logging for maturity events</li>
 							<li><code>/jobs/dailyTasks.js</code> - Automated daily processes</li>
 						</ul>
 					</div>
