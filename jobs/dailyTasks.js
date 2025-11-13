@@ -67,24 +67,6 @@ async function checkLoanMaturity() {
 }
 
 /**
- * Process daily interest accrual for all active GICs
- */
-async function processGICInterest() {
-  console.log('[Daily Task] Processing GIC interest...');
-  const activeGICs = await gicService.getActiveGICs();
-
-  for (const gic of activeGICs) {
-    try {
-      await gicService.processDailyInterest(gic.AccountID);
-    } catch (error) {
-      console.error(`Error processing interest for GIC ${gic.AccountID}:`, error);
-    }
-  }
-
-  console.log(`[Daily Task] Processed interest for ${activeGICs.length} GICs`);
-}
-
-/**
  * Check for GIC maturity and process accordingly
  */
 async function checkGICMaturity() {
@@ -122,7 +104,6 @@ async function runDailyTasks() {
     await checkLoanMaturity();
 
     // Process GIC operations
-    await processGICInterest();
     await checkGICMaturity();
 
     console.log('='.repeat(50));
@@ -144,6 +125,5 @@ module.exports = {
   processLoanInterest,
   checkLoanPayoffs,
   checkLoanMaturity,
-  processGICInterest,
   checkGICMaturity
 };
