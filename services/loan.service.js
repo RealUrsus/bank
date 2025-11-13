@@ -116,7 +116,8 @@ const loanService = {
   },
 
   /**
-   * Approve a loan request and deposit funds to chequing account
+   * Approve a loan request
+   * Funds will be disbursed on the start date during daily tasks
    * @param {number} loanId - Loan ID
    * @returns {Promise<void>}
    */
@@ -126,33 +127,18 @@ const loanService = {
       throw new Error('Loan not found');
     }
 
-    if (loan.StatusID !== STATUS.PENDING) {
-      throw new Error('Only pending loans can be approved');
-    }
+    await accountService.updateAccountStatus(loanId, STATUS.APPROVED);
 
-    // Get user's chequing account
-    const chequingAccount = await db.queryOne(
-      `SELECT AccountID FROM Accounts
-       WHERE UserID = ? AND AccountTypeID = ?`,
-      [loan.UserID, ACCOUNT_TYPES.CHEQUING]
-    );
-
-    if (!chequingAccount) {
-      throw new Error('User chequing account not found');
-    }
-
-    // Approve loan and deposit principal to chequing account atomically
-    await db.transaction(async () => {
-      // Update loan status to APPROVED
-      await accountService.updateAccountStatus(loanId, STATUS.APPROVED);
-
-      // Deposit loan principal to chequing account
-      await transactionService.createSystemTransaction({
-        accountId: chequingAccount.AccountID,
-        transactionTypeId: TRANSACTION_TYPES.DEPOSIT,
-        amount: loan.PrincipalAmount,
-        description: `Loan disbursement - Loan #${loanId} ($${loan.PrincipalAmount.toFixed(2)} at ${loan.InterestRate}% APR)`
-      });
+    // Log approval event
+    maturityLogger.logLoanApproval({
+      loanId,
+      userId: loan.UserID,
+      userName: `${loan.Name} ${loan.Surname}`,
+      principal: loan.PrincipalAmount,
+      rate: loan.InterestRate,
+      term: loan.Term,
+      startDate: loan.StartDate,
+      frequency: loan.PaymentFrequency
     });
   },
 
@@ -231,6 +217,75 @@ const loanService = {
       loan.InterestRate,
       days
     );
+  },
+
+  /**
+   * Disburse loan funds to chequing account on start date
+   * Called by daily tasks to check if loan should be disbursed today
+   * @param {number} loanId - Loan ID
+   * @returns {Promise<boolean>} True if loan was disbursed
+   */
+  async disburseLoan(loanId) {
+    const loan = await this.getLoan(loanId);
+    if (!loan || loan.StatusID !== STATUS.APPROVED) {
+      return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(loan.StartDate);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Check if today is the start date or later, and loan hasn't been disbursed yet
+    if (today < startDate) {
+      return false; // Start date hasn't arrived yet
+    }
+
+    // Check if loan has already been disbursed by looking for existing disbursement transaction
+    const existingDisbursement = await db.queryOne(
+      `SELECT TransactionID FROM Transactions
+       WHERE AccountID IN (
+         SELECT AccountID FROM Accounts
+         WHERE UserID = ? AND AccountTypeID = ?
+       )
+       AND Description LIKE ?
+       LIMIT 1`,
+      [loan.UserID, ACCOUNT_TYPES.CHEQUING, `Loan disbursement - Loan #${loanId}%`]
+    );
+
+    if (existingDisbursement) {
+      return false; // Already disbursed
+    }
+
+    // Get user's chequing account
+    const chequingAccount = await db.queryOne(
+      `SELECT AccountID FROM Accounts
+       WHERE UserID = ? AND AccountTypeID = ?`,
+      [loan.UserID, ACCOUNT_TYPES.CHEQUING]
+    );
+
+    if (!chequingAccount) {
+      throw new Error('User chequing account not found');
+    }
+
+    // Deposit loan principal to chequing account
+    await transactionService.createSystemTransaction({
+      accountId: chequingAccount.AccountID,
+      transactionTypeId: TRANSACTION_TYPES.DEPOSIT,
+      amount: loan.PrincipalAmount,
+      description: `Loan disbursement - Loan #${loanId} ($${loan.PrincipalAmount.toFixed(2)} at ${loan.InterestRate}% APR)`
+    });
+
+    // Log disbursement event
+    maturityLogger.logLoanDisbursement({
+      loanId,
+      userId: loan.UserID,
+      userName: `${loan.Name} ${loan.Surname}`,
+      principal: loan.PrincipalAmount,
+      chequingAccountId: chequingAccount.AccountID
+    });
+
+    return true;
   },
 
   /**

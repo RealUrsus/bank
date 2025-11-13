@@ -54,33 +54,48 @@
 
 				<!-- Loan Approval Section -->
 				<div class="help-section">
-					<h3><i data-feather="check-square"></i> Loan Approval Process</h3>
-					<p>When an admin approves a loan request, the following automated process occurs:</p>
+					<h3><i data-feather="check-square"></i> Loan Approval and Disbursement Process</h3>
+					<p>The loan process follows these steps:</p>
 
 					<div class="process-step">
-						<p><strong>Approval Steps (Atomic Transaction):</strong></p>
-						<ol>
-							<li>System validates:
+						<p><strong>Step 1: Admin Approves Loan</strong></p>
+						<ul>
+							<li>Admin reviews loan request and clicks "Approve"</li>
+							<li>System updates loan status to <span class="badge bg-success">APPROVED</span></li>
+							<li>Logs <code>LOAN_APPROVED</code> event to <code>/var/log/loans.log</code></li>
+							<li><strong>No funds disbursed yet</strong> - funds will be disbursed on the start date</li>
+						</ul>
+
+						<p class="mt-3"><strong>Step 2: Daily Tasks Disburse Funds on Start Date</strong></p>
+						<ul>
+							<li>Daily tasks run at <strong>midnight UTC</strong></li>
+							<li>System checks all APPROVED loans</li>
+							<li>For loans where today ≥ start date and not yet disbursed:
 								<ul>
-									<li>Loan exists and is in PENDING status</li>
-									<li>Client has a chequing account</li>
+									<li>Deposits loan principal to client's chequing account</li>
+									<li>Creates system transaction: "Loan disbursement - Loan #[ID]"</li>
+									<li>Logs <code>LOAN_DISBURSED</code> event to <code>/var/log/loans.log</code></li>
+									<li>Loan becomes active</li>
 								</ul>
 							</li>
-							<li>Updates loan status to <span class="badge bg-success">APPROVED</span></li>
-							<li>Creates a <span class="badge bg-success">DEPOSIT</span> transaction:
-								<ul>
-									<li>Amount: Loan principal</li>
-									<li>Account: Client's chequing account</li>
-									<li>Type: System transaction (auto-approved)</li>
-									<li>Description: "Loan disbursement - Loan #[ID]"</li>
-								</ul>
-							</li>
-							<li>Both operations are performed atomically (all or nothing)</li>
-						</ol>
-						<div class="alert alert-success alert-process">
-							<strong>Example:</strong> Client requests $10,000 loan at 5% APR<br>
-							When approved → $10,000 immediately deposited to client's chequing account<br>
-							Interest payments begin based on payment frequency
+						</ul>
+
+						<p class="mt-3"><strong>Step 3: Interest Payments Begin</strong></p>
+						<ul>
+							<li>After disbursement, interest payments process based on payment frequency</li>
+							<li>Monthly or annual withdrawals from chequing account</li>
+						</ul>
+
+						<div class="alert alert-info alert-process">
+							<strong>Example Timeline:</strong><br>
+							<strong>Day 1 (Jan 10):</strong> Client requests $10,000 loan with start date Jan 15<br>
+							<strong>Day 2 (Jan 11):</strong> Admin approves → Status = APPROVED, no funds yet<br>
+							<strong>Day 6 (Jan 15 at midnight):</strong> Daily tasks run → $10,000 deposited to chequing<br>
+							<strong>Feb 15:</strong> First interest payment withdrawn (if Monthly frequency)<br>
+						</div>
+
+						<div class="alert alert-warning alert-process">
+							<strong>Important:</strong> Admins can approve loans in advance. The funds will only be disbursed when the start date arrives during the daily tasks at midnight UTC.
 						</div>
 					</div>
 				</div>
@@ -88,9 +103,31 @@
 				<!-- Daily Automated Tasks Section -->
 				<div class="help-section">
 					<h3><i data-feather="clock"></i> Daily Automated Tasks</h3>
-					<p>The system runs automated tasks every day at <strong>midnight UTC (12:00 AM)</strong> to process interest payments and check maturity status for all accounts.</p>
+					<p>The system runs automated tasks every day at <strong>midnight UTC (12:00 AM)</strong> to process loan disbursements, interest payments, and check maturity status for all accounts.</p>
 
-					<h4>1. Loan Interest Processing</h4>
+					<h4>1. Loan Disbursement</h4>
+					<div class="process-step">
+						<p><strong>Process:</strong> <code>disburseLoanFunds()</code></p>
+						<p><strong>Frequency:</strong> Daily at midnight (first task)</p>
+						<p><strong>What happens:</strong></p>
+						<ul>
+							<li>System retrieves all <span class="badge bg-success">APPROVED</span> loans</li>
+							<li>For each loan:
+								<ul>
+									<li>Checks if today ≥ start date</li>
+									<li>Checks if funds have already been disbursed</li>
+									<li>If eligible, deposits principal to client's chequing account</li>
+								</ul>
+							</li>
+							<li>Creates a <span class="badge bg-success">DEPOSIT</span> system transaction</li>
+							<li>Transaction description: "Loan disbursement - Loan #[ID]"</li>
+						</ul>
+						<div class="alert alert-success alert-process">
+							<strong>Note:</strong> This ensures approved loans are automatically funded on their start date without manual intervention.
+						</div>
+					</div>
+
+					<h4>2. Loan Interest Processing</h4>
 					<div class="process-step">
 						<p><strong>Process:</strong> <code>processLoanInterest()</code></p>
 						<p><strong>Frequency:</strong> Daily at midnight (processes payments on due dates only)</p>
@@ -120,7 +157,7 @@
 						</div>
 					</div>
 
-					<h4>2. Loan Payoff Checks</h4>
+					<h4>3. Loan Payoff Checks</h4>
 					<div class="process-step">
 						<p><strong>Process:</strong> <code>checkLoanPayoffs()</code></p>
 						<p><strong>Frequency:</strong> Daily at midnight</p>
@@ -135,7 +172,7 @@
 						</div>
 					</div>
 
-					<h4>3. Loan Maturity Processing</h4>
+					<h4>4. Loan Maturity Processing</h4>
 					<div class="process-step">
 						<p><strong>Process:</strong> <code>checkLoanMaturity()</code></p>
 						<p><strong>Frequency:</strong> Daily at midnight</p>
@@ -144,11 +181,11 @@
 							<li>System checks if current date ≥ (start date + term in months)</li>
 							<li>For matured loans, the system automatically:
 								<ol>
-									<li>Logs maturity event to <code>/var/log/loans.log</code></li>
+									<li>Logs <code>LOAN_MATURITY</code> event to <code>/var/log/loans.log</code></li>
 									<li>Calculates remaining unpaid balance (Principal - Amount Paid)</li>
 									<li>Withdraws remaining balance from client's chequing account as final payment</li>
 									<li>Updates loan status to <span class="badge bg-secondary">CLOSED</span></li>
-									<li>Logs closure event</li>
+									<li>Logs <code>LOAN_CLOSED</code> event</li>
 								</ol>
 							</li>
 							<li>30-day notification appears on admin dashboard for loans nearing maturity</li>
@@ -158,7 +195,7 @@
 						</div>
 					</div>
 
-					<h4>4. GIC Maturity Processing</h4>
+					<h4>5. GIC Maturity Processing</h4>
 					<div class="process-step">
 						<p><strong>Process:</strong> <code>checkGICMaturity()</code></p>
 						<p><strong>Frequency:</strong> Daily at midnight</p>
@@ -217,7 +254,7 @@
 						<p><strong>When:</strong> Start Date + Term (in months) = Maturity Date</p>
 						<p><strong>Automatic Actions:</strong></p>
 						<ol>
-							<li>System logs maturity event to <code>/var/log/gic.log</code></li>
+							<li>System logs <code>GIC_MATURITY</code> event to <code>/var/log/gic.log</code></li>
 							<li>Calculates maturity value using <strong>compound interest with monthly compounding</strong>:
 								<div class="code-block">
 									Maturity Value = Principal × (1 + Annual Rate / 12)<sup>Term in Months</sup>
@@ -225,7 +262,7 @@
 							</li>
 							<li>Deposits full maturity value to client's <strong>chequing account</strong></li>
 							<li>Updates GIC status to <span class="badge bg-secondary">CLOSED</span></li>
-							<li>Logs payoff event with maturity value and interest earned</li>
+							<li>Logs <code>GIC_PAYOFF</code> event with maturity value and interest earned</li>
 							<li>All operations performed atomically (within a database transaction)</li>
 						</ol>
 						<p><strong>Manual Actions Required:</strong></p>
@@ -256,10 +293,10 @@
 									<li>No funds disbursed yet</li>
 								</ul>
 							</li>
-							<li><span class="badge bg-success">APPROVED</span> - Active loan processing periodic interest payments
+							<li><span class="badge bg-success">APPROVED</span> - Loan approved, awaiting or active
 								<ul class="mt-2">
-									<li><strong>On approval:</strong> Principal amount is automatically deposited to client's chequing account</li>
-									<li>Interest payments begin based on payment frequency</li>
+									<li><strong>After approval:</strong> Funds disbursed on start date during daily tasks</li>
+									<li>Interest payments begin after disbursement, based on payment frequency</li>
 									<li>Loan remains active until paid off or matured</li>
 								</ul>
 							</li>
@@ -319,11 +356,11 @@
 									<li>Review client credit history and account status</li>
 									<li>Verify client's chequing account exists</li>
 									<li>Approve or deny loan requests</li>
-									<li><strong>Important:</strong> When approved, the system automatically:
+									<li><strong>Important:</strong> When approved:
 										<ul>
-											<li>Deposits loan principal to client's chequing account</li>
-											<li>Updates loan status to APPROVED</li>
-											<li>Begins interest payment schedule from start date</li>
+											<li>Loan status changes to APPROVED immediately</li>
+											<li>Funds will be disbursed on start date during midnight daily tasks</li>
+											<li>Can approve loans in advance of their start date</li>
 										</ul>
 									</li>
 								</ul>
@@ -430,8 +467,21 @@
 
 						<h4 class="mt-4">Log Files</h4>
 						<ul>
-							<li><code>/var/log/loans.log</code> - Loan maturity and closure events</li>
-							<li><code>/var/log/gic.log</code> - GIC maturity and payoff events</li>
+							<li><code>/var/log/loans.log</code> - Complete loan lifecycle events:
+								<ul>
+									<li><strong>LOAN_APPROVED:</strong> When admin approves loan (includes principal, rate, term, start date, frequency)</li>
+									<li><strong>LOAN_DISBURSED:</strong> When funds deposited to chequing on start date</li>
+									<li><strong>LOAN_MATURITY:</strong> When loan reaches maturity date (includes balance paid, remaining)</li>
+									<li><strong>LOAN_CLOSED:</strong> When loan is closed after maturity processing</li>
+								</ul>
+							</li>
+							<li><code>/var/log/gic.log</code> - Complete GIC lifecycle events:
+								<ul>
+									<li><strong>GIC_PURCHASED:</strong> When client purchases GIC (includes product, principal, rate, term)</li>
+									<li><strong>GIC_MATURITY:</strong> When GIC reaches maturity date</li>
+									<li><strong>GIC_PAYOFF:</strong> When funds deposited to chequing (includes maturity value, interest earned)</li>
+								</ul>
+							</li>
 						</ul>
 
 						<h4 class="mt-4">Key Service Files</h4>
