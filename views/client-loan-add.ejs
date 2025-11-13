@@ -15,12 +15,11 @@
       </aside>
       <!-- Content -->
       <div class="p-3">
-        <% if (typeof locals.session !== 'undefined' && locals.session.message) { %>
+        <% if (message) { %>
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
-          <%= locals.session.message %>
+          <%= message %>
           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        <% locals.session.message = null; %>
         <% } %>
         <form action="/client/loan/add" method="post" class="row g-2 align-items-center">
           <div class="input-group mb-3">
