@@ -130,8 +130,9 @@ router.route('/loans/add')
   .get(async (req, res, next) => {
     try {
       const users = await userService.getAllClients();
-      res.locals.session = req.session;
-      res.render('admin-loans-add', { user: req.user, users });
+      const message = req.session.message;
+      req.session.message = null;
+      res.render('admin-loans-add', { user: req.user, users, message });
     } catch (err) {
       next(err);
     }

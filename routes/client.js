@@ -176,8 +176,9 @@ router.post('/transactions/add', async (req, res, next) => {
 
 router.get('/loan/add', (req, res) => {
   res.locals.filter = null;
-  res.locals.session = req.session;
-  res.render('client-loan-add', { user: req.user });
+  const message = req.session.message;
+  req.session.message = null;
+  res.render('client-loan-add', { user: req.user, message });
 });
 
 router.post('/loan/add', async (req, res, next) => {
