@@ -62,6 +62,7 @@
 						<ul>
 							<li>Admin reviews loan request and clicks "Approve"</li>
 							<li>System updates loan status to <span class="badge bg-success">APPROVED</span></li>
+							<li>Logs <code>LOAN_APPROVED</code> event to <code>/var/log/loans.log</code></li>
 							<li><strong>No funds disbursed yet</strong> - funds will be disbursed on the start date</li>
 						</ul>
 
@@ -73,6 +74,7 @@
 								<ul>
 									<li>Deposits loan principal to client's chequing account</li>
 									<li>Creates system transaction: "Loan disbursement - Loan #[ID]"</li>
+									<li>Logs <code>LOAN_DISBURSED</code> event to <code>/var/log/loans.log</code></li>
 									<li>Loan becomes active</li>
 								</ul>
 							</li>
@@ -179,11 +181,11 @@
 							<li>System checks if current date ≥ (start date + term in months)</li>
 							<li>For matured loans, the system automatically:
 								<ol>
-									<li>Logs maturity event to <code>/var/log/loans.log</code></li>
+									<li>Logs <code>LOAN_MATURITY</code> event to <code>/var/log/loans.log</code></li>
 									<li>Calculates remaining unpaid balance (Principal - Amount Paid)</li>
 									<li>Withdraws remaining balance from client's chequing account as final payment</li>
 									<li>Updates loan status to <span class="badge bg-secondary">CLOSED</span></li>
-									<li>Logs closure event</li>
+									<li>Logs <code>LOAN_CLOSED</code> event</li>
 								</ol>
 							</li>
 							<li>30-day notification appears on admin dashboard for loans nearing maturity</li>
@@ -252,7 +254,7 @@
 						<p><strong>When:</strong> Start Date + Term (in months) = Maturity Date</p>
 						<p><strong>Automatic Actions:</strong></p>
 						<ol>
-							<li>System logs maturity event to <code>/var/log/gic.log</code></li>
+							<li>System logs <code>GIC_MATURITY</code> event to <code>/var/log/gic.log</code></li>
 							<li>Calculates maturity value using <strong>compound interest with monthly compounding</strong>:
 								<div class="code-block">
 									Maturity Value = Principal × (1 + Annual Rate / 12)<sup>Term in Months</sup>
@@ -260,7 +262,7 @@
 							</li>
 							<li>Deposits full maturity value to client's <strong>chequing account</strong></li>
 							<li>Updates GIC status to <span class="badge bg-secondary">CLOSED</span></li>
-							<li>Logs payoff event with maturity value and interest earned</li>
+							<li>Logs <code>GIC_PAYOFF</code> event with maturity value and interest earned</li>
 							<li>All operations performed atomically (within a database transaction)</li>
 						</ol>
 						<p><strong>Manual Actions Required:</strong></p>
@@ -465,8 +467,21 @@
 
 						<h4 class="mt-4">Log Files</h4>
 						<ul>
-							<li><code>/var/log/loans.log</code> - Loan maturity and closure events</li>
-							<li><code>/var/log/gic.log</code> - GIC maturity and payoff events</li>
+							<li><code>/var/log/loans.log</code> - Complete loan lifecycle events:
+								<ul>
+									<li><strong>LOAN_APPROVED:</strong> When admin approves loan (includes principal, rate, term, start date, frequency)</li>
+									<li><strong>LOAN_DISBURSED:</strong> When funds deposited to chequing on start date</li>
+									<li><strong>LOAN_MATURITY:</strong> When loan reaches maturity date (includes balance paid, remaining)</li>
+									<li><strong>LOAN_CLOSED:</strong> When loan is closed after maturity processing</li>
+								</ul>
+							</li>
+							<li><code>/var/log/gic.log</code> - Complete GIC lifecycle events:
+								<ul>
+									<li><strong>GIC_PURCHASED:</strong> When client purchases GIC (includes product, principal, rate, term)</li>
+									<li><strong>GIC_MATURITY:</strong> When GIC reaches maturity date</li>
+									<li><strong>GIC_PAYOFF:</strong> When funds deposited to chequing (includes maturity value, interest earned)</li>
+								</ul>
+							</li>
 						</ul>
 
 						<h4 class="mt-4">Key Service Files</h4>

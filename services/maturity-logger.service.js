@@ -14,6 +14,34 @@ if (!fs.existsSync(logDir)) {
 
 const maturityLoggerService = {
   /**
+   * Log loan approval event
+   * @param {object} data - Loan approval data
+   */
+  logLoanApproval(data) {
+    const { loanId, userId, userName, principal, rate, term, startDate, frequency } = data;
+    const timestamp = new Date().toISOString();
+    const logFile = path.join(logDir, 'loans.log');
+
+    const logEntry = `[${timestamp}] LOAN_APPROVED | Loan_ID: ${loanId} | User: ${userName} (ID: ${userId}) | Principal: $${principal.toFixed(2)} | Rate: ${rate}% | Term: ${term} months | Start_Date: ${startDate} | Payment_Frequency: ${frequency}\n`;
+
+    fs.appendFileSync(logFile, logEntry, 'utf8');
+  },
+
+  /**
+   * Log loan disbursement event
+   * @param {object} data - Loan disbursement data
+   */
+  logLoanDisbursement(data) {
+    const { loanId, userId, userName, principal, chequingAccountId } = data;
+    const timestamp = new Date().toISOString();
+    const logFile = path.join(logDir, 'loans.log');
+
+    const logEntry = `[${timestamp}] LOAN_DISBURSED | Loan_ID: ${loanId} | User: ${userName} (ID: ${userId}) | Amount: $${principal.toFixed(2)} | Chequing_Account: ${chequingAccountId} | Status: ACTIVE\n`;
+
+    fs.appendFileSync(logFile, logEntry, 'utf8');
+  },
+
+  /**
    * Log loan maturity event
    * @param {object} data - Loan maturity data
    */
@@ -37,6 +65,20 @@ const maturityLoggerService = {
     const logFile = path.join(logDir, 'loans.log');
 
     const logEntry = `[${timestamp}] LOAN_CLOSED | Loan_ID: ${loanId} | User_ID: ${userId} | Final_Payment: $${finalPayment.toFixed(2)} | Status: CLOSED\n`;
+
+    fs.appendFileSync(logFile, logEntry, 'utf8');
+  },
+
+  /**
+   * Log GIC purchase/start event
+   * @param {object} data - GIC purchase data
+   */
+  logGICPurchase(data) {
+    const { gicId, userId, userName, productName, principal, rate, term, startDate, chequingAccountId } = data;
+    const timestamp = new Date().toISOString();
+    const logFile = path.join(logDir, 'gic.log');
+
+    const logEntry = `[${timestamp}] GIC_PURCHASED | GIC_ID: ${gicId} | User: ${userName} (ID: ${userId}) | Product: ${productName} | Principal: $${principal.toFixed(2)} | Rate: ${rate}% | Term: ${term} months | Start_Date: ${startDate} | Chequing_Account: ${chequingAccountId} | Status: ACTIVE\n`;
 
     fs.appendFileSync(logFile, logEntry, 'utf8');
   },

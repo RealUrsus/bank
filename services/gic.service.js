@@ -161,7 +161,7 @@ const gicService = {
     }
 
     // Create GIC investment account and withdrawal transaction atomically
-    return await db.transaction(async () => {
+    const gicAccountId = await db.transaction(async () => {
       // Create GIC investment account
       const gicAccountId = await accountService.createAccount({
         userId,
@@ -187,6 +187,27 @@ const gicService = {
 
       return gicAccountId;
     });
+
+    // Get user details for logging
+    const user = await db.queryOne(
+      'SELECT Name, Surname FROM Users WHERE UserID = ?',
+      [userId]
+    );
+
+    // Log GIC purchase event
+    maturityLogger.logGICPurchase({
+      gicId: gicAccountId,
+      userId,
+      userName: `${user.Name} ${user.Surname}`,
+      productName: product.ProductName,
+      principal: amount,
+      rate: product.InterestRate,
+      term: product.Term,
+      startDate: formatDate(new Date()),
+      chequingAccountId
+    });
+
+    return gicAccountId;
   },
 
   /**

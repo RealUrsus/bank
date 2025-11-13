@@ -122,7 +122,24 @@ const loanService = {
    * @returns {Promise<void>}
    */
   async approveLoan(loanId) {
+    const loan = await this.getLoan(loanId);
+    if (!loan) {
+      throw new Error('Loan not found');
+    }
+
     await accountService.updateAccountStatus(loanId, STATUS.APPROVED);
+
+    // Log approval event
+    maturityLogger.logLoanApproval({
+      loanId,
+      userId: loan.UserID,
+      userName: `${loan.Name} ${loan.Surname}`,
+      principal: loan.PrincipalAmount,
+      rate: loan.InterestRate,
+      term: loan.Term,
+      startDate: loan.StartDate,
+      frequency: loan.PaymentFrequency
+    });
   },
 
   /**
@@ -257,6 +274,15 @@ const loanService = {
       transactionTypeId: TRANSACTION_TYPES.DEPOSIT,
       amount: loan.PrincipalAmount,
       description: `Loan disbursement - Loan #${loanId} ($${loan.PrincipalAmount.toFixed(2)} at ${loan.InterestRate}% APR)`
+    });
+
+    // Log disbursement event
+    maturityLogger.logLoanDisbursement({
+      loanId,
+      userId: loan.UserID,
+      userName: `${loan.Name} ${loan.Surname}`,
+      principal: loan.PrincipalAmount,
+      chequingAccountId: chequingAccount.AccountID
     });
 
     return true;
