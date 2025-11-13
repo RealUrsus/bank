@@ -234,7 +234,8 @@ const gicService = {
 
     // Calculate total maturity value using compound interest formula:
     // Maturity Value = Principal × (1 + Annual Rate / 12)^Number of Months
-    const maturityValue = this.calculateGICMaturityValue(gic);
+    // Round to 2 decimal places for currency
+    const maturityValue = Math.round(this.calculateGICMaturityValue(gic) * 100) / 100;
 
     // Get user's chequing account
     const chequingAccount = await db.queryOne(
