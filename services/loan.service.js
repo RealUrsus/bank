@@ -212,35 +212,29 @@ const loanService = {
       return null;
     }
 
-    // Determine if interest payment is due based on payment frequency
+    // Calculate days since loan start
     const now = new Date();
-    const lastPayment = loan.LastInterestPaymentDate
-      ? new Date(loan.LastInterestPaymentDate)
-      : new Date(loan.StartDate);
+    const startDate = new Date(loan.StartDate);
+    const daysSinceStart = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
 
     let isDue = false;
     let interestAmount = 0;
     let periodDescription = '';
 
     if (loan.PaymentFrequency === 'Monthly') {
-      // Check if a month has passed
-      const monthsSinceLastPayment = (now.getFullYear() - lastPayment.getFullYear()) * 12 +
-                                     (now.getMonth() - lastPayment.getMonth());
-      if (monthsSinceLastPayment >= 1) {
+      // Check if today is a monthly payment day (every 30 days)
+      if (daysSinceStart > 0 && daysSinceStart % 30 === 0) {
         isDue = true;
-        // Calculate monthly interest: (Principal * Annual Rate) / 12
-        interestAmount = (loan.PrincipalAmount * loan.InterestRate / 100) / 12;
+        // Calculate monthly interest: (Principal * Annual Rate) / 12, rounded to 2 decimals
+        interestAmount = Math.round((loan.PrincipalAmount * loan.InterestRate / 100) / 12 * 100) / 100;
         periodDescription = 'Monthly';
       }
     } else if (loan.PaymentFrequency === 'Annual') {
-      // Check if a year has passed
-      const yearsSinceLastPayment = now.getFullYear() - lastPayment.getFullYear();
-      const monthDiff = now.getMonth() - lastPayment.getMonth();
-      const dayDiff = now.getDate() - lastPayment.getDate();
-      if (yearsSinceLastPayment > 1 || (yearsSinceLastPayment === 1 && (monthDiff > 0 || (monthDiff === 0 && dayDiff >= 0)))) {
+      // Check if today is an annual payment day (every 365 days)
+      if (daysSinceStart > 0 && daysSinceStart % 365 === 0) {
         isDue = true;
-        // Calculate annual interest: Principal * Annual Rate
-        interestAmount = loan.PrincipalAmount * loan.InterestRate / 100;
+        // Calculate annual interest: Principal * Annual Rate, rounded to 2 decimals
+        interestAmount = Math.round(loan.PrincipalAmount * loan.InterestRate / 100 * 100) / 100;
         periodDescription = 'Annual';
       }
     }
@@ -268,12 +262,6 @@ const loanService = {
       description: `${periodDescription} loan interest payment - Loan #${loanId} (${loan.InterestRate}% APR)`
     });
 
-    // Update LastInterestPaymentDate
-    await db.run(
-      `UPDATE Accounts SET LastInterestPaymentDate = ? WHERE AccountID = ?`,
-      [now.toISOString().split('T')[0], loanId]
-    );
-
     return transactionId;
   },
 
@@ -298,9 +286,9 @@ const loanService = {
       return false;
     }
 
-    // Calculate remaining balance owed on the loan
+    // Calculate remaining balance owed on the loan, rounded to 2 decimals
     const currentBalance = await accountService.getBalance(loanId);
-    const remainingBalance = loan.PrincipalAmount - currentBalance;
+    const remainingBalance = Math.round((loan.PrincipalAmount - currentBalance) * 100) / 100;
 
     // Log to loans.log file
     const fs = require('fs');
