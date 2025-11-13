@@ -7,6 +7,7 @@ const db = require('./database.service');
 const accountService = require('./account.service');
 const transactionService = require('./transaction.service');
 const financialService = require('./financial.service');
+const maturityLogger = require('./maturity-logger.service');
 const { ACCOUNT_TYPES, STATUS, TRANSACTION_TYPES } = require('./constants');
 
 const loanService = {
@@ -202,7 +203,7 @@ const loanService = {
 
   /**
    * Process loan interest based on payment frequency
-   * Charges interest monthly or annually from checking account
+   * Charges interest monthly or annually from chequing account
    * @param {number} loanId - Loan ID
    * @returns {Promise<number|null>} Transaction ID or null if not applicable
    */
@@ -212,28 +213,33 @@ const loanService = {
       return null;
     }
 
-    // Calculate days since loan start
     const now = new Date();
     const startDate = new Date(loan.StartDate);
-    const daysSinceStart = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+
+    // Calculate months elapsed since loan start
+    const monthsElapsed = (now.getFullYear() - startDate.getFullYear()) * 12 +
+                          (now.getMonth() - startDate.getMonth());
+
+    // Check if today is the anniversary day of the month
+    const isAnniversaryDay = now.getDate() === startDate.getDate();
 
     let isDue = false;
     let interestAmount = 0;
     let periodDescription = '';
 
     if (loan.PaymentFrequency === 'Monthly') {
-      // Check if today is a monthly payment day (every 30 days)
-      if (daysSinceStart > 0 && daysSinceStart % 30 === 0) {
+      // Monthly payment: Due on the same day each month after the start date
+      // Example: Loan starts on Jan 15 -> payments on Feb 15, Mar 15, etc.
+      if (monthsElapsed > 0 && isAnniversaryDay) {
         isDue = true;
-        // Calculate monthly interest: (Principal * Annual Rate) / 12, rounded to 2 decimals
         interestAmount = Math.round((loan.PrincipalAmount * loan.InterestRate / 100) / 12 * 100) / 100;
         periodDescription = 'Monthly';
       }
     } else if (loan.PaymentFrequency === 'Annual') {
-      // Check if today is an annual payment day (every 365 days)
-      if (daysSinceStart > 0 && daysSinceStart % 365 === 0) {
+      // Annual payment: Due on the same date each year after the start date
+      // Example: Loan starts on Jan 15, 2024 -> payment on Jan 15, 2025
+      if (monthsElapsed > 0 && monthsElapsed % 12 === 0 && isAnniversaryDay) {
         isDue = true;
-        // Calculate annual interest: Principal * Annual Rate, rounded to 2 decimals
         interestAmount = Math.round(loan.PrincipalAmount * loan.InterestRate / 100 * 100) / 100;
         periodDescription = 'Annual';
       }
@@ -243,7 +249,7 @@ const loanService = {
       return null;
     }
 
-    // Get user's checking account
+    // Get user's chequing account
     const chequingAccount = await db.queryOne(
       `SELECT AccountID FROM Accounts
        WHERE UserID = ? AND AccountTypeID = ?`,
@@ -254,7 +260,7 @@ const loanService = {
       throw new Error('User chequing account not found');
     }
 
-    // Create withdrawal from checking account (even if balance goes negative)
+    // Withdraw interest from chequing account
     const transactionId = await transactionService.createSystemTransaction({
       accountId: chequingAccount.AccountID,
       transactionTypeId: TRANSACTION_TYPES.WITHDRAWAL,
@@ -267,7 +273,7 @@ const loanService = {
 
   /**
    * Check loan maturity and process accordingly
-   * Logs matured loans and withdraws remaining balance from checking account
+   * Logs matured loans, withdraws remaining balance, and closes the loan
    * @param {number} loanId - Loan ID
    * @returns {Promise<boolean>} True if loan has matured and was processed
    */
@@ -277,6 +283,7 @@ const loanService = {
       return false;
     }
 
+    // Check if loan has reached maturity date
     const hasMatured = financialService.hasReachedMaturity(
       loan.StartDate,
       loan.Term
@@ -286,26 +293,21 @@ const loanService = {
       return false;
     }
 
-    // Calculate remaining balance owed on the loan, rounded to 2 decimals
+    // Calculate remaining balance owed on the loan
     const currentBalance = await accountService.getBalance(loanId);
     const remainingBalance = Math.round((loan.PrincipalAmount - currentBalance) * 100) / 100;
 
-    // Log to loans.log file
-    const fs = require('fs');
-    const path = require('path');
-    const logDir = path.join(__dirname, '..', 'var', 'log');
-    const logFile = path.join(logDir, 'loans.log');
+    // Log maturity event
+    maturityLogger.logLoanMaturity({
+      loanId,
+      userId: loan.UserID,
+      userName: `${loan.Name} ${loan.Surname}`,
+      principal: loan.PrincipalAmount,
+      balancePaid: currentBalance,
+      remaining: remainingBalance
+    });
 
-    const logEntry = `[${new Date().toISOString()}] Loan ${loanId} matured - User: ${loan.Name} ${loan.Surname} (ID: ${loan.UserID}), Principal: $${loan.PrincipalAmount.toFixed(2)}, Balance Paid: $${currentBalance.toFixed(2)}, Remaining: $${remainingBalance.toFixed(2)}\n`;
-
-    // Ensure log directory exists
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-
-    fs.appendFileSync(logFile, logEntry);
-
-    // Get user's checking account
+    // Get user's chequing account
     const chequingAccount = await db.queryOne(
       `SELECT AccountID FROM Accounts
        WHERE UserID = ? AND AccountTypeID = ?`,
@@ -316,18 +318,28 @@ const loanService = {
       throw new Error('User chequing account not found');
     }
 
-    // Withdraw remaining loan balance from checking account (even if it goes negative)
-    if (remainingBalance > 0) {
-      await transactionService.createSystemTransaction({
-        accountId: chequingAccount.AccountID,
-        transactionTypeId: TRANSACTION_TYPES.WITHDRAWAL,
-        amount: remainingBalance,
-        description: `Loan maturity - Final payment for Loan #${loanId} (Remaining: $${remainingBalance.toFixed(2)})`
-      });
-    }
+    // Perform final withdrawal and status update atomically
+    await db.transaction(async () => {
+      // Withdraw remaining loan balance from chequing account if any balance remains
+      if (remainingBalance > 0) {
+        await transactionService.createSystemTransaction({
+          accountId: chequingAccount.AccountID,
+          transactionTypeId: TRANSACTION_TYPES.WITHDRAWAL,
+          amount: remainingBalance,
+          description: `Loan maturity - Final payment for Loan #${loanId} (Remaining: $${remainingBalance.toFixed(2)})`
+        });
+      }
 
-    // Note: Not updating loan status here as per requirements
-    // Client must apply for a new loan
+      // Update loan status to CLOSED (consistent with GIC maturity handling)
+      await accountService.updateAccountStatus(loanId, STATUS.CLOSED);
+    });
+
+    // Log closure event
+    maturityLogger.logLoanClosure({
+      loanId,
+      userId: loan.UserID,
+      finalPayment: remainingBalance
+    });
 
     return true;
   },
