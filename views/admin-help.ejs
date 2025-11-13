@@ -52,6 +52,39 @@
 				<h2 class="mb-4"><i data-feather="help-circle"></i> Admin Help - Daily Processes</h2>
 				<p class="lead">This page provides documentation for daily processes, loan and investment management, and maturity handling.</p>
 
+				<!-- Loan Approval Section -->
+				<div class="help-section">
+					<h3><i data-feather="check-square"></i> Loan Approval Process</h3>
+					<p>When an admin approves a loan request, the following automated process occurs:</p>
+
+					<div class="process-step">
+						<p><strong>Approval Steps (Atomic Transaction):</strong></p>
+						<ol>
+							<li>System validates:
+								<ul>
+									<li>Loan exists and is in PENDING status</li>
+									<li>Client has a chequing account</li>
+								</ul>
+							</li>
+							<li>Updates loan status to <span class="badge bg-success">APPROVED</span></li>
+							<li>Creates a <span class="badge bg-success">DEPOSIT</span> transaction:
+								<ul>
+									<li>Amount: Loan principal</li>
+									<li>Account: Client's chequing account</li>
+									<li>Type: System transaction (auto-approved)</li>
+									<li>Description: "Loan disbursement - Loan #[ID]"</li>
+								</ul>
+							</li>
+							<li>Both operations are performed atomically (all or nothing)</li>
+						</ol>
+						<div class="alert alert-success alert-process">
+							<strong>Example:</strong> Client requests $10,000 loan at 5% APR<br>
+							When approved → $10,000 immediately deposited to client's chequing account<br>
+							Interest payments begin based on payment frequency
+						</div>
+					</div>
+				</div>
+
 				<!-- Daily Automated Tasks Section -->
 				<div class="help-section">
 					<h3><i data-feather="clock"></i> Daily Automated Tasks</h3>
@@ -213,14 +246,42 @@
 				<div class="help-section">
 					<h3><i data-feather="tag"></i> Account Status Guide</h3>
 
-					<h4>Loan Statuses</h4>
+					<h4>Loan Statuses and Lifecycle</h4>
 					<div class="process-step">
+						<p><strong>Status Progression:</strong></p>
 						<ul>
-							<li><span class="badge bg-warning">PENDING</span> - Awaiting admin approval (new loan request)</li>
-							<li><span class="badge bg-success">APPROVED</span> - Active loan processing periodic interest payments</li>
-							<li><span class="badge bg-danger">REJECTED</span> - Loan request denied by admin</li>
-							<li><span class="badge bg-success">PAID_OFF</span> - Loan fully paid before maturity, no longer processing payments</li>
-							<li><span class="badge bg-secondary">CLOSED</span> - Loan has reached maturity and final payment processed</li>
+							<li><span class="badge bg-warning">PENDING</span> - Awaiting admin approval (new loan request)
+								<ul class="mt-2">
+									<li>Client submits loan application</li>
+									<li>No funds disbursed yet</li>
+								</ul>
+							</li>
+							<li><span class="badge bg-success">APPROVED</span> - Active loan processing periodic interest payments
+								<ul class="mt-2">
+									<li><strong>On approval:</strong> Principal amount is automatically deposited to client's chequing account</li>
+									<li>Interest payments begin based on payment frequency</li>
+									<li>Loan remains active until paid off or matured</li>
+								</ul>
+							</li>
+							<li><span class="badge bg-danger">REJECTED</span> - Loan request denied by admin
+								<ul class="mt-2">
+									<li>No funds are disbursed</li>
+									<li>Client must submit a new application</li>
+								</ul>
+							</li>
+							<li><span class="badge bg-success">PAID_OFF</span> - Loan fully paid before maturity, no longer processing payments
+								<ul class="mt-2">
+									<li>Client deposited enough to cover the principal</li>
+									<li>Automatically marked when balance ≥ principal</li>
+								</ul>
+							</li>
+							<li><span class="badge bg-secondary">CLOSED</span> - Loan has reached maturity and final payment processed
+								<ul class="mt-2">
+									<li>Maturity date reached</li>
+									<li>Remaining balance withdrawn from chequing</li>
+									<li>Loan account closed</li>
+								</ul>
+							</li>
 						</ul>
 					</div>
 
@@ -256,8 +317,15 @@
 							<li><strong>Process Loan Requests:</strong>
 								<ul>
 									<li>Review client credit history and account status</li>
+									<li>Verify client's chequing account exists</li>
 									<li>Approve or deny loan requests</li>
-									<li>Once approved, loan starts accruing interest from start date</li>
+									<li><strong>Important:</strong> When approved, the system automatically:
+										<ul>
+											<li>Deposits loan principal to client's chequing account</li>
+											<li>Updates loan status to APPROVED</li>
+											<li>Begins interest payment schedule from start date</li>
+										</ul>
+									</li>
 								</ul>
 							</li>
 						</ol>
