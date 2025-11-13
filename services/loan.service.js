@@ -116,12 +116,44 @@ const loanService = {
   },
 
   /**
-   * Approve a loan request
+   * Approve a loan request and deposit funds to chequing account
    * @param {number} loanId - Loan ID
    * @returns {Promise<void>}
    */
   async approveLoan(loanId) {
-    await accountService.updateAccountStatus(loanId, STATUS.APPROVED);
+    const loan = await this.getLoan(loanId);
+    if (!loan) {
+      throw new Error('Loan not found');
+    }
+
+    if (loan.StatusID !== STATUS.PENDING) {
+      throw new Error('Only pending loans can be approved');
+    }
+
+    // Get user's chequing account
+    const chequingAccount = await db.queryOne(
+      `SELECT AccountID FROM Accounts
+       WHERE UserID = ? AND AccountTypeID = ?`,
+      [loan.UserID, ACCOUNT_TYPES.CHEQUING]
+    );
+
+    if (!chequingAccount) {
+      throw new Error('User chequing account not found');
+    }
+
+    // Approve loan and deposit principal to chequing account atomically
+    await db.transaction(async () => {
+      // Update loan status to APPROVED
+      await accountService.updateAccountStatus(loanId, STATUS.APPROVED);
+
+      // Deposit loan principal to chequing account
+      await transactionService.createSystemTransaction({
+        accountId: chequingAccount.AccountID,
+        transactionTypeId: TRANSACTION_TYPES.DEPOSIT,
+        amount: loan.PrincipalAmount,
+        description: `Loan disbursement - Loan #${loanId} ($${loan.PrincipalAmount.toFixed(2)} at ${loan.InterestRate}% APR)`
+      });
+    });
   },
 
   /**
