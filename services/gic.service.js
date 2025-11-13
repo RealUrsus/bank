@@ -3,12 +3,32 @@
  * Handles GIC product and investment operations
  */
 
+const fs = require('fs');
+const path = require('path');
 const db = require('./database.service');
 const accountService = require('./account.service');
 const transactionService = require('./transaction.service');
 const financialService = require('./financial.service');
 const { ACCOUNT_TYPES, STATUS, TRANSACTION_TYPES } = require('./constants');
 const { formatDate } = require('../utils/formatters');
+
+// Ensure log directory exists
+const logDir = path.join(__dirname, '../var/log');
+const logFile = path.join(logDir, 'gic.log');
+
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+
+/**
+ * Log GIC events to file
+ * @param {string} message - Log message
+ */
+function logGICEvent(message) {
+  const timestamp = new Date().toISOString();
+  const logEntry = `[${timestamp}] ${message}\n`;
+  fs.appendFileSync(logFile, logEntry, 'utf8');
+}
 
 const gicService = {
   /**
@@ -248,6 +268,9 @@ const gicService = {
       throw new Error('User chequing account not found');
     }
 
+    // Log GIC maturity event
+    logGICEvent(`GIC_MATURITY | GIC_ID: ${gicId} | User_ID: ${gic.UserID} | Product: ${gic.ProductName || 'Investment'} | Principal: $${gic.PrincipalAmount.toFixed(2)} | Term: ${gic.Term} months | Start: ${gic.StartDate}`);
+
     // Perform all operations atomically
     await db.transaction(async () => {
       // Deposit full maturity value to chequing account
@@ -261,6 +284,10 @@ const gicService = {
       // Update GIC status to CLOSED
       await accountService.updateAccountStatus(gicId, STATUS.CLOSED);
     });
+
+    // Log successful payoff transaction
+    const interestEarned = maturityValue - gic.PrincipalAmount;
+    logGICEvent(`GIC_PAYOFF | GIC_ID: ${gicId} | User_ID: ${gic.UserID} | Maturity_Value: $${maturityValue.toFixed(2)} | Interest_Earned: $${interestEarned.toFixed(2)} | Chequing_Account: ${chequingAccount.AccountID} | Status: COMPLETED`);
 
     return true;
   },
