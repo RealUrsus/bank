@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head'); %>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/client-common.css">
+  </head>
+  <body>
+    <header>
+      <%- include('partials/header'); %>
+    </header>
+    <main class="container-fluid d-flex flex-nowrap">
+      <aside class="border">
+        <%- include('partials/client/sidebar'); %>
+      </aside>
+      <!-- Content -->
+      <div class="flex-grow-1 p-3">
+        <h3 class="mb-4">Help & Information</h3>
+
+        <!-- Timezone Information -->
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i data-feather="clock" style="width: 20px; height: 20px;"></i>
+              Date & Time Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info mb-3">
+              <i data-feather="info" style="width: 18px; height: 18px;"></i>
+              <strong>Important:</strong> All dates and times in this system are stored and processed in <strong>UTC (Coordinated Universal Time)</strong>.
+            </div>
+
+            <h6 class="fw-bold">What does this mean?</h6>
+            <ul>
+              <li>Transaction dates are recorded in UTC timezone</li>
+              <li>Loan start dates and maturity dates use UTC</li>
+              <li>GIC investment dates are in UTC</li>
+              <li>All timestamps and logs use UTC</li>
+            </ul>
+
+            <h6 class="fw-bold mt-3">Why UTC?</h6>
+            <p>
+              UTC is an international time standard that does not change with daylight saving time.
+              This ensures consistent date handling across different timezones and prevents confusion
+              when dates are displayed or processed.
+            </p>
+
+            <div class="alert alert-warning mt-3">
+              <i data-feather="alert-triangle" style="width: 18px; height: 18px;"></i>
+              <strong>Note:</strong> When entering dates, they will be interpreted as UTC.
+              Displayed dates may appear one day earlier or later depending on your local timezone offset.
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Help Sections -->
+        <div class="card mb-4">
+          <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+              <i data-feather="help-circle" style="width: 20px; height: 20px;"></i>
+              Account Status Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <h6 class="fw-bold">Loan & GIC Statuses:</h6>
+            <ul>
+              <li><span class="badge bg-warning">Pending</span> - Awaiting approval</li>
+              <li><span class="badge bg-success">Active</span> - Currently active and operational</li>
+              <li><span class="badge bg-danger">Rejected</span> - Request was rejected</li>
+              <li><span class="badge bg-info">Paid Off</span> - Loan fully repaid</li>
+              <li><span class="badge bg-secondary">Closed</span> - Account closed or matured</li>
+            </ul>
+
+            <h6 class="fw-bold mt-3">Transaction Statuses:</h6>
+            <ul>
+              <li><span class="badge bg-warning">Pending</span> - Awaiting approval</li>
+              <li><span class="badge bg-success">Approved</span> - Transaction approved and counted in balance</li>
+              <li><span class="badge bg-danger">Rejected</span> - Transaction rejected</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card">
+          <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+              <i data-feather="message-circle" style="width: 20px; height: 20px;"></i>
+              Need More Help?
+            </h5>
+          </div>
+          <div class="card-body">
+            <p>If you have questions or need assistance, please contact your bank administrator.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <%- include('partials/footer'); %>
+    </footer>
+    <!-- Icons -->
+    <script src="/js/feather.min.js"></script>
+    <script>feather.replace()</script>
+  </body>
+</html>
