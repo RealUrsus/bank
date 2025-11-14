@@ -37,8 +37,8 @@
                   <option selected>Select To Account...</option>
                   <% if (loans && loans.length > 0) { %>
                     <% for (const loan of loans) { %>
-                        <% if (loan.StatusID === 2) { %>
-                        <option value = <%= loan.AccountID %>>Loan #<%= loan.AccountID %> (-$<%= loan.PrincipalAmount %>)</option>
+                        <% if (loan.StatusID === 4) { %>
+                        <option value = <%= loan.AccountID %>>Loan #<%= loan.AccountID %> (-$<%= loan.PrincipalAmount.toFixed(2) %>)</option>
                         <% } %>
                     <%}%>
                   <%}%>
