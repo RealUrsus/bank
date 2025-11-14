@@ -475,4 +475,13 @@ router.post('/change-password', async (req, res, next) => {
   }
 });
 
+// Help page
+router.get('/help', async (req, res, next) => {
+  try {
+    res.render('client-help', { user: req.user });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
