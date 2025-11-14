@@ -314,7 +314,9 @@ router.get('/transfer', fetchLoans, async (req, res, next) => {
     res.render('client-transfer', {
       user: req.user,
       account: req.user.account,
-      approved_balance
+      approved_balance,
+      loans: res.locals.loans,
+      message: null
      });
   } catch (err) {
       next(err);
