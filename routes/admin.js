@@ -130,9 +130,7 @@ router.route('/loans/add')
   .get(async (req, res, next) => {
     try {
       const users = await userService.getAllClients();
-      const message = req.session.message;
-      req.session.message = null;
-      res.render('admin-loans-add', { user: req.user, users, message });
+      res.render('admin-loans-add', { user: req.user, users });
     } catch (err) {
       next(err);
     }
@@ -156,11 +154,6 @@ router.route('/loans/add')
 
       res.redirect('/admin/loans/view');
     } catch (err) {
-      // Handle validation errors with user-friendly messages
-      if (err.status === 400) {
-        req.session.message = err.message;
-        return res.redirect('/admin/loans/add');
-      }
       next(err);
     }
   });

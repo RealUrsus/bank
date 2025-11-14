@@ -176,9 +176,7 @@ router.post('/transactions/add', async (req, res, next) => {
 
 router.get('/loan/add', (req, res) => {
   res.locals.filter = null;
-  const message = req.session.message;
-  req.session.message = null;
-  res.render('client-loan-add', { user: req.user, message });
+  res.render('client-loan-add', { user: req.user });
 });
 
 router.post('/loan/add', async (req, res, next) => {
@@ -199,11 +197,6 @@ router.post('/loan/add', async (req, res, next) => {
 
     res.redirect(`/client/loan/${loanId}`);
   } catch (err) {
-    // Handle validation errors with user-friendly messages
-    if (err.status === 400) {
-      req.session.message = err.message;
-      return res.redirect('/client/loan/add');
-    }
     next(err);
   }
 });
