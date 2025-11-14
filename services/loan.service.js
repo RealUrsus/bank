@@ -249,8 +249,8 @@ const loanService = {
     const startDate = new Date(loan.StartDate);
     startDate.setHours(0, 0, 0, 0);
 
-    // Only disburse on the exact start date
-    if (today.getTime() !== startDate.getTime()) {
+    // Only disburse if start date has arrived
+    if (today.getTime() < startDate.getTime()) {
       return false;
     }
 
