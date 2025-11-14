@@ -254,23 +254,7 @@ const loanService = {
       return false; // Start date hasn't arrived yet
     }
 
-    // Check if loan has already been disbursed by looking for existing disbursement transaction
-    const existingDisbursement = await db.queryOne(
-      `SELECT TransactionID FROM Transactions
-       WHERE AccountID IN (
-         SELECT AccountID FROM Accounts
-         WHERE UserID = ? AND AccountTypeID = ?
-       )
-       AND Description LIKE ?
-       LIMIT 1`,
-      [loan.UserID, ACCOUNT_TYPES.CHEQUING, `Loan disbursement - Loan #${loanId}%`]
-    );
-
-    if (existingDisbursement) {
-      return false; // Already disbursed
-    }
-
-    // Get user's chequing account
+    // Get user's chequing account first
     const chequingAccount = await db.queryOne(
       `SELECT AccountID FROM Accounts
        WHERE UserID = ? AND AccountTypeID = ?`,
@@ -279,6 +263,19 @@ const loanService = {
 
     if (!chequingAccount) {
       throw new Error('User chequing account not found');
+    }
+
+    // Check if loan has already been disbursed by looking for existing disbursement transaction
+    const existingDisbursement = await db.queryOne(
+      `SELECT TransactionID FROM Transactions
+       WHERE AccountID = ?
+       AND Description LIKE ?
+       LIMIT 1`,
+      [chequingAccount.AccountID, `Loan disbursement - Loan #${loanId}%`]
+    );
+
+    if (existingDisbursement) {
+      return false; // Already disbursed
     }
 
     // Deposit loan principal to chequing account
