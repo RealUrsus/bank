@@ -76,6 +76,7 @@
                       <th>Principal Amount</th>
                       <th>Interest Rate</th>
                       <th>Term</th>
+                      <th>Status</th>
                       <th>Description</th>
                       <th class="text-center">Actions</th>
                     </tr>
@@ -88,6 +89,7 @@
                       <td class="fw-bold">$<%= loan.PrincipalAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></td>
                       <td><%= loan.InterestRate %>%</td>
                       <td><%= loan.Term %> months</td>
+                      <td><span class="badge bg-<%= loan.StatusName === 'Active' ? 'success' : loan.StatusName === 'Pending' ? 'warning' : loan.StatusName === 'Closed' || loan.StatusName === 'Paid Off' ? 'secondary' : 'danger' %>"><%= loan.StatusName %></span></td>
                       <td><%= loan.Description %></td>
                       <td class="text-center">
                         <div class="btn-group" role="group">
