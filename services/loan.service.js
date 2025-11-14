@@ -245,16 +245,17 @@ const loanService = {
     }
 
     // EOD runs at midnight (start of next day), so check if yesterday was the start date
+    // Use date strings to avoid timezone issues
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const startDate = new Date(loan.StartDate);
-    startDate.setHours(0, 0, 0, 0);
+    const yesterdayString = yesterday.getFullYear() + '-' +
+                           String(yesterday.getMonth() + 1).padStart(2, '0') + '-' +
+                           String(yesterday.getDate()).padStart(2, '0');
 
-    // Only disburse if yesterday was the start date
-    if (yesterday.getTime() !== startDate.getTime()) {
+    // Compare date strings (loan.StartDate is stored as 'YYYY-MM-DD')
+    if (loan.StartDate !== yesterdayString) {
       return false;
     }
 
