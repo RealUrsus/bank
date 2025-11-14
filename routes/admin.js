@@ -436,8 +436,10 @@ router.get('/clients', async (req, res, next) => {
   try {
     const clients = await userService.getAllClients();
     const message = req.session.message;
+    const messageType = req.session.messageType || 'info';
     req.session.message = null; // Clear message after displaying
-    res.render('admin-clients', { user: req.user, clients, message });
+    req.session.messageType = null;
+    res.render('admin-clients', { user: req.user, clients, message, messageType });
   } catch (err) {
     next(err);
   }
@@ -482,6 +484,7 @@ router.post('/clients/change-password', async (req, res, next) => {
     // Validate input
     if (!userId || !newPassword || !confirmPassword) {
       req.session.message = 'All fields are required.';
+      req.session.messageType = 'danger';
       return res.redirect('/admin/clients');
     }
 
@@ -489,6 +492,7 @@ router.post('/clients/change-password', async (req, res, next) => {
 
     if (!userService.passwordsMatch(newPassword, confirmPassword)) {
       req.session.message = 'Passwords do not match.';
+      req.session.messageType = 'danger';
       return res.redirect('/admin/clients');
     }
 
@@ -496,10 +500,12 @@ router.post('/clients/change-password', async (req, res, next) => {
     const result = await userService.adminChangePassword(userId, newPassword);
 
     req.session.message = result.message;
+    req.session.messageType = result.success ? 'success' : 'danger';
     res.redirect('/admin/clients');
   } catch (err) {
     console.error('Error changing client password:', err);
     req.session.message = 'An error occurred while changing password.';
+    req.session.messageType = 'danger';
     res.redirect('/admin/clients');
   }
 });
