@@ -149,7 +149,7 @@ router.route('/loans/add')
         term,
         startDate: date,
         description,
-        paymentFrequency
+        paymentFrequencyId: parseInt(paymentFrequency)
       });
 
       res.redirect('/admin/loans/view');
@@ -190,7 +190,7 @@ router.route('/loans/edit/:loanId')
         interestRate: interest,
         principalAmount: amount,
         term,
-        paymentFrequency,
+        paymentFrequencyId: parseInt(paymentFrequency),
         startDate: date,
         description,
         statusId: status

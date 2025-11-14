@@ -85,6 +85,21 @@ const DATE_CONFIG = {
   MAX_TRANSACTION_PERIOD_DAYS: 365
 };
 
+// Payment Frequencies
+const PAYMENT_FREQUENCIES = {
+  BI_WEEKLY: 0,
+  MONTHLY: 1,
+  ANNUALLY: 2,
+  AT_MATURITY: 3
+};
+
+const PAYMENT_FREQUENCY_NAMES = {
+  0: 'Bi-weekly',
+  1: 'Monthly',
+  2: 'Annually',
+  3: 'At Maturity'
+};
+
 // Transaction Categories
 const TRANSACTION_CATEGORIES = [
   'Food',
@@ -116,6 +131,8 @@ module.exports = {
   TRANSACTION_TYPE_NAMES,
   STATUS,
   STATUS_NAMES,
+  PAYMENT_FREQUENCIES,
+  PAYMENT_FREQUENCY_NAMES,
   PASSWORD_CONFIG,
   DATE_CONFIG,
   TRANSACTION_CATEGORIES

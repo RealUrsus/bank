@@ -8,7 +8,7 @@ const accountService = require('./account.service');
 const transactionService = require('./transaction.service');
 const financialService = require('./financial.service');
 const maturityLogger = require('./maturity-logger.service');
-const { ACCOUNT_TYPES, STATUS, TRANSACTION_TYPES } = require('./constants');
+const { ACCOUNT_TYPES, STATUS, TRANSACTION_TYPES, PAYMENT_FREQUENCIES } = require('./constants');
 
 const loanService = {
   /**
@@ -18,10 +18,11 @@ const loanService = {
    */
   async getLoan(loanId) {
     return await db.queryOne(
-      `SELECT a.*, u.Name, u.Surname, u.UserID, s.StatusName
+      `SELECT a.*, u.Name, u.Surname, u.UserID, s.StatusName, pf.PaymentFrequencyName
        FROM Accounts a
        INNER JOIN Users u ON a.UserID = u.UserID
        INNER JOIN Status s ON a.StatusID = s.StatusID
+       LEFT JOIN PaymentFrequencies pf ON a.PaymentFrequencyID = pf.PaymentFrequencyID
        WHERE a.AccountID = ? AND a.AccountTypeID = ?`,
       [loanId, ACCOUNT_TYPES.LOAN]
     );
@@ -36,9 +37,10 @@ const loanService = {
   async getUserLoans(userId, activeOnly = false) {
     if (activeOnly) {
       return await db.queryMany(
-        `SELECT a.*, s.StatusName
+        `SELECT a.*, s.StatusName, pf.PaymentFrequencyName
          FROM Accounts a
          INNER JOIN Status s ON a.StatusID = s.StatusID
+         LEFT JOIN PaymentFrequencies pf ON a.PaymentFrequencyID = pf.PaymentFrequencyID
          WHERE a.UserID = ? AND a.AccountTypeID = ?
            AND s.StatusName = 'Active'
          ORDER BY a.StartDate ASC`,
@@ -47,10 +49,11 @@ const loanService = {
     }
 
     return await db.queryMany(
-      `SELECT a.*, u.Name, u.Surname, s.StatusName
+      `SELECT a.*, u.Name, u.Surname, s.StatusName, pf.PaymentFrequencyName
        FROM Accounts a
        INNER JOIN Users u ON a.UserID = u.UserID
        INNER JOIN Status s ON a.StatusID = s.StatusID
+       LEFT JOIN PaymentFrequencies pf ON a.PaymentFrequencyID = pf.PaymentFrequencyID
        WHERE a.UserID = ? AND a.AccountTypeID = ?
        ORDER BY a.StartDate DESC`,
       [userId, ACCOUNT_TYPES.LOAN]
@@ -76,10 +79,11 @@ const loanService = {
    */
   async getPendingLoanRequests() {
     return await db.queryMany(
-      `SELECT a.*, u.Name, u.Surname, u.UserID, s.StatusName
+      `SELECT a.*, u.Name, u.Surname, u.UserID, s.StatusName, pf.PaymentFrequencyName
        FROM Accounts a
        INNER JOIN Users u ON a.UserID = u.UserID
        INNER JOIN Status s ON a.StatusID = s.StatusID
+       LEFT JOIN PaymentFrequencies pf ON a.PaymentFrequencyID = pf.PaymentFrequencyID
        WHERE a.AccountTypeID = ? AND a.StatusID = ?
        ORDER BY a.AccountID DESC`,
       [ACCOUNT_TYPES.LOAN, STATUS.PENDING]
@@ -99,7 +103,7 @@ const loanService = {
       term,
       startDate,
       description,
-      paymentFrequency
+      paymentFrequencyId
     } = loanData;
 
     // Server-side validation: Reject past dates (today is allowed)
@@ -124,7 +128,7 @@ const loanService = {
       startDate,
       statusId: STATUS.PENDING,
       description,
-      paymentFrequency
+      paymentFrequencyId
     });
   },
 
@@ -151,7 +155,7 @@ const loanService = {
       rate: loan.InterestRate,
       term: loan.Term,
       startDate: loan.StartDate,
-      frequency: loan.PaymentFrequency
+      frequency: loan.PaymentFrequencyName
     });
   },
 
@@ -214,7 +218,7 @@ const loanService = {
       loan.PrincipalAmount,
       loan.InterestRate,
       loan.Term,
-      loan.PaymentFrequency
+      loan.PaymentFrequencyName
     );
   },
 
@@ -316,7 +320,7 @@ const loanService = {
     let interestAmount = 0;
     let periodDescription = '';
 
-    if (loan.PaymentFrequency && loan.PaymentFrequency.toLowerCase() === 'monthly') {
+    if (loan.PaymentFrequencyID === PAYMENT_FREQUENCIES.MONTHLY) {
       // Monthly payment: Due on the same day each month after the start date
       // Example: Loan starts on Jan 15 -> payments on Feb 15, Mar 15, etc.
       if (monthsElapsed > 0 && isAnniversaryDay) {
@@ -324,7 +328,7 @@ const loanService = {
         interestAmount = Math.round((loan.PrincipalAmount * loan.InterestRate / 100) / 12 * 100) / 100;
         periodDescription = 'Monthly';
       }
-    } else if (loan.PaymentFrequency && loan.PaymentFrequency.toLowerCase() === 'annually') {
+    } else if (loan.PaymentFrequencyID === PAYMENT_FREQUENCIES.ANNUALLY) {
       // Annual payment: Due on the same date each year after the start date
       // Example: Loan starts on Jan 15, 2024 -> payment on Jan 15, 2025
       if (monthsElapsed > 0 && monthsElapsed % 12 === 0 && isAnniversaryDay) {
