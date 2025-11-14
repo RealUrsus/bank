@@ -16,7 +16,7 @@
       <!-- Content -->
       <div class="p-3">
         <div id="pastDateWarning" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;">
-          <strong>Warning:</strong> The selected start date is in the past. Are you sure you want to proceed?
+          <strong>Warning:</strong> Loan start date cannot be in the past. Please select today or a future date.
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         <form action="/client/loan/add" method="post" class="row g-2 align-items-center">
@@ -61,7 +61,7 @@
           </div>
           <div class="col-auto">
             <button type="reset" class="btn btn-secondary">Reset</button>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button>
           </div>
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         </form>
@@ -73,9 +73,10 @@
     <script src="/js/feather.min.js"></script>
     <script>feather.replace()</script>
     <script>
-      // Check for past date on loan start date field and prevent submission
+      // Check for past date on loan start date field and disable submit button
       const dateInput = document.getElementById('date');
       const warningDiv = document.getElementById('pastDateWarning');
+      const submitBtn = document.getElementById('submitBtn');
       const form = document.querySelector('form');
 
       function isPastDate(dateString) {
@@ -91,20 +92,26 @@
         return dateString < todayString;
       }
 
-      dateInput.addEventListener('change', function() {
-        if (isPastDate(this.value)) {
+      function updateSubmitButton() {
+        if (isPastDate(dateInput.value)) {
           warningDiv.style.display = 'block';
+          submitBtn.disabled = true;
+          submitBtn.classList.add('disabled');
         } else {
           warningDiv.style.display = 'none';
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('disabled');
         }
-      });
+      }
 
-      // Prevent form submission if date is in the past
+      dateInput.addEventListener('change', updateSubmitButton);
+      dateInput.addEventListener('input', updateSubmitButton);
+
+      // Prevent form submission if date is in the past (extra safety)
       form.addEventListener('submit', function(e) {
         if (isPastDate(dateInput.value)) {
           e.preventDefault();
-          warningDiv.style.display = 'block';
-          warningDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          updateSubmitButton();
           return false;
         }
       });
