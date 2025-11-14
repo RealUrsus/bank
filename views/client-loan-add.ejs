@@ -78,13 +78,21 @@
       const warningDiv = document.getElementById('pastDateWarning');
       const form = document.querySelector('form');
 
-      dateInput.addEventListener('change', function() {
-        const selectedDate = new Date(this.value);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        selectedDate.setHours(0, 0, 0, 0);
+      function isPastDate(dateString) {
+        if (!dateString) return false;
 
-        if (selectedDate < today) {
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date();
+        const todayString = today.getFullYear() + '-' +
+                           String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                           String(today.getDate()).padStart(2, '0');
+
+        // Compare date strings directly (today and future are allowed)
+        return dateString < todayString;
+      }
+
+      dateInput.addEventListener('change', function() {
+        if (isPastDate(this.value)) {
           warningDiv.style.display = 'block';
         } else {
           warningDiv.style.display = 'none';
@@ -93,18 +101,11 @@
 
       // Prevent form submission if date is in the past
       form.addEventListener('submit', function(e) {
-        if (dateInput.value) {
-          const selectedDate = new Date(dateInput.value);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          selectedDate.setHours(0, 0, 0, 0);
-
-          if (selectedDate < today) {
-            e.preventDefault();
-            warningDiv.style.display = 'block';
-            warningDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            return false;
-          }
+        if (isPastDate(dateInput.value)) {
+          e.preventDefault();
+          warningDiv.style.display = 'block';
+          warningDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          return false;
         }
       });
     </script>
