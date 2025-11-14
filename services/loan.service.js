@@ -249,28 +249,12 @@ const loanService = {
     const startDate = new Date(loan.StartDate);
     startDate.setHours(0, 0, 0, 0);
 
-    // Check if today is the start date or later, and loan hasn't been disbursed yet
-    if (today < startDate) {
-      return false; // Start date hasn't arrived yet
+    // Only disburse on the exact start date
+    if (today.getTime() !== startDate.getTime()) {
+      return false;
     }
 
-    // Check if loan has already been disbursed by looking for existing disbursement transaction
-    const existingDisbursement = await db.queryOne(
-      `SELECT TransactionID FROM Transactions
-       WHERE AccountID IN (
-         SELECT AccountID FROM Accounts
-         WHERE UserID = ? AND AccountTypeID = ?
-       )
-       AND Description LIKE ?
-       LIMIT 1`,
-      [loan.UserID, ACCOUNT_TYPES.CHEQUING, `Loan disbursement - Loan #${loanId}%`]
-    );
-
-    if (existingDisbursement) {
-      return false; // Already disbursed
-    }
-
-    // Get user's chequing account
+    // Get user's chequing account first
     const chequingAccount = await db.queryOne(
       `SELECT AccountID FROM Accounts
        WHERE UserID = ? AND AccountTypeID = ?`,
@@ -279,6 +263,19 @@ const loanService = {
 
     if (!chequingAccount) {
       throw new Error('User chequing account not found');
+    }
+
+    // Check if loan has already been disbursed by looking for existing disbursement transaction
+    const existingDisbursement = await db.queryOne(
+      `SELECT TransactionID FROM Transactions
+       WHERE AccountID = ?
+       AND Description LIKE ?
+       LIMIT 1`,
+      [chequingAccount.AccountID, `Loan disbursement - Loan #${loanId}%`]
+    );
+
+    if (existingDisbursement) {
+      return false; // Already disbursed
     }
 
     // Deposit loan principal to chequing account
