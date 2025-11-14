@@ -80,16 +80,15 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-light text-small shadow">
             <li><a class="dropdown-item" href="/client/change-password">Change Password</a></li>
-            <li><a class="dropdown-item" href="#">Profile</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
                 <form action="/logout" method="post" class="d-flex align-items-center">
                     <button type="submit" class="btn dropdown-item">
-                        <img 
-                            src="/images/log-out.png" 
-                            alt="Log Out" 
+                        <img
+                            src="/images/log-out.png"
+                            alt="Log Out"
                             height="20px"
-                        /> 
+                        />
                         <span class="ms-1 text-nowrap">Sign out</span>
                     </button>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">

@@ -435,7 +435,9 @@ router.post('/agreements/delete', async (req, res, next) => {
 router.get('/clients', async (req, res, next) => {
   try {
     const clients = await userService.getAllClients();
-    res.render('admin-clients', { user: req.user, clients });
+    const message = req.session.message;
+    req.session.message = null; // Clear message after displaying
+    res.render('admin-clients', { user: req.user, clients, message });
   } catch (err) {
     next(err);
   }
@@ -471,6 +473,36 @@ router.route('/clients/edit/:userId')
       next(err);
     }
   });
+
+// Admin change client password
+router.post('/clients/change-password', async (req, res, next) => {
+  try {
+    const { userId, newPassword, confirmPassword } = req.body;
+
+    // Validate input
+    if (!userId || !newPassword || !confirmPassword) {
+      req.session.message = 'All fields are required.';
+      return res.redirect('/admin/clients');
+    }
+
+    validateId(userId, 'userId');
+
+    if (!userService.passwordsMatch(newPassword, confirmPassword)) {
+      req.session.message = 'Passwords do not match.';
+      return res.redirect('/admin/clients');
+    }
+
+    // Change password using admin service
+    const result = await userService.adminChangePassword(userId, newPassword);
+
+    req.session.message = result.message;
+    res.redirect('/admin/clients');
+  } catch (err) {
+    console.error('Error changing client password:', err);
+    req.session.message = 'An error occurred while changing password.';
+    res.redirect('/admin/clients');
+  }
+});
 
 // Admin reports route with client selection
 router.get('/reports', async (req, res, next) => {

@@ -178,6 +178,45 @@ const userService = {
    */
   passwordsMatch(password, confirmPassword) {
     return password === confirmPassword;
+  },
+
+  /**
+   * Admin changes user password (without requiring current password)
+   * @param {number} userId - User ID
+   * @param {string} newPassword - New password
+   * @returns {Promise<object>} Result object with success status and message
+   */
+  async adminChangePassword(userId, newPassword) {
+    // Validate new password length
+    if (newPassword.length < PASSWORD_CONFIG.MIN_LENGTH) {
+      return {
+        success: false,
+        message: `New password must be at least ${PASSWORD_CONFIG.MIN_LENGTH} characters long`
+      };
+    }
+
+    // Get user to verify they exist
+    const user = await this.getUser(userId);
+    if (!user) {
+      return {
+        success: false,
+        message: 'User not found'
+      };
+    }
+
+    // Hash new password
+    const { hash, salt } = await this.hashPassword(newPassword);
+
+    // Update password in database
+    await db.run(
+      'UPDATE Users SET HashedPassword = ?, Salt = ? WHERE UserID = ?',
+      [hash, salt, userId]
+    );
+
+    return {
+      success: true,
+      message: 'Password changed successfully'
+    };
   }
 };
 
