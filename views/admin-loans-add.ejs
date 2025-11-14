@@ -91,9 +91,10 @@
     <script src="/js/feather.min.js"></script>
     <script>feather.replace()</script>
     <script>
-      // Check for past date on loan start date field
+      // Check for past date on loan start date field and prevent submission
       const dateInput = document.getElementById('date');
       const warningDiv = document.getElementById('pastDateWarning');
+      const form = document.querySelector('form');
 
       dateInput.addEventListener('change', function() {
         const selectedDate = new Date(this.value);
@@ -105,6 +106,23 @@
           warningDiv.style.display = 'block';
         } else {
           warningDiv.style.display = 'none';
+        }
+      });
+
+      // Prevent form submission if date is in the past
+      form.addEventListener('submit', function(e) {
+        if (dateInput.value) {
+          const selectedDate = new Date(dateInput.value);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          selectedDate.setHours(0, 0, 0, 0);
+
+          if (selectedDate < today) {
+            e.preventDefault();
+            warningDiv.style.display = 'block';
+            warningDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return false;
+          }
         }
       });
     </script>
