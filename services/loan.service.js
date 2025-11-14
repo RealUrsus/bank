@@ -244,17 +244,21 @@ const loanService = {
       return false;
     }
 
+    // EOD runs at midnight (start of next day), so check if yesterday was the start date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
     const startDate = new Date(loan.StartDate);
     startDate.setHours(0, 0, 0, 0);
 
-    // Only disburse if start date has arrived
-    if (today.getTime() < startDate.getTime()) {
+    // Only disburse if yesterday was the start date
+    if (yesterday.getTime() !== startDate.getTime()) {
       return false;
     }
 
-    // Get user's chequing account first
+    // Get user's chequing account
     const chequingAccount = await db.queryOne(
       `SELECT AccountID FROM Accounts
        WHERE UserID = ? AND AccountTypeID = ?`,
@@ -263,19 +267,6 @@ const loanService = {
 
     if (!chequingAccount) {
       throw new Error('User chequing account not found');
-    }
-
-    // Check if loan has already been disbursed by looking for existing disbursement transaction
-    const existingDisbursement = await db.queryOne(
-      `SELECT TransactionID FROM Transactions
-       WHERE AccountID = ?
-       AND Description LIKE ?
-       LIMIT 1`,
-      [chequingAccount.AccountID, `Loan disbursement - Loan #${loanId}%`]
-    );
-
-    if (existingDisbursement) {
-      return false; // Already disbursed
     }
 
     // Deposit loan principal to chequing account
