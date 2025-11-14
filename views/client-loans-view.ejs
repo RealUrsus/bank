@@ -47,9 +47,9 @@
         <div class="mb-3">
           <label class="form-label fw-bold">Filter by Status:</label>
           <div class="btn-group d-block" role="group" aria-label="Status filter">
-            <input type="radio" class="btn-check" name="statusFilter" id="filter-approved" value="approved" <%= selectedStatus === 'approved' ? 'checked' : '' %>>
-            <label class="btn btn-outline-primary" for="filter-approved">
-              <i data-feather="check-circle" style="width: 16px; height: 16px;"></i> Approved
+            <input type="radio" class="btn-check" name="statusFilter" id="filter-active" value="active" <%= selectedStatus === 'active' ? 'checked' : '' %>>
+            <label class="btn btn-outline-success" for="filter-active">
+              <i data-feather="activity" style="width: 16px; height: 16px;"></i> Active
             </label>
 
             <input type="radio" class="btn-check" name="statusFilter" id="filter-all" value="all" <%= selectedStatus === 'all' ? 'checked' : '' %>>
@@ -62,11 +62,6 @@
               <i data-feather="clock" style="width: 16px; height: 16px;"></i> Pending
             </label>
 
-            <input type="radio" class="btn-check" name="statusFilter" id="filter-active" value="active" <%= selectedStatus === 'active' ? 'checked' : '' %>>
-            <label class="btn btn-outline-success" for="filter-active">
-              <i data-feather="activity" style="width: 16px; height: 16px;"></i> Active
-            </label>
-
             <input type="radio" class="btn-check" name="statusFilter" id="filter-paid-off" value="paid off" <%= selectedStatus === 'paid off' ? 'checked' : '' %>>
             <label class="btn btn-outline-info" for="filter-paid-off">
               <i data-feather="check-square" style="width: 16px; height: 16px;"></i> Paid Off
@@ -75,6 +70,11 @@
             <input type="radio" class="btn-check" name="statusFilter" id="filter-rejected" value="rejected" <%= selectedStatus === 'rejected' ? 'checked' : '' %>>
             <label class="btn btn-outline-danger" for="filter-rejected">
               <i data-feather="x-circle" style="width: 16px; height: 16px;"></i> Rejected
+            </label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="filter-closed" value="closed" <%= selectedStatus === 'closed' ? 'checked' : '' %>>
+            <label class="btn btn-outline-secondary" for="filter-closed">
+              <i data-feather="x-square" style="width: 16px; height: 16px;"></i> Closed
             </label>
           </div>
         </div>

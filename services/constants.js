@@ -45,6 +45,13 @@ const TRANSACTION_TYPE_NAMES = {
 };
 
 // Status Values
+// Usage:
+// - PENDING: Loan requests, pending transactions
+// - APPROVED: Approved transactions only (not used for accounts)
+// - REJECTED: Rejected loan requests
+// - ACTIVE: Active loans, GICs, chequing accounts, agreements
+// - CLOSED: Closed/matured loans and GICs
+// - PAID_OFF: Fully paid off loans
 const STATUS = {
   PENDING: 1,
   APPROVED: 2,
