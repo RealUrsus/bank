@@ -148,7 +148,7 @@ const accountService = {
       startDate = null,
       statusId,
       description = null,
-      paymentFrequency = null,
+      paymentFrequencyId = null,
       balance = null,
       minimumBalance = null
     } = accountData;
@@ -177,9 +177,9 @@ const accountService = {
       fields.push('Description');
       values.push(description);
     }
-    if (paymentFrequency !== null) {
-      fields.push('PaymentFrequency');
-      values.push(paymentFrequency);
+    if (paymentFrequencyId !== null) {
+      fields.push('PaymentFrequencyID');
+      values.push(paymentFrequencyId);
     }
     if (balance !== null) {
       fields.push('Balance');
@@ -209,6 +209,7 @@ const accountService = {
       interestRate,
       principalAmount,
       term,
+      paymentFrequencyId,
       startDate,
       description,
       statusId
@@ -217,9 +218,9 @@ const accountService = {
     await db.run(
       `UPDATE Accounts
        SET UserID = ?, InterestRate = ?, PrincipalAmount = ?,
-           Term = ?, StartDate = ?, Description = ?, StatusID = ?
+           Term = ?, PaymentFrequencyID = ?, StartDate = ?, Description = ?, StatusID = ?
        WHERE AccountID = ?`,
-      [userId, interestRate, principalAmount, term, startDate, description, statusId, accountId]
+      [userId, interestRate, principalAmount, term, paymentFrequencyId, startDate, description, statusId, accountId]
     );
   },
 

@@ -42,7 +42,7 @@
                 <td>$<%= Number(loan.PrincipalAmount).toFixed(2) %></td>
                 <td><%= loan.InterestRate %>%</td>
                 <td><%= loan.Term %> months</td>
-                <td><%= loan.PaymentFrequency || 'N/A' %></td>
+                <td><%= loan.PaymentFrequencyName || 'N/A' %></td>
                 <td><%= loan.Description %></td>
                 <td><span class="badge bg-warning text-dark"><%= loan.StatusName %></span></td>
                 <td class="text-center">

@@ -36,7 +36,12 @@ db.serialize(() => {
     LoanTypeName TEXT NOT NULL UNIQUE COLLATE NOCASE
   )`);
 
-  
+  db.run(`CREATE TABLE IF NOT EXISTS PaymentFrequencies (
+    PaymentFrequencyID INTEGER PRIMARY KEY,
+    PaymentFrequencyName TEXT NOT NULL UNIQUE COLLATE NOCASE
+  )`);
+
+
   // Main Tables
   db.run(`CREATE TABLE IF NOT EXISTS Accounts (
       AccountID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,17 +54,26 @@ db.serialize(() => {
       InterestRate REAL DEFAULT 0.0,
       Term INTEGER DEFAULT NULL,
       PaymentFrequency TEXT DEFAULT NULL,
+      PaymentFrequencyID INTEGER DEFAULT NULL,
       StartDate DATE DEFAULT NULL,
       StatusID INTEGER DEFAULT 1 NOT NULL,
-      Description TEXT DEFAULT NULL,      
+      Description TEXT DEFAULT NULL,
       FOREIGN KEY (AccountTypeID) REFERENCES AccountTypes(AccountTypeID),
-      FOREIGN KEY (UserID) REFERENCES Users(UserID)
+      FOREIGN KEY (UserID) REFERENCES Users(UserID),
+      FOREIGN KEY (PaymentFrequencyID) REFERENCES PaymentFrequencies(PaymentFrequencyID)
   )`);
 
   // Migration: Add PaymentFrequency column if it doesn't exist
   db.run(`ALTER TABLE Accounts ADD COLUMN PaymentFrequency TEXT DEFAULT NULL`, (err) => {
     if (err && !err.message.includes('duplicate column')) {
       console.error('Error adding PaymentFrequency column:', err);
+    }
+  });
+
+  // Migration: Add PaymentFrequencyID column if it doesn't exist
+  db.run(`ALTER TABLE Accounts ADD COLUMN PaymentFrequencyID INTEGER DEFAULT NULL`, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding PaymentFrequencyID column:', err);
     }
   });
 
@@ -121,8 +135,23 @@ db.serialize(() => {
   db.run("INSERT OR IGNORE INTO Roles (RoleName) VALUES ('Admin'), ('Auditor'), ('Client')");
   db.run("INSERT OR IGNORE INTO TransactionTypes (TransactionTypeName) VALUES ('Deposit'), ('Withdrawal'), ('Transfer')");
   db.run("INSERT OR IGNORE INTO Status (StatusName) VALUES ('Pending'), ('Approved'), ('Rejected'), ('Active'), ('Closed'), ('Paid Off')");
+  db.run("INSERT OR IGNORE INTO PaymentFrequencies (PaymentFrequencyID, PaymentFrequencyName) VALUES (0, 'Bi-weekly'), (1, 'Monthly'), (2, 'Annually'), (3, 'At Maturity')");
 
-  
+  // Migration: Migrate existing PaymentFrequency TEXT values to PaymentFrequencyID
+  db.run(`UPDATE Accounts
+          SET PaymentFrequencyID = CASE
+            WHEN lower(PaymentFrequency) = 'monthly' THEN 1
+            WHEN lower(PaymentFrequency) = 'annually' THEN 2
+            WHEN lower(PaymentFrequency) = 'annual' THEN 2
+            ELSE NULL
+          END
+          WHERE PaymentFrequency IS NOT NULL AND PaymentFrequencyID IS NULL`, (err) => {
+    if (err) {
+      console.error('Error migrating PaymentFrequency data:', err);
+    }
+  });
+
+
   // Create initial admin user
   let salt = crypto.randomBytes(16);
   db.run(`INSERT OR IGNORE INTO Users (Username, HashedPassword, Salt, Name, Surname, RoleID) VALUES (?, ?, ?, ?, ?, ?)`, [

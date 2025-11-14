@@ -192,7 +192,7 @@ router.post('/loan/add', async (req, res, next) => {
       term,
       startDate: date,
       description,
-      paymentFrequency
+      paymentFrequencyId: parseInt(paymentFrequency)
     });
 
     res.redirect(`/client/loan/${loanId}`);

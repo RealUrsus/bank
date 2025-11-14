@@ -149,7 +149,7 @@ router.route('/loans/add')
         term,
         startDate: date,
         description,
-        paymentFrequency
+        paymentFrequencyId: parseInt(paymentFrequency)
       });
 
       res.redirect('/admin/loans/view');
@@ -179,17 +179,18 @@ router.route('/loans/edit/:loanId')
   })
   .post(async (req, res, next) => {
     try {
-      const { loanId, clientId, amount, interest, date, term, description, status } = req.body;
+      const { loanId, clientId, amount, interest, date, term, paymentFrequency, description, status } = req.body;
 
       validateId(loanId, 'loanId');
       validateId(clientId, 'clientId');
-      validateRequiredFields({ amount, interest, date, term, description, status });
+      validateRequiredFields({ amount, interest, date, term, paymentFrequency, description, status });
 
       await loanService.updateLoan(loanId, {
         userId: clientId,
         interestRate: interest,
         principalAmount: amount,
         term,
+        paymentFrequencyId: parseInt(paymentFrequency),
         startDate: date,
         description,
         statusId: status
