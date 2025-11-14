@@ -45,12 +45,12 @@ async function getTransactions(req, res, next) {
 // Middleware to fetch user loans
 async function fetchLoans(req, res, next) {
   try {
-    const status = req.query.status || 'approved';
+    const status = req.query.status || 'active';
     let loans;
 
     if (status === 'all') {
       loans = await loanService.getUserLoans(req.user.id, false);
-    } else if (status === 'approved') {
+    } else if (status === 'active') {
       loans = await loanService.getUserLoans(req.user.id, true);
     } else {
       // Filter by specific status name

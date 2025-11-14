@@ -30,17 +30,17 @@ const loanService = {
   /**
    * Get all loans for a user
    * @param {number} userId - User ID
-   * @param {boolean} approvedOnly - Only return approved loans (excludes paid off)
+   * @param {boolean} activeOnly - Only return active loans (excludes paid off)
    * @returns {Promise<Array>} Array of loans
    */
-  async getUserLoans(userId, approvedOnly = false) {
-    if (approvedOnly) {
+  async getUserLoans(userId, activeOnly = false) {
+    if (activeOnly) {
       return await db.queryMany(
         `SELECT a.*, s.StatusName
          FROM Accounts a
          INNER JOIN Status s ON a.StatusID = s.StatusID
          WHERE a.UserID = ? AND a.AccountTypeID = ?
-           AND s.StatusName = 'Approved'
+           AND s.StatusName = 'Active'
          ORDER BY a.StartDate ASC`,
         [userId, ACCOUNT_TYPES.LOAN]
       );
@@ -58,7 +58,7 @@ const loanService = {
   },
 
   /**
-   * Get all active (approved) loans
+   * Get all active loans
    * Used by daily tasks for interest calculations
    * @returns {Promise<Array>} Array of active loans
    */
@@ -66,7 +66,7 @@ const loanService = {
     return await db.queryMany(
       `SELECT * FROM Accounts
        WHERE AccountTypeID = ? AND StatusID = ?`,
-      [ACCOUNT_TYPES.LOAN, STATUS.APPROVED]
+      [ACCOUNT_TYPES.LOAN, STATUS.ACTIVE]
     );
   },
 
@@ -140,7 +140,7 @@ const loanService = {
       throw new Error('Loan not found');
     }
 
-    await accountService.updateAccountStatus(loanId, STATUS.APPROVED);
+    await accountService.updateAccountStatus(loanId, STATUS.ACTIVE);
 
     // Log approval event
     maturityLogger.logLoanApproval({
@@ -190,7 +190,7 @@ const loanService = {
    */
   async checkLoanPayoff(loanId) {
     const loan = await this.getLoan(loanId);
-    if (!loan || loan.StatusID !== STATUS.APPROVED) {
+    if (!loan || loan.StatusID !== STATUS.ACTIVE) {
       return false;
     }
 
@@ -240,7 +240,7 @@ const loanService = {
    */
   async disburseLoan(loanId) {
     const loan = await this.getLoan(loanId);
-    if (!loan || loan.StatusID !== STATUS.APPROVED) {
+    if (!loan || loan.StatusID !== STATUS.ACTIVE) {
       return false;
     }
 
@@ -309,7 +309,7 @@ const loanService = {
    */
   async processLoanInterest(loanId) {
     const loan = await this.getLoan(loanId);
-    if (!loan || loan.StatusID !== STATUS.APPROVED) {
+    if (!loan || loan.StatusID !== STATUS.ACTIVE) {
       return null;
     }
 
@@ -379,7 +379,7 @@ const loanService = {
    */
   async checkLoanMaturity(loanId) {
     const loan = await this.getLoan(loanId);
-    if (!loan || loan.StatusID !== STATUS.APPROVED) {
+    if (!loan || loan.StatusID !== STATUS.ACTIVE) {
       return false;
     }
 
@@ -455,7 +455,7 @@ const loanService = {
        FROM Accounts a
        INNER JOIN Users u ON a.UserID = u.UserID
        WHERE a.AccountTypeID = ? AND a.StatusID = ?`,
-      [ACCOUNT_TYPES.LOAN, STATUS.APPROVED]
+      [ACCOUNT_TYPES.LOAN, STATUS.ACTIVE]
     );
     const maturingLoans = [];
 

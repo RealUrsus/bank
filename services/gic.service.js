@@ -122,7 +122,7 @@ const gicService = {
     return await db.queryMany(
       `SELECT * FROM Accounts
        WHERE AccountTypeID = ? AND StatusID = ?`,
-      [ACCOUNT_TYPES.INVESTMENT, STATUS.APPROVED]
+      [ACCOUNT_TYPES.INVESTMENT, STATUS.ACTIVE]
     );
   },
 
@@ -170,7 +170,7 @@ const gicService = {
         principalAmount: amount,
         term: product.Term,
         startDate: formatDate(new Date()),
-        statusId: STATUS.APPROVED,
+        statusId: STATUS.ACTIVE,
         balance: amount,
         description: productId.toString()
       });
@@ -230,7 +230,7 @@ const gicService = {
    */
   async checkGICMaturity(gicId) {
     const gic = await this.getGIC(gicId);
-    if (!gic || gic.StatusID !== STATUS.APPROVED) {
+    if (!gic || gic.StatusID !== STATUS.ACTIVE) {
       return false;
     }
 
@@ -244,7 +244,7 @@ const gicService = {
    */
   async matureGIC(gicId) {
     const gic = await this.getGIC(gicId);
-    if (!gic || gic.StatusID !== STATUS.APPROVED) {
+    if (!gic || gic.StatusID !== STATUS.ACTIVE) {
       return false;
     }
 
@@ -316,7 +316,7 @@ const gicService = {
        FROM Accounts a
        INNER JOIN Users u ON a.UserID = u.UserID
        WHERE a.AccountTypeID = ? AND a.StatusID = ?`,
-      [ACCOUNT_TYPES.INVESTMENT, STATUS.APPROVED]
+      [ACCOUNT_TYPES.INVESTMENT, STATUS.ACTIVE]
     );
     const maturingGICs = [];
 
