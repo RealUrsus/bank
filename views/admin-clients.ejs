@@ -17,7 +17,7 @@
         <h3 class="mb-4">Client Management</h3>
 
         <% if (typeof message !== 'undefined' && message) { %>
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <div class="alert alert-<%= messageType || 'info' %> alert-dismissible fade show" role="alert">
           <%= message %>
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -80,6 +80,9 @@
                   <div class="mb-3">
                     <label for="confirmPassword<%= client.UserID %>" class="form-label">Confirm Password</label>
                     <input type="password" class="form-control" id="confirmPassword<%= client.UserID %>" name="confirmPassword" required minlength="8">
+                    <div class="invalid-feedback" id="passwordMismatch<%= client.UserID %>" style="display: none;">
+                      Passwords do not match!
+                    </div>
                   </div>
                 </div>
                 <div class="modal-footer">
@@ -99,5 +102,61 @@
     <!-- Icons -->
     <script src="/js/feather.min.js"></script>
     <script>feather.replace()</script>
+
+    <!-- Password validation script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Add validation to all password change forms
+        const forms = document.querySelectorAll('form[action="/admin/clients/change-password"]');
+
+        forms.forEach(function(form) {
+          const userId = form.querySelector('input[name="userId"]').value;
+          const newPasswordInput = form.querySelector('#newPassword' + userId);
+          const confirmPasswordInput = form.querySelector('#confirmPassword' + userId);
+          const mismatchMessage = form.querySelector('#passwordMismatch' + userId);
+          const submitButton = form.querySelector('button[type="submit"]');
+
+          function validatePasswords() {
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (confirmPassword.length > 0 && newPassword !== confirmPassword) {
+              confirmPasswordInput.classList.add('is-invalid');
+              mismatchMessage.style.display = 'block';
+              submitButton.disabled = true;
+              return false;
+            } else {
+              confirmPasswordInput.classList.remove('is-invalid');
+              mismatchMessage.style.display = 'none';
+              submitButton.disabled = false;
+              return true;
+            }
+          }
+
+          // Validate on input
+          newPasswordInput.addEventListener('input', validatePasswords);
+          confirmPasswordInput.addEventListener('input', validatePasswords);
+
+          // Validate on form submit
+          form.addEventListener('submit', function(e) {
+            if (!validatePasswords()) {
+              e.preventDefault();
+              return false;
+            }
+          });
+
+          // Reset validation when modal is closed
+          const modal = form.closest('.modal');
+          if (modal) {
+            modal.addEventListener('hidden.bs.modal', function() {
+              form.reset();
+              confirmPasswordInput.classList.remove('is-invalid');
+              mismatchMessage.style.display = 'none';
+              submitButton.disabled = false;
+            });
+          }
+        });
+      });
+    </script>
   </body>
 </html>
