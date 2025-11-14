@@ -75,7 +75,7 @@ const accountService = {
        FROM Transactions
        JOIN Status ON Transactions.StatusID = Status.StatusID
        WHERE AccountID = ?
-         AND (Status.StatusName = 'Active' OR Status.StatusName = 'Paid Off')`,
+         AND (Status.StatusName = 'Approved' OR Status.StatusName = 'Paid Off')`,
       [accountId]
     );
     return result?.total || 0;
