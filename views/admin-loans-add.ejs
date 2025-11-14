@@ -16,6 +16,10 @@
       <!-- Content -->
       <div class="p-3">
         <h2 class="mb-3">Add New Loan</h2>
+        <div id="pastDateWarning" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;">
+          <strong>Warning:</strong> The selected start date is in the past. Are you sure you want to proceed?
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         <form action="/admin/loans/add" method="post" class="row g-2 align-items-center">
           <div class="input-group mb-3">
             <div class="form-floating mb-3">
@@ -86,5 +90,23 @@
     <!-- Icons -->
     <script src="/js/feather.min.js"></script>
     <script>feather.replace()</script>
+    <script>
+      // Check for past date on loan start date field
+      const dateInput = document.getElementById('date');
+      const warningDiv = document.getElementById('pastDateWarning');
+
+      dateInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        if (selectedDate < today) {
+          warningDiv.style.display = 'block';
+        } else {
+          warningDiv.style.display = 'none';
+        }
+      });
+    </script>
   </body>
 </html>
