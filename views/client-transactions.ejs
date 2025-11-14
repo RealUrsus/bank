@@ -77,7 +77,9 @@
             </thead>
             <tbody>
               <% for (const transaction of transactions) {
-                const transactionDate = new Date(transaction.Date);
+                // Parse date as local to avoid timezone conversion issues
+                const [year, month, day] = transaction.Date.split('-').map(Number);
+                const transactionDate = new Date(year, month - 1, day);
                 const formattedDate = transactionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                 const isDeposit = transaction.TransactionTypeID === 1;
                 const isApproved = transaction.StatusID === 2;

@@ -58,7 +58,9 @@
                 const term = parseInt(gic.Term);
                 const balanceAtMaturity = principal + (principal * rate / 100 * term / 12);
 
-                const startDate = new Date(gic.StartDate);
+                // Parse date as local to avoid timezone conversion issues
+                const [year, month, day] = gic.StartDate.split('-').map(Number);
+                const startDate = new Date(year, month - 1, day);
                 const endDate = new Date(startDate);
                 endDate.setMonth(endDate.getMonth() + term);
                 const formattedEndDate = endDate.toISOString().split('T')[0];

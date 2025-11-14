@@ -28,28 +28,26 @@
           <div class="card-body">
             <div class="alert alert-info mb-3">
               <i data-feather="info" style="width: 18px; height: 18px;"></i>
-              <strong>Important:</strong> All dates and times in this system are stored and processed in <strong>UTC (Coordinated Universal Time)</strong>.
+              <strong>Important:</strong> All dates in this system are stored and displayed in <strong>local date format</strong> (calendar dates without specific times).
             </div>
 
             <h6 class="fw-bold">What does this mean?</h6>
             <ul>
-              <li>Transaction dates are recorded in UTC timezone</li>
-              <li>Loan start dates and maturity dates use UTC</li>
-              <li>GIC investment dates are in UTC</li>
-              <li>All timestamps and logs use UTC</li>
+              <li>Transaction dates represent the calendar day when the transaction occurred</li>
+              <li>Loan start dates and maturity dates are calendar dates</li>
+              <li>GIC investment dates are calendar dates</li>
+              <li>Dates will display correctly regardless of your timezone</li>
             </ul>
 
-            <h6 class="fw-bold mt-3">Why UTC?</h6>
+            <h6 class="fw-bold mt-3">Date Entry</h6>
             <p>
-              UTC is an international time standard that does not change with daylight saving time.
-              This ensures consistent date handling across different timezones and prevents confusion
-              when dates are displayed or processed.
+              When you enter a date (e.g., November 14, 2025), that exact calendar date will be stored and displayed.
+              There are no timezone conversions that would cause the date to appear different.
             </p>
 
-            <div class="alert alert-warning mt-3">
-              <i data-feather="alert-triangle" style="width: 18px; height: 18px;"></i>
-              <strong>Note:</strong> When entering dates, they will be interpreted as UTC.
-              Displayed dates may appear one day earlier or later depending on your local timezone offset.
+            <div class="alert alert-success mt-3">
+              <i data-feather="check-circle" style="width: 18px; height: 18px;"></i>
+              <strong>Example:</strong> If you record a transaction on November 14, 2025, it will always display as November 14, 2025.
             </div>
           </div>
         </div>

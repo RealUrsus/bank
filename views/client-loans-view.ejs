@@ -106,7 +106,9 @@
             </thead>
             <tbody>
               <% for (const loan of loans) {
-                const startDate = new Date(loan.StartDate);
+                // Parse date as local to avoid timezone conversion issues
+                const [year, month, day] = loan.StartDate.split('-').map(Number);
+                const startDate = new Date(year, month - 1, day);
                 const endDate = new Date(startDate);
                 endDate.setMonth(endDate.getMonth() + parseInt(loan.Term));
                 const formattedStartDate = startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
