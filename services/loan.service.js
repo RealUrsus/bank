@@ -249,9 +249,9 @@ const loanService = {
     const startDate = new Date(loan.StartDate);
     startDate.setHours(0, 0, 0, 0);
 
-    // Check if today is the start date or later, and loan hasn't been disbursed yet
-    if (today < startDate) {
-      return false; // Start date hasn't arrived yet
+    // Only disburse on the exact start date
+    if (today.getTime() !== startDate.getTime()) {
+      return false;
     }
 
     // Get user's chequing account first
