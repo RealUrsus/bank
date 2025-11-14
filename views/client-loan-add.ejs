@@ -15,12 +15,6 @@
       </aside>
       <!-- Content -->
       <div class="p-3">
-        <% if (message) { %>
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-          <%= message %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <% } %>
         <form action="/client/loan/add" method="post" class="row g-2 align-items-center">
           <div class="input-group mb-3">
             <div class="form-floating mb-3">
