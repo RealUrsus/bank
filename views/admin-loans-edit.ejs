@@ -49,6 +49,14 @@
           </div>
 
           <div class="mb-3">
+            <label for="paymentFrequency"><h5>Payment Frequency</h5></label>
+            <select class="form-select" id="paymentFrequency" name="paymentFrequency" style="max-width: 320px;" required>
+              <option value="monthly" <%= loan.PaymentFrequency && loan.PaymentFrequency.toLowerCase() === 'monthly' ? 'selected' : '' %>>Monthly</option>
+              <option value="annually" <%= loan.PaymentFrequency && loan.PaymentFrequency.toLowerCase() === 'annually' ? 'selected' : '' %>>Annually</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
             <label for="term"><h5>Term</h5></label>
             <select class="form-select" id="term" name="term" style="max-width: 320px;" required>
               <option value="12" <%= loan.Term === 12 ? 'selected' : '' %>>12 months</option>

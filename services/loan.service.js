@@ -316,7 +316,7 @@ const loanService = {
     let interestAmount = 0;
     let periodDescription = '';
 
-    if (loan.PaymentFrequency === 'Monthly') {
+    if (loan.PaymentFrequency && loan.PaymentFrequency.toLowerCase() === 'monthly') {
       // Monthly payment: Due on the same day each month after the start date
       // Example: Loan starts on Jan 15 -> payments on Feb 15, Mar 15, etc.
       if (monthsElapsed > 0 && isAnniversaryDay) {
@@ -324,7 +324,7 @@ const loanService = {
         interestAmount = Math.round((loan.PrincipalAmount * loan.InterestRate / 100) / 12 * 100) / 100;
         periodDescription = 'Monthly';
       }
-    } else if (loan.PaymentFrequency === 'Annual') {
+    } else if (loan.PaymentFrequency && loan.PaymentFrequency.toLowerCase() === 'annually') {
       // Annual payment: Due on the same date each year after the start date
       // Example: Loan starts on Jan 15, 2024 -> payment on Jan 15, 2025
       if (monthsElapsed > 0 && monthsElapsed % 12 === 0 && isAnniversaryDay) {

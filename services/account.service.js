@@ -209,6 +209,7 @@ const accountService = {
       interestRate,
       principalAmount,
       term,
+      paymentFrequency,
       startDate,
       description,
       statusId
@@ -217,9 +218,9 @@ const accountService = {
     await db.run(
       `UPDATE Accounts
        SET UserID = ?, InterestRate = ?, PrincipalAmount = ?,
-           Term = ?, StartDate = ?, Description = ?, StatusID = ?
+           Term = ?, PaymentFrequency = ?, StartDate = ?, Description = ?, StatusID = ?
        WHERE AccountID = ?`,
-      [userId, interestRate, principalAmount, term, startDate, description, statusId, accountId]
+      [userId, interestRate, principalAmount, term, paymentFrequency, startDate, description, statusId, accountId]
     );
   },
 
