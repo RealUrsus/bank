@@ -102,6 +102,18 @@ const loanService = {
       paymentFrequency
     } = loanData;
 
+    // Server-side validation: Reject past dates (today is allowed)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const loanStartDate = new Date(startDate);
+    loanStartDate.setHours(0, 0, 0, 0);
+
+    if (loanStartDate < today) {
+      const error = new Error('Loan start date cannot be in the past');
+      error.status = 400;
+      throw error;
+    }
+
     return await accountService.createAccount({
       userId,
       accountTypeId: ACCOUNT_TYPES.LOAN,
