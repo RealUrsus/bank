@@ -85,7 +85,7 @@
                 const startDate = new Date(year, month - 1, day);
                 const endDate = new Date(startDate);
                 endDate.setMonth(endDate.getMonth() + term);
-                const formattedEndDate = endDate.toISOString().split('T')[0];
+                const formattedEndDate = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
                 const statusClass = gic.StatusName ? 'status-' + gic.StatusName.toLowerCase().replace(/\s+/g, '-') : '';
               %>
               <tr class="clickable-row"

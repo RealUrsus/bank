@@ -35,7 +35,7 @@
           const startDateObj = new Date(startDate);
           const endDateObj = new Date(startDateObj);
           endDateObj.setMonth(endDateObj.getMonth() + term);
-          const endDate = endDateObj.toISOString().split('T')[0];
+          const endDate = `${endDateObj.getFullYear()}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')}`;
         %>
 
         <!-- GIC Details Card -->
