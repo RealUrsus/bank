@@ -30,8 +30,14 @@ app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: '1d', // Cache for 1 day
 }));
 
+// Warn if using default session secret
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret || sessionSecret === 'dev-secret-change-in-production') {
+  console.warn('WARNING: Using default session secret. Set SESSION_SECRET environment variable in production!');
+}
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+  secret: sessionSecret || 'dev-secret-change-in-production',
   store: new SQLiteStore({
     db: process.env.SESSION_DB_PATH || './var/db/sessions.db',
     dir: './'
@@ -41,6 +47,7 @@ app.use(session({
   cookie: {
     httpOnly: true,                               // Prevent XSS
     sameSite: 'strict',                           // CSRF protection
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
     maxAge: 24 * 60 * 60 * 1000                   // 24 hours
   }
 }));
@@ -100,19 +107,27 @@ app.use((err, req, res, next) => {
     code: err.code,
     message: err.message,
     url: req.url,
-    method: req.method
+    method: req.method,
+    stack: err.stack
   });
 
   // Handle CSRF token errors by redirecting to login
-  if (err.code === 'EBADCSRFTOKEN' || (err.message && (err.message.includes('csrf') || err.message.includes('CSRF')))) {
+  if (err.code === 'EBADCSRFTOKEN' || (err.message && (err.message.toLowerCase().includes('csrf')))) {
     req.session.message = 'Your session has expired. Please log in again.';
     return res.redirect('/login');
   }
 
-  console.error(err.stack);
-  res.status(err.status || 500)
+  // Determine status code
+  const status = err.status || 500;
+
+  // In production, hide internal error details
+  const message = process.env.NODE_ENV === 'production' && status === 500
+    ? 'An internal server error occurred'
+    : err.message;
+
+  res.status(status)
      .type('text/plain')
-     .send(`Error: ${err.message}`);
+     .send(`Error: ${message}`);
 });
 
 // Server initialization function

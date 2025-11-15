@@ -3,7 +3,6 @@
  * Handles user authentication and signup operations
  */
 
-const crypto = require('crypto');
 const db = require('./database.service');
 const cryptoUtils = require('../utils/crypto');
 const { ROLES } = require('./constants');
