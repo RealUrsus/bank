@@ -307,7 +307,15 @@ const loanService = {
     }
 
     const now = new Date();
-    const startDate = new Date(loan.StartDate);
+
+    // Parse YYYY-MM-DD date strings as local dates (not UTC) to avoid timezone issues
+    let startDate;
+    if (typeof loan.StartDate === 'string' && loan.StartDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = loan.StartDate.split('-').map(Number);
+      startDate = new Date(year, month - 1, day); // month is 0-indexed
+    } else {
+      startDate = new Date(loan.StartDate);
+    }
 
     // Calculate days elapsed since loan start
     const daysElapsed = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
