@@ -137,8 +137,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Transactions route (with optional period parameter)
-router.get('/transactions/:period?', getTransactions, async (req, res) => {
+// Default transactions route (30 days)
+router.get('/transactions', getTransactions, async (req, res) => {
+  res.locals.filter = null;
+  const { balance, approvedBalance } = await accountService.getBalances(req.user.account);
+  res.render('client-transactions', { user: req.user, balance, approved_balance: approvedBalance, categories: TRANSACTION_CATEGORIES });
+});
+
+// Transactions route with period parameter
+router.get('/transactions/:period', getTransactions, async (req, res) => {
   res.locals.filter = null;
   const { balance, approvedBalance } = await accountService.getBalances(req.user.account);
   res.render('client-transactions', { user: req.user, balance, approved_balance: approvedBalance, categories: TRANSACTION_CATEGORIES });
