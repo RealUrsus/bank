@@ -23,7 +23,7 @@
   "dependencies": {
     "connect-sqlite3": "latest",
     "cookie-parser": "latest",
-    "csrf-sync": "^4.0.4",
+    "csrf-sync": "latest",
     "debug": "latest",
     "dotenv": "^17.2.3",
     "ejs": "latest",
