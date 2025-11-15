@@ -296,7 +296,7 @@ const loanService = {
 
   /**
    * Process loan interest based on payment frequency
-   * Charges interest monthly or annually from chequing account
+   * Charges interest bi-weekly, monthly, annually, or at maturity from chequing account
    * @param {number} loanId - Loan ID
    * @returns {Promise<number|null>} Transaction ID or null if not applicable
    */
@@ -309,6 +309,9 @@ const loanService = {
     const now = new Date();
     const startDate = new Date(loan.StartDate);
 
+    // Calculate days elapsed since loan start
+    const daysElapsed = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+
     // Calculate months elapsed since loan start
     const monthsElapsed = (now.getFullYear() - startDate.getFullYear()) * 12 +
                           (now.getMonth() - startDate.getMonth());
@@ -320,7 +323,16 @@ const loanService = {
     let interestAmount = 0;
     let periodDescription = '';
 
-    if (loan.PaymentFrequencyID === PAYMENT_FREQUENCIES.MONTHLY) {
+    if (loan.PaymentFrequencyID === PAYMENT_FREQUENCIES.BI_WEEKLY) {
+      // Bi-weekly payment: Due every 14 days after the start date
+      // Example: Loan starts on Jan 1 -> payments on Jan 15, Jan 29, Feb 12, etc.
+      if (daysElapsed > 0 && daysElapsed % 14 === 0) {
+        isDue = true;
+        // Bi-weekly interest: Annual rate / 26 periods per year
+        interestAmount = Math.round((loan.PrincipalAmount * loan.InterestRate / 100) / 26 * 100) / 100;
+        periodDescription = 'Bi-weekly';
+      }
+    } else if (loan.PaymentFrequencyID === PAYMENT_FREQUENCIES.MONTHLY) {
       // Monthly payment: Due on the same day each month after the start date
       // Example: Loan starts on Jan 15 -> payments on Feb 15, Mar 15, etc.
       if (monthsElapsed > 0 && isAnniversaryDay) {
@@ -336,6 +348,11 @@ const loanService = {
         interestAmount = Math.round(loan.PrincipalAmount * loan.InterestRate / 100 * 100) / 100;
         periodDescription = 'Annual';
       }
+    } else if (loan.PaymentFrequencyID === PAYMENT_FREQUENCIES.AT_MATURITY) {
+      // At maturity payment: Interest is only charged when loan reaches maturity
+      // No periodic interest payments - all interest is due at maturity
+      // This is handled in checkLoanMaturity(), so no interest charged here
+      return null;
     }
 
     if (!isDue || interestAmount <= 0) {
