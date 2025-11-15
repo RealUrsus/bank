@@ -341,9 +341,21 @@ router.post('/transfer', async (req, res, next) => {
       return res.redirect('/client/transfer');
     }
 
-    if ((dstAccount.PrincipalAmount - dstBalance - validAmount) < 0) {
-      req.session.message = 'Transfer amount exceeds loan principal';
-      return res.redirect('/client/transfer');
+    // For loans, check if transfer exceeds the paid-off amount (principal + accrued interest - current balance)
+    if (dstAccount.PrincipalAmount) {
+      const principal = parseFloat(dstAccount.PrincipalAmount);
+      const interestRate = parseFloat(dstAccount.InterestRate);
+      const startDate = new Date(dstAccount.StartDate);
+      const today = new Date();
+      const daysElapsed = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
+      const monthsElapsed = daysElapsed / 30.44; // Average days per month
+      const accruedInterest = (principal * interestRate * (monthsElapsed / 12)) / 100;
+      const paidOffAmount = principal + accruedInterest - dstBalance;
+
+      if (validAmount > paidOffAmount) {
+        req.session.message = 'Transfer amount exceeds what is owed on the loan';
+        return res.redirect('/client/transfer');
+      }
     }
 
     // Create descriptive messages using service method

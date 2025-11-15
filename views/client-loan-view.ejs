@@ -90,23 +90,6 @@
               <i data-feather="info" style="width: 16px; height: 16px;"></i>
               <strong>Note:</strong> Paid off Amount is Principal Loan Amount + interest accrued to current day minus Current Balance. This amount must be transferred from checking to assign status paid off and close loan.
             </div>
-
-            <hr>
-
-            <div class="row">
-              <div class="col-md-4">
-                <small class="text-muted d-block">Interest Rate</small>
-                <strong><%= interestRate %>%</strong>
-              </div>
-              <div class="col-md-4">
-                <small class="text-muted d-block">Term</small>
-                <strong><%= term %> months</strong>
-              </div>
-              <div class="col-md-4">
-                <small class="text-muted d-block">Maturity Calculation</small>
-                <strong>$<%= principal.toFixed(2) %> + $<%= interestAmount.toFixed(2) %> interest</strong>
-              </div>
-            </div>
           </div>
         </div>
 
