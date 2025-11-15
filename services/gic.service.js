@@ -85,13 +85,28 @@ const gicService = {
   /**
    * Get all GIC investments for a user
    * @param {number} userId - User ID
+   * @param {boolean} activeOnly - Only return active GICs
    * @returns {Promise<Array>} Array of GIC investments
    */
-  async getUserGICs(userId) {
+  async getUserGICs(userId, activeOnly = false) {
+    if (activeOnly) {
+      return await db.queryMany(
+        `SELECT a.*, gp.ProductName, s.StatusName
+         FROM Accounts a
+         LEFT JOIN GICProducts gp ON a.Description = CAST(gp.ProductID AS TEXT)
+         INNER JOIN Status s ON a.StatusID = s.StatusID
+         WHERE a.UserID = ? AND a.AccountTypeID = ?
+           AND s.StatusName = 'Active'
+         ORDER BY a.StartDate DESC`,
+        [userId, ACCOUNT_TYPES.INVESTMENT]
+      );
+    }
+
     return await db.queryMany(
-      `SELECT a.*, gp.ProductName
+      `SELECT a.*, gp.ProductName, s.StatusName
        FROM Accounts a
        LEFT JOIN GICProducts gp ON a.Description = CAST(gp.ProductID AS TEXT)
+       INNER JOIN Status s ON a.StatusID = s.StatusID
        WHERE a.UserID = ? AND a.AccountTypeID = ?
        ORDER BY a.StartDate DESC`,
       [userId, ACCOUNT_TYPES.INVESTMENT]

@@ -53,7 +53,16 @@ const financialService = {
    * @returns {Date} Maturity date
    */
   calculateMaturityDate(startDate, termMonths) {
-    const maturity = new Date(startDate);
+    let maturity;
+
+    // Parse YYYY-MM-DD date strings as local dates (not UTC)
+    if (typeof startDate === 'string' && startDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = startDate.split('-').map(Number);
+      maturity = new Date(year, month - 1, day); // month is 0-indexed
+    } else {
+      maturity = new Date(startDate);
+    }
+
     maturity.setMonth(maturity.getMonth() + termMonths);
     return maturity;
   },
@@ -66,7 +75,14 @@ const financialService = {
    */
   hasReachedMaturity(startDate, termMonths) {
     const maturityDate = this.calculateMaturityDate(startDate, termMonths);
-    return new Date() >= maturityDate;
+    const today = new Date();
+
+    // Normalize both dates to midnight for date-only comparison
+    // This ensures maturity checks work correctly regardless of time of day
+    maturityDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    return today >= maturityDate;
   },
 
   /**
