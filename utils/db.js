@@ -1,12 +1,17 @@
 const sqlite3 = require('sqlite3').verbose();
 const mkdirp = require('mkdirp');
 const crypto = require('crypto');
+const path = require('path');
 const { ROLES, PASSWORD_CONFIG } = require('../services/constants');
 
-// Ensure database directory exists
-mkdirp.sync('./var/db');
+// Get database path from environment variable or use default
+const dbPath = process.env.DATABASE_PATH || './var/db/bank.db';
+const dbDir = path.dirname(dbPath);
 
-let db = new sqlite3.Database('./var/db/bank.db');
+// Ensure database directory exists
+mkdirp.sync(dbDir);
+
+let db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
   db.run("BEGIN TRANSACTION");

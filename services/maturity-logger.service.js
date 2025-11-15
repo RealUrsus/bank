@@ -6,8 +6,10 @@
 const fs = require('fs');
 const path = require('path');
 
+// Get log directory from environment variable or use default
+const logDir = process.env.LOG_DIR || path.join(__dirname, '../var/log');
+
 // Ensure log directory exists
-const logDir = path.join(__dirname, '../var/log');
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
