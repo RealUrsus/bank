@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 const PORT = process.env.PORT || 8000;
 
 const express = require("express");
@@ -28,8 +31,11 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 app.use(session({
-  secret: require("crypto").randomBytes(32).toString("hex"),
-  store: new SQLiteStore({ db: 'sessions.db', dir: './var/db' }),
+  secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+  store: new SQLiteStore({
+    db: process.env.SESSION_DB_PATH || './var/db/sessions.db',
+    dir: './'
+  }),
   resave: false,           // don't save session if unmodified
   saveUninitialized: false, // don't create session until something stored
   cookie: {
@@ -73,46 +79,46 @@ app.use((req, res, next) => {
   }
 });
 
-(async () => {
+// Main routes
+app.get("/", (req, res) => res.render("home"));
+app.get("/about", (req, res) => res.render("about"));
+app.use('/', require("./routes/auth.js"));
+app.use('/client', require("./routes/client.js"));
+app.use('/admin', require("./routes/admin.js"));
+
+// 404 handler (Express 5–compatible)
+app.use((req, res) => {
+  res.status(404)
+     .type('text/plain')
+     .send(`Error: ${req.originalUrl} was not found`);
+});
+
+// Global error handler (after all routes)
+app.use((err, req, res, next) => {
+  // Log all errors for debugging
+  console.error('Error caught:', {
+    code: err.code,
+    message: err.message,
+    url: req.url,
+    method: req.method
+  });
+
+  // Handle CSRF token errors by redirecting to login
+  if (err.code === 'EBADCSRFTOKEN' || (err.message && (err.message.includes('csrf') || err.message.includes('CSRF')))) {
+    req.session.message = 'Your session has expired. Please log in again.';
+    return res.redirect('/login');
+  }
+
+  console.error(err.stack);
+  res.status(err.status || 500)
+     .type('text/plain')
+     .send(`Error: ${err.message}`);
+});
+
+// Server initialization function
+async function startServer() {
   try {
-    // Main routes
-    app.get("/", (req, res) => res.render("home"));
-    app.get("/about", (req, res) => res.render("about"));
-    app.use('/', require("./routes/auth.js"));
-    app.use('/client', require("./routes/client.js"));
-    app.use('/admin', require("./routes/admin.js"));
-
-    // ✅ 404 handler (Express 5–compatible)
-    app.use((req, res) => {
-      res.status(404)
-         .type('text/plain')
-         .send(`Error: ${req.originalUrl} was not found`);
-    });
-
-    // ✅ Global error handler (after all routes)
-    app.use((err, req, res, next) => {
-      // Log all errors for debugging
-      console.error('Error caught:', {
-        code: err.code,
-        message: err.message,
-        url: req.url,
-        method: req.method
-      });
-
-      // Handle CSRF token errors by redirecting to login
-      if (err.code === 'EBADCSRFTOKEN' || (err.message && (err.message.includes('csrf') || err.message.includes('CSRF')))) {
-        req.session.message = 'Your session has expired. Please log in again.';
-        return res.redirect('/login');
-      }
-
-      console.error(err.stack);
-      res.status(err.status || 500)
-         .type('text/plain')
-         .send(`Error: ${err.message}`);
-    });
-
-    // Start Server
-    const server = app.listen(PORT, () => 
+    const server = app.listen(PORT, () =>
       console.log(`Bank app is listening on port ${PORT}`)
     );
 
@@ -130,7 +136,12 @@ app.use((req, res, next) => {
       process.exit(1);
     });
 
+    return server;
   } catch (err) {
-    console.error(err.stack);
+    console.error('Failed to start server:', err);
+    process.exit(1);
   }
-})();
+}
+
+// Start the server
+startServer();

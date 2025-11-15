@@ -111,12 +111,13 @@ const transactionService = {
    * @returns {Promise<Array>} Array of pending transactions
    */
   async getPendingTransactionsByUser(userId) {
+    const { ACCOUNT_TYPES } = require('./constants');
     return await db.queryMany(
       `SELECT t.*
        FROM Transactions t
        INNER JOIN Accounts a ON t.AccountID = a.AccountID
-       WHERE a.UserID = ? AND a.AccountTypeID = 1 AND t.StatusID = 1`,
-      [userId]
+       WHERE a.UserID = ? AND a.AccountTypeID = ? AND t.StatusID = ?`,
+      [userId, ACCOUNT_TYPES.CHEQUING, STATUS.PENDING]
     );
   },
 
@@ -204,12 +205,13 @@ const transactionService = {
    * @returns {Promise<number>} Count of pending transactions
    */
   async getPendingTransactionsCount() {
+    const { ACCOUNT_TYPES } = require('./constants');
     const result = await db.queryOne(
       `SELECT COUNT(*) AS count
        FROM Transactions t
        INNER JOIN Accounts a ON t.AccountID = a.AccountID
        WHERE t.StatusID = ? AND a.AccountTypeID = ?`,
-      [STATUS.PENDING, 1] // 1 = Chequing account type
+      [STATUS.PENDING, ACCOUNT_TYPES.CHEQUING]
     );
     return result?.count || 0;
   },
@@ -219,6 +221,7 @@ const transactionService = {
    * @returns {Promise<Array>} Array of pending transactions with client info
    */
   async getAllPendingTransactions() {
+    const { ACCOUNT_TYPES } = require('./constants');
     return await db.queryMany(
       `SELECT t.*, u.UserID, u.Name, u.Surname
        FROM Transactions t
@@ -226,7 +229,7 @@ const transactionService = {
        INNER JOIN Users u ON a.UserID = u.UserID
        WHERE t.StatusID = ? AND a.AccountTypeID = ?
        ORDER BY t.CreatedAt DESC`,
-      [STATUS.PENDING, 1] // 1 = Chequing account type
+      [STATUS.PENDING, ACCOUNT_TYPES.CHEQUING]
     );
   },
 

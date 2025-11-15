@@ -1,10 +1,28 @@
 var express = require('express');
 var passport = require('passport');
 var LocalStrategy = require('passport-local');
-var crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 
-const db = require('../utils/db');
+const authService = require('../services/auth.service');
 const loadConfig = require('../middleware/loadConfig.js');
+
+// Rate limiter for login attempts
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 login requests per windowMs
+  message: 'Too many login attempts from this IP, please try again after 15 minutes',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Rate limiter for signup attempts
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // Limit each IP to 3 signup requests per hour
+  message: 'Too many accounts created from this IP, please try again after an hour',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /* Configure password authentication strategy.
  *
@@ -17,19 +35,18 @@ const loadConfig = require('../middleware/loadConfig.js');
  * the hashed password stored in the database.  If the comparison succeeds, the
  * user is authenticated; otherwise, not.
  */
-passport.use(new LocalStrategy(function verify(username, password, cb) {
-  db.get('SELECT * FROM Users WHERE Username = ?', [ username ], function(err, row) {
-    if (err) { return cb(err); }
-    if (!row) { return cb(null, false, { message: 'Incorrect username or password.' }); }
-    
-    crypto.pbkdf2(password, row.Salt, 310000, 32, 'sha256', function(err, hashedPassword) {
-      if (err) { return cb(err); }
-      if (!crypto.timingSafeEqual(row.HashedPassword, hashedPassword)) {
-        return cb(null, false, { message: 'Incorrect username or password.' });
-      }
-      return cb(null, row);
-    });
-  });
+passport.use(new LocalStrategy(async function verify(username, password, cb) {
+  try {
+    const user = await authService.verifyCredentials(username, password);
+
+    if (!user) {
+      return cb(null, false, { message: 'Incorrect username or password.' });
+    }
+
+    return cb(null, user);
+  } catch (err) {
+    return cb(err);
+  }
 }));
 
 /* Configure session management.
@@ -130,7 +147,7 @@ router.get('/login', (req, res, next)=> {
  *         description: Redirect.
  */
 
-router.post('/login/password', async (req, res, next) => {
+router.post('/login/password', loginLimiter, async (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) {
       req.session.message = 'An error occurred during authentication.';
@@ -191,29 +208,23 @@ router.get('/signup', function(req, res, next) {
  * then a new user record is inserted into the database.  If the record is
  * successfully created, the user is logged in.
  */
-router.post('/signup', function(req, res, next) { 
-  var salt = crypto.randomBytes(16);
-  crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256', function(err, hashedPassword) {
-    if (err) { return next(err); }
-    db.run('INSERT INTO Users (Username, HashedPassword, Salt, Name, Surname, RoleID) VALUES (?, ?, ?, ?, ?, ?)', [
-      req.body.username,
-      hashedPassword,
-      salt,
-      req.body.name,
-      req.body.surname,
-      req.roles.CLIENT
-    ], function(err) {
-      if (err) { return next(err); }
-      var user = {
-        id: this.lastID,
-        username: req.body.username
-      };
-      req.login(user, function(err) {
-        if (err) { return next(err); }
-        res.redirect('/');
-      });
+router.post('/signup', signupLimiter, async function(req, res, next) {
+  try {
+    const user = await authService.createUser({
+      username: req.body.username,
+      password: req.body.password,
+      name: req.body.name,
+      surname: req.body.surname,
+      roleId: req.roles.CLIENT
     });
-  });
+
+    req.login(user, function(err) {
+      if (err) { return next(err); }
+      res.redirect('/');
+    });
+  } catch (err) {
+    return next(err);
+  }
 });
 
 module.exports = router;

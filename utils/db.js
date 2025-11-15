@@ -1,6 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const mkdirp = require('mkdirp');
 const crypto = require('crypto');
+const { ROLES, PASSWORD_CONFIG } = require('../services/constants');
 
 // Ensure database directory exists
 mkdirp.sync('./var/db');
@@ -153,14 +154,20 @@ db.serialize(() => {
 
 
   // Create initial admin user
-  let salt = crypto.randomBytes(16);
+  let salt = crypto.randomBytes(PASSWORD_CONFIG.SALT_BYTES);
   db.run(`INSERT OR IGNORE INTO Users (Username, HashedPassword, Salt, Name, Surname, RoleID) VALUES (?, ?, ?, ?, ?, ?)`, [
       'admin',
-      crypto.pbkdf2Sync('admin', salt, 310000, 32, 'sha256'),
+      crypto.pbkdf2Sync(
+        'admin',
+        salt,
+        PASSWORD_CONFIG.PBKDF2_ITERATIONS,
+        PASSWORD_CONFIG.HASH_LENGTH,
+        PASSWORD_CONFIG.DIGEST
+      ),
       salt,
       'Bank',
       'Admin',
-      1
+      ROLES.ADMIN
   ]);
 
   db.run("COMMIT");
