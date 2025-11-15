@@ -274,15 +274,7 @@ const gicService = {
     const interestEarned = maturityValue - gic.PrincipalAmount;
 
     // Get user's chequing account
-    const chequingAccount = await db.queryOne(
-      `SELECT AccountID FROM Accounts
-       WHERE UserID = ? AND AccountTypeID = ?`,
-      [gic.UserID, ACCOUNT_TYPES.CHEQUING]
-    );
-
-    if (!chequingAccount) {
-      throw new Error('User chequing account not found');
-    }
+    const chequingAccountId = await accountService.getChequingAccountId(gic.UserID);
 
     // Log maturity event
     maturityLogger.logGICMaturity({
@@ -298,7 +290,7 @@ const gicService = {
     await db.transaction(async () => {
       // Deposit maturity value to chequing account
       await transactionService.createSystemTransaction({
-        accountId: chequingAccount.AccountID,
+        accountId: chequingAccountId,
         transactionTypeId: TRANSACTION_TYPES.DEPOSIT,
         amount: maturityValue,
         description: `GIC maturity - ${gic.ProductName || 'Investment'} (Principal: $${gic.PrincipalAmount.toFixed(2)}, Maturity: $${maturityValue.toFixed(2)})`
@@ -314,7 +306,7 @@ const gicService = {
       userId: gic.UserID,
       maturityValue,
       interestEarned,
-      chequingAccountId: chequingAccount.AccountID
+      chequingAccountId: chequingAccountId
     });
 
     return true;

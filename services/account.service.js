@@ -82,6 +82,40 @@ const accountService = {
   },
 
   /**
+   * Get both balance and approved balance efficiently
+   * @param {number} accountId - Account ID
+   * @returns {Promise<object>} Object with balance and approvedBalance properties
+   */
+  async getBalances(accountId) {
+    const [balance, approvedBalance] = await Promise.all([
+      this.getBalance(accountId),
+      this.getApprovedBalance(accountId)
+    ]);
+
+    return { balance, approvedBalance };
+  },
+
+  /**
+   * Get chequing account ID for a user
+   * @param {number} userId - User ID
+   * @returns {Promise<number>} Chequing account ID
+   * @throws {Error} If chequing account not found
+   */
+  async getChequingAccountId(userId) {
+    const account = await db.queryOne(
+      `SELECT AccountID FROM Accounts
+       WHERE UserID = ? AND AccountTypeID = ?`,
+      [userId, ACCOUNT_TYPES.CHEQUING]
+    );
+
+    if (!account) {
+      throw new Error('User chequing account not found');
+    }
+
+    return account.AccountID;
+  },
+
+  /**
    * Update account status
    * @param {number} accountId - Account ID
    * @param {number} statusId - New status ID

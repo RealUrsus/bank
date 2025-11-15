@@ -11,11 +11,13 @@ const loanService = require('../services/loan.service');
 const gicService = require('../services/gic.service');
 const agreementService = require('../services/agreement.service');
 const userService = require('../services/user.service');
+const financialService = require('../services/financial.service');
 
 // Utils
 const { formatDate } = require('../utils/formatters');
 const { validateId, validateDateNotFuture, validateRequiredFields, validateAmount, validatePeriod } = require('../utils/validators');
 const { DATE_CONFIG, TRANSACTION_CATEGORIES } = require('../services/constants');
+const { buildReportFilters } = require('../utils/reportHelpers');
 
 const router = express.Router();
 
@@ -135,20 +137,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Default transactions route (30 days)
-router.get('/transactions', getTransactions, async (req, res) => {
+// Transactions route (with optional period parameter)
+router.get('/transactions/:period?', getTransactions, async (req, res) => {
   res.locals.filter = null;
-  const balance = await accountService.getBalance(req.user.account);
-  const approved_balance = await accountService.getApprovedBalance(req.user.account);
-  res.render('client-transactions', { user: req.user, balance, approved_balance, categories: TRANSACTION_CATEGORIES });
-});
-
-// Transactions route with period parameter
-router.get('/transactions/:period', getTransactions, async (req, res) => {
-  res.locals.filter = null;
-  const balance = await accountService.getBalance(req.user.account);
-  const approved_balance = await accountService.getApprovedBalance(req.user.account);
-  res.render('client-transactions', { user: req.user, balance, approved_balance, categories: TRANSACTION_CATEGORIES });
+  const { balance, approvedBalance } = await accountService.getBalances(req.user.account);
+  res.render('client-transactions', { user: req.user, balance, approved_balance: approvedBalance, categories: TRANSACTION_CATEGORIES });
 });
 
 router.post('/transactions/add', async (req, res, next) => {
@@ -357,12 +350,7 @@ router.post('/transfer', async (req, res, next) => {
     if (dstAccount.PrincipalAmount) {
       const principal = parseFloat(dstAccount.PrincipalAmount);
       const interestRate = parseFloat(dstAccount.InterestRate);
-      const startDate = new Date(dstAccount.StartDate);
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const daysElapsed = Math.max(0, Math.floor((yesterday - startDate) / (1000 * 60 * 60 * 24)));
-      const monthsElapsed = daysElapsed / 30.44; // Average days per month
-      const accruedInterest = (principal * interestRate * (monthsElapsed / 12)) / 100;
+      const accruedInterest = financialService.calculateAccruedInterestToYesterday(principal, interestRate, dstAccount.StartDate);
       const paidOffAmount = principal + accruedInterest - dstBalance;
 
       if (validAmount > paidOffAmount) {
@@ -399,28 +387,8 @@ router.get('/reports', async (req, res, next) => {
     const accountID = await getAccountID(req.user.id, "Chequing");
     req.user["account"] = accountID;
 
-    // Extract filters from query parameters
-    const { category, transactionType, startDate, endDate, timeframe } = req.query;
-
-    // Handle predefined timeframes
-    let filters = { category, transactionType };
-
-    if (timeframe === 'all') {
-      // No date filters for all time
-      filters.startDate = null;
-      filters.endDate = null;
-    } else if (timeframe === 'custom' && startDate && endDate) {
-      // Custom date range
-      filters.startDate = startDate;
-      filters.endDate = endDate;
-    } else if (timeframe && timeframe.includes('-')) {
-      // Month format: YYYY-MM
-      const [year, month] = timeframe.split('-');
-      const startOfMonth = new Date(year, month - 1, 1);
-      const endOfMonth = new Date(year, month, 0);
-      filters.startDate = formatDate(startOfMonth);
-      filters.endDate = formatDate(endOfMonth);
-    }
+    // Build filters from query parameters
+    const filters = buildReportFilters(req.query);
 
     // Generate report
     const reportData = await transactionService.generateReport(accountID, filters);
