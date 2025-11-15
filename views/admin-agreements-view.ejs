@@ -23,7 +23,7 @@
         <div class="card mb-4">
           <div class="card-body">
             <h5 class="card-title mb-3">
-              <i data-feather="user" style="width: 20px; height: 20px;"></i>
+              <i data-feather="user" class="icon-lg"></i>
               Select Client
             </h5>
             <form method="GET" action="/admin/agreements/view">
@@ -41,14 +41,14 @@
                 </div>
                 <div class="col-md-3">
                   <button type="submit" class="btn btn-primary w-100">
-                    <i data-feather="search" style="width: 16px; height: 16px;"></i>
+                    <i data-feather="search" class="icon-md"></i>
                     Load Agreements
                   </button>
                 </div>
                 <% if (clientId) { %>
                 <div class="col-md-3">
                   <a href="/admin/agreements/view" class="btn btn-outline-secondary w-100">
-                    <i data-feather="x" style="width: 16px; height: 16px;"></i>
+                    <i data-feather="x" class="icon-md"></i>
                     Show All
                   </a>
                 </div>
@@ -70,7 +70,7 @@
         <div class="card">
           <div class="card-body">
             <h5 class="card-title mb-3">
-              <i data-feather="file-text" style="width: 20px; height: 20px;"></i>
+              <i data-feather="file-text" class="icon-lg"></i>
               Agreements <span class="badge bg-primary"><%= agreements.length %></span>
             </h5>
             <div class="table-responsive">
@@ -104,13 +104,13 @@
                     <td class="text-center">
                       <div class="btn-group" role="group">
                         <a href="/admin/agreements/edit/<%= agreement.AgreementID %>" class="btn btn-secondary btn-sm">
-                          <i data-feather="edit" style="width: 14px; height: 14px;"></i>
+                          <i data-feather="edit" class="icon-sm"></i>
                           Edit
                         </a>
                         <form action="/admin/agreements/delete" method="POST" class="d-inline">
                           <input type="hidden" name="id" value="<%= agreement.AgreementID %>">
                           <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this agreement?')">
-                            <i data-feather="trash-2" style="width: 14px; height: 14px;"></i>
+                            <i data-feather="trash-2" class="icon-sm"></i>
                             Delete
                           </button>
                           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -129,7 +129,7 @@
         <div class="card">
           <div class="card-body">
             <div class="text-center py-5">
-              <i data-feather="inbox" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+              <i data-feather="inbox" class="text-muted mb-3 icon-2xl"></i>
               <h4 class="text-muted">No Agreements Found</h4>
               <% if (clientId) { %>
                 <p class="text-muted">This client has no agreements.</p>
@@ -137,7 +137,7 @@
                 <p class="text-muted">There are currently no agreements in the system.</p>
               <% } %>
               <a href="/admin/agreements/add" class="btn btn-primary">
-                <i data-feather="plus-circle" style="width: 16px; height: 16px;"></i>
+                <i data-feather="plus-circle" class="icon-md"></i>
                 Create New Agreement
               </a>
             </div>

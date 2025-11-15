@@ -18,7 +18,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h3 class="mb-0">GIC Investment #<%= account.AccountID %></h3>
           <a href="/client/gic/view" class="btn btn-outline-secondary btn-sm">
-            <i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> Back to GICs
+            <i data-feather="arrow-left" class="icon-md"></i> Back to GICs
           </a>
         </div>
 
@@ -51,7 +51,7 @@
                     <small class="text-muted d-block">Principal Amount</small>
                     <h4 class="mb-0">$<%= principal.toFixed(2) %></h4>
                   </div>
-                  <i data-feather="dollar-sign" class="text-primary" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="dollar-sign" class="text-primary" class="icon-1xl"></i>
                 </div>
               </div>
               <div class="col-md-6 mb-3">
@@ -60,7 +60,7 @@
                     <small class="text-muted d-block">Balance at Maturity</small>
                     <h4 class="mb-0">$<%= balanceAtMaturity.toFixed(2) %></h4>
                   </div>
-                  <i data-feather="trending-up" class="text-success" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="trending-up" class="text-success" class="icon-1xl"></i>
                 </div>
               </div>
               <div class="col-md-6 mb-3">
@@ -69,7 +69,7 @@
                     <small class="text-muted d-block">Annual Interest Rate</small>
                     <h4 class="mb-0"><%= interestRate.toFixed(2) %>%</h4>
                   </div>
-                  <i data-feather="percent" class="text-warning" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="percent" class="text-warning" class="icon-1xl"></i>
                 </div>
               </div>
               <div class="col-md-6 mb-3">
@@ -78,7 +78,7 @@
                     <small class="text-muted d-block">Term</small>
                     <h4 class="mb-0"><%= term %> months</h4>
                   </div>
-                  <i data-feather="calendar" class="text-info" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="calendar" class="text-info" class="icon-1xl"></i>
                 </div>
               </div>
             </div>

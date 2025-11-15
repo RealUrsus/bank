@@ -25,17 +25,17 @@
           <div class="btn-group d-block" role="group" aria-label="Status filter">
             <input type="radio" class="btn-check" name="statusFilter" id="filter-active" value="active" <%= (typeof selectedStatus !== 'undefined' && selectedStatus === 'active') ? 'checked' : '' %>>
             <label class="btn btn-outline-success" for="filter-active">
-              <i data-feather="activity" style="width: 16px; height: 16px;"></i> Active
+              <i data-feather="activity" class="icon-md"></i> Active
             </label>
 
             <input type="radio" class="btn-check" name="statusFilter" id="filter-all" value="all" <%= (typeof selectedStatus === 'undefined' || selectedStatus === 'all') ? 'checked' : '' %>>
             <label class="btn btn-outline-primary" for="filter-all">
-              <i data-feather="list" style="width: 16px; height: 16px;"></i> All
+              <i data-feather="list" class="icon-md"></i> All
             </label>
 
             <input type="radio" class="btn-check" name="statusFilter" id="filter-closed" value="closed" <%= (typeof selectedStatus !== 'undefined' && selectedStatus === 'closed') ? 'checked' : '' %>>
             <label class="btn btn-outline-secondary" for="filter-closed">
-              <i data-feather="x-square" style="width: 16px; height: 16px;"></i> Closed
+              <i data-feather="x-square" class="icon-md"></i> Closed
             </label>
           </div>
         </div>
@@ -47,28 +47,28 @@
             <thead class="table-light">
               <tr>
                 <th class="sortable" data-column="accountId">
-                  Account ID <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Account ID <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable" data-column="productName">
-                  Product Name <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Product Name <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable" data-column="principal">
-                  Principal Amount <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Principal Amount <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable" data-column="rate">
-                  Rate <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Rate <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable" data-column="term">
-                  Term <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Term <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable" data-column="startDate">
-                  Start Date <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Start Date <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable" data-column="endDate">
-                  End Date <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  End Date <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable" data-column="maturity">
-                  Balance at Maturity <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Balance at Maturity <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="text-center">Status</th>
               </tr>
@@ -126,7 +126,7 @@
           <% } else { %>
           <!-- Empty State -->
           <div class="text-center py-5">
-            <i data-feather="briefcase" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+            <i data-feather="briefcase" class="text-muted mb-3 icon-2xl"></i>
             <h4 class="text-muted">No GIC Investments Found</h4>
             <p class="text-muted">You don't have any GIC investments yet.</p>
           </div>

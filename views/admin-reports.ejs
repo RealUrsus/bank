@@ -24,7 +24,7 @@
         <div class="card mb-4">
           <div class="card-body">
             <h5 class="card-title mb-3">
-              <i data-feather="user" style="width: 20px; height: 20px;"></i>
+              <i data-feather="user" class="icon-lg"></i>
               Select Client
             </h5>
             <form method="GET" action="/admin/reports">
@@ -42,7 +42,7 @@
                 </div>
                 <div class="col-md-3">
                   <button type="submit" class="btn btn-primary w-100">
-                    <i data-feather="search" style="width: 16px; height: 16px;"></i>
+                    <i data-feather="search" class="icon-md"></i>
                     Load Client Data
                   </button>
                 </div>
@@ -61,7 +61,7 @@
         <div class="card mb-4">
           <div class="card-body">
             <h5 class="card-title mb-3">
-              <i data-feather="filter" style="width: 20px; height: 20px;"></i>
+              <i data-feather="filter" class="icon-lg"></i>
               Report Filters
             </h5>
             <form id="reportForm" method="GET" action="/admin/reports">
@@ -112,11 +112,11 @@
 
               <div class="mt-3">
                 <button type="submit" class="btn btn-primary">
-                  <i data-feather="bar-chart-2" style="width: 16px; height: 16px;"></i>
+                  <i data-feather="bar-chart-2" class="icon-md"></i>
                   Generate Report
                 </button>
                 <a href="/admin/reports?clientId=<%= selectedClient.UserID %>" class="btn btn-outline-secondary">
-                  <i data-feather="x" style="width: 16px; height: 16px;"></i>
+                  <i data-feather="x" class="icon-md"></i>
                   Clear Filters
                 </a>
               </div>
@@ -180,7 +180,7 @@
           <div class="card mb-4">
             <div class="card-body">
               <h5 class="card-title mb-3">
-                <i data-feather="pie-chart" style="width: 20px; height: 20px;"></i>
+                <i data-feather="pie-chart" class="icon-lg"></i>
                 Category Breakdown
               </h5>
               <div class="table-responsive">
@@ -188,19 +188,19 @@
                   <thead class="table-light">
                     <tr>
                       <th class="sortable" data-sort="category">
-                        Category <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        Category <i data-feather="chevrons-up-down" class="icon-sm"></i>
                       </th>
                       <th class="sortable text-end" data-sort="income">
-                        Income <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        Income <i data-feather="chevrons-up-down" class="icon-sm"></i>
                       </th>
                       <th class="sortable text-end" data-sort="expense">
-                        Expenses <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        Expenses <i data-feather="chevrons-up-down" class="icon-sm"></i>
                       </th>
                       <th class="sortable text-end" data-sort="net">
-                        Net <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        Net <i data-feather="chevrons-up-down" class="icon-sm"></i>
                       </th>
                       <th class="sortable text-center" data-sort="count">
-                        Transaction Count <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                        Transaction Count <i data-feather="chevrons-up-down" class="icon-sm"></i>
                       </th>
                     </tr>
                   </thead>
@@ -246,10 +246,10 @@
             <div class="card-header bg-white" role="button" data-bs-toggle="collapse" data-bs-target="#transactionDetailsCollapse" aria-expanded="false" aria-controls="transactionDetailsCollapse">
               <h5 class="card-title mb-0 d-flex justify-content-between align-items-center">
                 <span>
-                  <i data-feather="list" style="width: 20px; height: 20px;"></i>
+                  <i data-feather="list" class="icon-lg"></i>
                   Transaction Details
                 </span>
-                <i data-feather="chevron-down" style="width: 20px; height: 20px;" id="collapseIcon"></i>
+                <i data-feather="chevron-down" class="icon-lg" id="collapseIcon"></i>
               </h5>
             </div>
             <div class="collapse" id="transactionDetailsCollapse">
@@ -258,7 +258,7 @@
                 <div class="mb-3 search-box">
                   <div class="input-group">
                     <span class="input-group-text bg-white">
-                      <i data-feather="search" style="width: 16px; height: 16px;"></i>
+                      <i data-feather="search" class="icon-md"></i>
                     </span>
                     <input type="text" class="form-control" id="searchTransactions" placeholder="Search transactions...">
                   </div>
@@ -270,16 +270,16 @@
                     <thead class="table-light">
                       <tr>
                         <th class="sortable" data-sort="date">
-                          Date <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                          Date <i data-feather="chevrons-up-down" class="icon-sm"></i>
                         </th>
                         <th class="sortable" data-sort="type">
-                          Type <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                          Type <i data-feather="chevrons-up-down" class="icon-sm"></i>
                         </th>
                         <th class="sortable text-end" data-sort="amount">
-                          Amount <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                          Amount <i data-feather="chevrons-up-down" class="icon-sm"></i>
                         </th>
                         <th class="sortable" data-sort="category">
-                          Category <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                          Category <i data-feather="chevrons-up-down" class="icon-sm"></i>
                         </th>
                         <th>Description</th>
                       </tr>
@@ -299,7 +299,7 @@
                         <td><%= formattedDate %></td>
                         <td>
                           <span class="badge <%= isDeposit ? 'bg-success' : 'bg-danger' %>">
-                            <i data-feather="<%= isDeposit ? 'arrow-down-circle' : 'arrow-up-circle' %>" style="width: 14px; height: 14px;"></i>
+                            <i data-feather="<%= isDeposit ? 'arrow-down-circle' : 'arrow-up-circle' %>" class="icon-sm"></i>
                             <%= isDeposit ? 'Income' : 'Expense' %>
                           </span>
                         </td>
@@ -322,7 +322,7 @@
                 <% } else { %>
                 <!-- Empty State -->
                 <div class="text-center py-5">
-                  <i data-feather="inbox" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+                  <i data-feather="inbox" class="text-muted mb-3 icon-2xl"></i>
                   <h4 class="text-muted">No Transactions Found</h4>
                   <p class="text-muted">Try adjusting your filters to see more results.</p>
                 </div>
@@ -334,7 +334,7 @@
         <% } else { %>
         <!-- No Client Selected -->
         <div class="text-center py-5">
-          <i data-feather="user-check" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+          <i data-feather="user-check" class="text-muted mb-3 icon-2xl"></i>
           <h4 class="text-muted">Select a Client</h4>
           <p class="text-muted">Please select a client from the dropdown above to view their transaction reports.</p>
         </div>
@@ -400,7 +400,7 @@
             const noResults = document.createElement('div');
             noResults.id = 'noSearchResults';
             noResults.className = 'alert alert-info text-center mt-3';
-            noResults.innerHTML = '<i data-feather="search" style="width: 24px; height: 24px;"></i><br>No transactions match your search term: <strong>' + searchTerm + '</strong>';
+            noResults.innerHTML = '<i data-feather="search" class="icon-xl"></i><br>No transactions match your search term: <strong>' + searchTerm + '</strong>';
             transactionsTable.parentElement.appendChild(noResults);
             feather.replace();
           }
