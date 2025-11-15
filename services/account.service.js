@@ -73,10 +73,9 @@ const accountService = {
     const result = await db.queryOne(
       `SELECT SUM(Amount * CASE WHEN TransactionTypeID = 1 THEN 1 ELSE -1 END) AS total
        FROM Transactions
-       JOIN Status ON Transactions.StatusID = Status.StatusID
        WHERE AccountID = ?
-         AND (Status.StatusName = 'Approved' OR Status.StatusName = 'Paid Off')`,
-      [accountId]
+         AND StatusID IN (?, ?)`,
+      [accountId, STATUS.APPROVED, STATUS.PAID_OFF]
     );
     return result?.total || 0;
   },
@@ -184,7 +183,8 @@ const accountService = {
       description = null,
       paymentFrequencyId = null,
       balance = null,
-      minimumBalance = null
+      minimumBalance = null,
+      productId = null
     } = accountData;
 
     // Build dynamic INSERT to only include fields that are provided
@@ -222,6 +222,10 @@ const accountService = {
     if (minimumBalance !== null) {
       fields.push('MinimumBalance');
       values.push(minimumBalance);
+    }
+    if (productId !== null) {
+      fields.push('ProductID');
+      values.push(productId);
     }
 
     const placeholders = values.map(() => '?').join(', ');

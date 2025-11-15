@@ -3,6 +3,8 @@
  * Handles interest calculations, maturity dates, payment schedules, etc.
  */
 
+const { FINANCIAL_CONFIG } = require('./constants');
+
 const financialService = {
   /**
    * Calculate simple interest for a given period
@@ -156,7 +158,7 @@ const financialService = {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const daysElapsed = Math.max(0, Math.floor((yesterday - start) / (1000 * 60 * 60 * 24)));
-    const monthsElapsed = daysElapsed / 30.44; // Average days per month
+    const monthsElapsed = daysElapsed / FINANCIAL_CONFIG.AVG_DAYS_PER_MONTH;
     return (principal * interestRate * (monthsElapsed / 12)) / 100;
   },
 

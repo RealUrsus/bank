@@ -3,8 +3,8 @@
  * Handles user operations including authentication and password management
  */
 
-const crypto = require('crypto');
 const db = require('./database.service');
+const cryptoUtils = require('../utils/crypto');
 const { PASSWORD_CONFIG, ROLES } = require('./constants');
 
 const userService = {
@@ -59,42 +59,24 @@ const userService = {
   },
 
   /**
-   * Hash a password using PBKDF2
+   * Hash a password using PBKDF2 (delegates to shared crypto utils)
    * @param {string} password - Plain text password
    * @param {Buffer} salt - Salt (if not provided, generates new one)
    * @returns {Promise<object>} Object with hash and salt
    */
   async hashPassword(password, salt = null) {
-    const saltBuffer = salt || crypto.randomBytes(PASSWORD_CONFIG.SALT_BYTES);
-
-    return new Promise((resolve, reject) => {
-      crypto.pbkdf2(
-        password,
-        saltBuffer,
-        PASSWORD_CONFIG.PBKDF2_ITERATIONS,
-        PASSWORD_CONFIG.HASH_LENGTH,
-        PASSWORD_CONFIG.DIGEST,
-        (err, hash) => {
-          if (err) return reject(err);
-          resolve({
-            hash,
-            salt: saltBuffer
-          });
-        }
-      );
-    });
+    return await cryptoUtils.hashPassword(password, salt);
   },
 
   /**
-   * Verify a password against stored hash
+   * Verify a password against stored hash (delegates to shared crypto utils)
    * @param {string} password - Plain text password
    * @param {Buffer} storedHash - Stored hash
    * @param {Buffer} salt - Salt used for hashing
    * @returns {Promise<boolean>} True if password matches
    */
   async verifyPassword(password, storedHash, salt) {
-    const { hash } = await this.hashPassword(password, salt);
-    return crypto.timingSafeEqual(storedHash, hash);
+    return await cryptoUtils.verifyPassword(password, storedHash, salt);
   },
 
   /**

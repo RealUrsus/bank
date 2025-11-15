@@ -90,6 +90,13 @@ db.serialize(() => {
     }
   });
 
+  // Migration: Add ProductID column to Accounts table for GIC product linking
+  db.run(`ALTER TABLE Accounts ADD COLUMN ProductID INTEGER DEFAULT NULL`, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding ProductID column:', err);
+    }
+  });
+
   db.run(`CREATE TABLE IF NOT EXISTS Users (
       UserID INTEGER PRIMARY KEY AUTOINCREMENT,
       Username TEXT NOT NULL UNIQUE,
@@ -154,6 +161,18 @@ db.serialize(() => {
           WHERE PaymentFrequency IS NOT NULL AND PaymentFrequencyID IS NULL`, (err) => {
     if (err) {
       console.error('Error migrating PaymentFrequency data:', err);
+    }
+  });
+
+  // Migration: Migrate GIC product IDs from Description to ProductID column
+  db.run(`UPDATE Accounts
+          SET ProductID = CAST(Description AS INTEGER)
+          WHERE AccountTypeID = 4
+            AND Description IS NOT NULL
+            AND ProductID IS NULL
+            AND Description GLOB '[0-9]*'`, (err) => {
+    if (err) {
+      console.error('Error migrating GIC ProductID data:', err);
     }
   });
 

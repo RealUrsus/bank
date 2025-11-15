@@ -122,6 +122,18 @@ const TRANSACTION_CATEGORIES = [
   'Other'
 ];
 
+// Financial Configuration
+const FINANCIAL_CONFIG = {
+  // Rounding tolerance for financial calculations (in dollars)
+  ROUNDING_TOLERANCE: 0.01,
+  // Interest calculation methods
+  LOAN_INTEREST_TYPE: 'simple',
+  GIC_INTEREST_TYPE: 'compound',
+  GIC_COMPOUNDING_FREQUENCY: 12, // Monthly compounding
+  // Days per month for accrual calculations
+  AVG_DAYS_PER_MONTH: 30.44
+};
+
 module.exports = {
   ACCOUNT_TYPES,
   ACCOUNT_TYPE_NAMES,
@@ -135,5 +147,6 @@ module.exports = {
   PAYMENT_FREQUENCY_NAMES,
   PASSWORD_CONFIG,
   DATE_CONFIG,
-  TRANSACTION_CATEGORIES
+  TRANSACTION_CATEGORIES,
+  FINANCIAL_CONFIG
 };
