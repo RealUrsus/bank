@@ -341,13 +341,14 @@ router.post('/transfer', async (req, res, next) => {
       return res.redirect('/client/transfer');
     }
 
-    // For loans, check if transfer exceeds the paid-off amount (principal + accrued interest - current balance)
+    // For loans, check if transfer exceeds the paid-off amount (principal + accrued interest to yesterday - current balance)
     if (dstAccount.PrincipalAmount) {
       const principal = parseFloat(dstAccount.PrincipalAmount);
       const interestRate = parseFloat(dstAccount.InterestRate);
       const startDate = new Date(dstAccount.StartDate);
-      const today = new Date();
-      const daysElapsed = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const daysElapsed = Math.max(0, Math.floor((yesterday - startDate) / (1000 * 60 * 60 * 24)));
       const monthsElapsed = daysElapsed / 30.44; // Average days per month
       const accruedInterest = (principal * interestRate * (monthsElapsed / 12)) / 100;
       const paidOffAmount = principal + accruedInterest - dstBalance;
