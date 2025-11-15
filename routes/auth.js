@@ -4,6 +4,7 @@ var LocalStrategy = require('passport-local');
 const rateLimit = require('express-rate-limit');
 
 const authService = require('../services/auth.service');
+const userService = require('../services/user.service');
 const loadConfig = require('../middleware/loadConfig.js');
 
 // Rate limiter for login attempts
@@ -210,11 +211,52 @@ router.get('/signup', function(req, res, next) {
  */
 router.post('/signup', signupLimiter, async function(req, res, next) {
   try {
+    const { username, password, name, surname } = req.body;
+
+    // Validate required fields
+    if (!username || !password || !name || !surname) {
+      const error = new Error('All fields are required');
+      error.status = 400;
+      throw error;
+    }
+
+    // Validate username format (alphanumeric and underscore, 3-20 characters)
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      const error = new Error('Username must be 3-20 characters and contain only letters, numbers, and underscores');
+      error.status = 400;
+      throw error;
+    }
+
+    // Validate password requirements
+    const passwordValidation = userService.validatePasswordRequirements(password);
+    if (!passwordValidation.isValid) {
+      const error = new Error(passwordValidation.message);
+      error.status = 400;
+      throw error;
+    }
+
+    // Sanitize and validate name fields
+    const sanitizedName = name.trim();
+    const sanitizedSurname = surname.trim();
+
+    if (!sanitizedName || !sanitizedSurname) {
+      const error = new Error('Name and surname cannot be empty');
+      error.status = 400;
+      throw error;
+    }
+
+    if (sanitizedName.length > 50 || sanitizedSurname.length > 50) {
+      const error = new Error('Name and surname must be less than 50 characters');
+      error.status = 400;
+      throw error;
+    }
+
+    // Create user with validated and sanitized input
     const user = await authService.createUser({
-      username: req.body.username,
-      password: req.body.password,
-      name: req.body.name,
-      surname: req.body.surname,
+      username,
+      password,
+      name: sanitizedName,
+      surname: sanitizedSurname,
       roleId: req.roles.CLIENT
     });
 

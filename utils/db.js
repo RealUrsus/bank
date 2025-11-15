@@ -11,7 +11,14 @@ const dbDir = path.dirname(dbPath);
 // Ensure database directory exists
 mkdirp.sync(dbDir);
 
-let db = new sqlite3.Database(dbPath);
+let db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Failed to connect to database:', err.message);
+    console.error('Database path:', dbPath);
+    process.exit(1);
+  }
+  console.log('Connected to SQLite database at', dbPath);
+});
 
 db.serialize(() => {
   db.run("BEGIN TRANSACTION");
