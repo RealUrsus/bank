@@ -145,10 +145,10 @@
                 <div class="mb-2 text-muted">Current Balance</div>
                 <div class="h4 text-primary">$<%= balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
               </div>
-              <% if (approved_balance !== balance) { %>
+              <% if (approvedBalance !== balance) { %>
               <div class="col-md-6">
                 <div class="mb-2 text-muted">Approved Balance</div>
-                <div class="h4 text-success">$<%= approved_balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+                <div class="h4 text-success">$<%= approvedBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
               </div>
               <% } %>
             </div>

@@ -6,7 +6,7 @@ const session = require('express-session');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const { csrfSync } = require('csrf-sync');
-// const helmet = require('helmet');
+const helmet = require('helmet');
 const passport = require('passport');
 const SQLiteStore = require('connect-sqlite3')(session);
 
@@ -17,7 +17,7 @@ require('./jobs/dailyTasks');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// app.use(helmet());
+app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));

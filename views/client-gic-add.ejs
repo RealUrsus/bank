@@ -16,7 +16,7 @@
       <!-- Content -->
       <div class="flex-grow-1 p-3">
         <h2 class="mb-3">Available GIC Investments</h2>
-        <p>Your current balance: <strong>$<%= parseFloat(approved_balance).toFixed(2) %></strong></p>
+        <p>Your current balance: <strong>$<%= parseFloat(approvedBalance).toFixed(2) %></strong></p>
 
         <% if (typeof locals.session !== 'undefined' && locals.session.message) { %>
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -37,7 +37,7 @@
                     <strong>Term:</strong> <%= product.Term %> months<br>
                     <strong>Minimum Amount:</strong> $<%= parseFloat(product.MinimumAmount).toFixed(2) %>
                   </p>
-                  <% if (approved_balance >= product.MinimumAmount) { %>
+                  <% if (approvedBalance >= product.MinimumAmount) { %>
                   <form action="/client/gic/purchase/<%= product.ProductID %>" method="post" class="mt-3">
                     <div class="mb-3">
                       <label for="amount_<%= product.ProductID %>" class="form-label">Investment Amount</label>

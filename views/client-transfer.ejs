@@ -27,7 +27,7 @@
             <div class="form-floating mb-3">
               <select class="form-select" id="source" name="source" aria-label="From Account">
                 <option selected>Select From Account...</option>
-                <option value=<%= account %>>Chequing # <%= account %> ($<%= (typeof approved_balance !== 'undefined' && approved_balance !== null) ? approved_balance.toFixed(2) : "0.0" %>)</option>
+                <option value=<%= account %>>Chequing # <%= account %> ($<%= (typeof approvedBalance !== 'undefined' && approvedBalance !== null) ? approvedBalance.toFixed(2) : "0.0" %>)</option>
               </select>
               <label for="source">From Account</label>
             </div>        

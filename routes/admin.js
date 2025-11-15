@@ -12,7 +12,7 @@ const gicService = require('../services/gic.service');
 const agreementService = require('../services/agreement.service');
 
 // Utils
-const { validateId, validateRequiredFields } = require('../utils/validators');
+const { validateId, validateRequiredFields, sanitizeHtml } = require('../utils/validators');
 const { TRANSACTION_CATEGORIES } = require('../services/constants');
 const { buildReportFilters } = require('../utils/reportHelpers');
 const { formatDate } = require('../utils/formatters');
@@ -385,8 +385,8 @@ router.route('/agreements/add')
 
       await agreementService.createAgreement({
         userId: clientId,
-        agreementName: title,
-        agreementContent: context
+        agreementName: sanitizeHtml(title),
+        agreementContent: sanitizeHtml(context)
       });
 
       res.redirect('/admin/agreements/view');
@@ -413,8 +413,8 @@ router.route('/agreements/edit/:agreementId')
       validateId(id, 'AgreementID');
 
       await agreementService.updateAgreement(id, {
-        agreementName: title,
-        agreementContent: context,
+        agreementName: sanitizeHtml(title),
+        agreementContent: sanitizeHtml(context),
         statusId: status
       });
 
