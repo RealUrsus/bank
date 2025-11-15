@@ -3,6 +3,7 @@
  * Handles transaction operations and transfer logic
  */
 
+const crypto = require('crypto');
 const db = require('./database.service');
 const { TRANSACTION_TYPES, STATUS } = require('./constants');
 const { formatDate } = require('../utils/formatters');
@@ -154,8 +155,8 @@ const transactionService = {
       destinationDescription
     } = transferData;
 
-    // Generate unique transfer ID
-    const transferId = Math.floor(Math.random() * 10 ** 12).toString();
+    // Generate unique transfer ID using cryptographically secure random bytes
+    const transferId = crypto.randomBytes(8).toString('hex');
     const date = formatDate(new Date());
 
     // Create both transactions in a transaction block for atomicity

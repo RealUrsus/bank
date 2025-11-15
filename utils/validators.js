@@ -89,10 +89,32 @@ function validatePeriod(period, maxDays = 365) {
   return parsed;
 }
 
+/**
+ * Sanitize HTML content to prevent XSS attacks
+ * Escapes HTML special characters
+ * @param {string} text - Text to sanitize
+ * @returns {string} Sanitized text
+ */
+function sanitizeHtml(text) {
+  if (typeof text !== 'string') return '';
+
+  const htmlEscapeMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2F;'
+  };
+
+  return text.replace(/[&<>"'/]/g, char => htmlEscapeMap[char]);
+}
+
 module.exports = {
   validateId,
   validateDateNotFuture,
   validateRequiredFields,
   validateAmount,
-  validatePeriod
+  validatePeriod,
+  sanitizeHtml
 };

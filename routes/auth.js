@@ -4,7 +4,7 @@ var LocalStrategy = require('passport-local');
 var crypto = require('crypto');
 
 const db = require('../utils/db');
-const configService = require('../helpers/configService.js');
+const loadConfig = require('../middleware/loadConfig.js');
 
 /* Configure password authentication strategy.
  *
@@ -69,15 +69,7 @@ passport.deserializeUser(function(user, cb) {
 var router = express.Router();
 
 // Middleware to load config for all routes handled by this router
-router.use(async (req, res, next) => {
-  try {
-      const roles = await configService.getConfig('Roles');
-      req.roles = roles; // Attach the loaded config to the request object. This is a global parameter.
-      next(); // Pass control to the next middleware or route handler
-  } catch (error) {
-      next(error);
-  }
-});
+router.use(loadConfig);
 
 /** GET /login
  *

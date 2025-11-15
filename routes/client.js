@@ -1,6 +1,6 @@
 const express = require('express');
 const checkRole = require('../middleware/checkRole.js');
-const configService = require('../helpers/configService.js');
+const loadConfig = require('../middleware/loadConfig.js');
 const ensureAuthenticated = require('../middleware/ensureAuth.js');
 const getAccountID = require('../middleware/getAccountID.js');
 
@@ -16,21 +16,14 @@ const financialService = require('../services/financial.service');
 // Utils
 const { formatDate } = require('../utils/formatters');
 const { validateId, validateDateNotFuture, validateRequiredFields, validateAmount, validatePeriod } = require('../utils/validators');
-const { DATE_CONFIG, TRANSACTION_CATEGORIES } = require('../services/constants');
+const { DATE_CONFIG, TRANSACTION_CATEGORIES, STATUS } = require('../services/constants');
 const { buildReportFilters } = require('../utils/reportHelpers');
+const { filterByStatus } = require('../utils/statusFilter');
 
 const router = express.Router();
 
 // Middleware to load config for all routes handled by this router
-router.use(async (req, res, next) => {
-  try {
-      const roles = await configService.getConfig('Roles');
-      req.roles = roles;
-      next();
-  } catch (error) {
-      next(error);
-  }
-});
+router.use(loadConfig);
 
 // Middleware to fetch transactions by period
 async function getTransactions(req, res, next) {
@@ -48,17 +41,9 @@ async function getTransactions(req, res, next) {
 async function fetchLoans(req, res, next) {
   try {
     const status = req.query.status || 'active';
-    let loans;
-
-    if (status === 'all') {
-      loans = await loanService.getUserLoans(req.user.id, false);
-    } else if (status === 'active') {
-      loans = await loanService.getUserLoans(req.user.id, true);
-    } else {
-      // Filter by specific status name
-      const allLoans = await loanService.getUserLoans(req.user.id, false);
-      loans = allLoans.filter(l => l.StatusName && l.StatusName.toLowerCase() === status.toLowerCase());
-    }
+    const allLoans = await loanService.getUserLoans(req.user.id, false);
+    const activeLoans = await loanService.getUserLoans(req.user.id, true);
+    const loans = filterByStatus(allLoans, activeLoans, status);
 
     res.locals.loans = loans;
     res.locals.selectedStatus = status;
@@ -98,25 +83,34 @@ router.get('/', async (req, res) => {
     const savingsBalance = await accountService.getApprovedBalance(accountID);
 
     // Loans summary - include only approved/active loans (exclude pending, rejected, paid off)
-    const relevantLoans = loans.filter(l => l.StatusID !== 1 && l.StatusID !== 3 && l.StatusID !== 6); // Exclude Pending(1), Rejected(3), Paid Off(6)
+    const relevantLoans = loans.filter(l =>
+      l.StatusID !== STATUS.PENDING &&
+      l.StatusID !== STATUS.REJECTED &&
+      l.StatusID !== STATUS.PAID_OFF
+    );
     let totalLoaned = 0;
     let totalOwed = 0;
     for (const loan of relevantLoans) {
-      totalLoaned += loan.PrincipalAmount;
-      const balance = await accountService.getBalance(loan.AccountID);
-      const remaining = loan.PrincipalAmount - balance;
+      const principal = parseFloat(loan.PrincipalAmount) || 0;
+      totalLoaned += principal;
+      const balance = parseFloat(await accountService.getBalance(loan.AccountID)) || 0;
+      const remaining = principal - balance;
       if (remaining > 0) {
         totalOwed += remaining;
       }
     }
 
     // Investments (GICs) summary - include all non-pending, non-rejected investments
-    const relevantGICs = gics.filter(g => g.StatusID !== 1 && g.StatusID !== 3); // Exclude Pending(1) and Rejected(3)
+    const relevantGICs = gics.filter(g =>
+      g.StatusID !== STATUS.PENDING &&
+      g.StatusID !== STATUS.REJECTED
+    );
     let totalInvested = 0;
     let currentInvestmentValue = 0;
     for (const gic of relevantGICs) {
-      totalInvested += gic.PrincipalAmount;
-      const balance = await accountService.getBalance(gic.AccountID);
+      const principal = parseFloat(gic.PrincipalAmount) || 0;
+      totalInvested += principal;
+      const balance = parseFloat(await accountService.getBalance(gic.AccountID)) || 0;
       currentInvestmentValue += balance;
     }
 
@@ -141,14 +135,14 @@ router.get('/', async (req, res) => {
 router.get('/transactions', getTransactions, async (req, res) => {
   res.locals.filter = null;
   const { balance, approvedBalance } = await accountService.getBalances(req.user.account);
-  res.render('client-transactions', { user: req.user, balance, approved_balance: approvedBalance, categories: TRANSACTION_CATEGORIES });
+  res.render('client-transactions', { user: req.user, balance, approvedBalance, categories: TRANSACTION_CATEGORIES });
 });
 
 // Transactions route with period parameter
 router.get('/transactions/:period', getTransactions, async (req, res) => {
   res.locals.filter = null;
   const { balance, approvedBalance } = await accountService.getBalances(req.user.account);
-  res.render('client-transactions', { user: req.user, balance, approved_balance: approvedBalance, categories: TRANSACTION_CATEGORIES });
+  res.render('client-transactions', { user: req.user, balance, approvedBalance, categories: TRANSACTION_CATEGORIES });
 });
 
 router.post('/transactions/add', async (req, res, next) => {
@@ -245,8 +239,8 @@ router.get('/loan/:confirmationId', async (req, res, next) => {
 router.get('/gic/add', async (req, res, next) => {
   try {
     const gicProducts = await gicService.getAllGICProducts();
-    const approved_balance = await accountService.getApprovedBalance(req.user.account);
-    res.render('client-gic-add', { user: req.user, gicProducts, approved_balance });
+    const approvedBalance = await accountService.getApprovedBalance(req.user.account);
+    res.render('client-gic-add', { user: req.user, gicProducts, approvedBalance });
   } catch (err) {
     next(err);
   }
@@ -278,17 +272,9 @@ router.post('/gic/purchase/:productId', async (req, res, next) => {
 router.get('/gic/view', async (req, res, next) => {
   try {
     const status = req.query.status || 'all';
-    let gics;
-
-    if (status === 'all') {
-      gics = await gicService.getUserGICs(req.user.id, false);
-    } else if (status === 'active') {
-      gics = await gicService.getUserGICs(req.user.id, true);
-    } else {
-      // Filter by specific status name
-      const allGICs = await gicService.getUserGICs(req.user.id, false);
-      gics = allGICs.filter(g => g.StatusName && g.StatusName.toLowerCase() === status.toLowerCase());
-    }
+    const allGICs = await gicService.getUserGICs(req.user.id, false);
+    const activeGICs = await gicService.getUserGICs(req.user.id, true);
+    const gics = filterByStatus(allGICs, activeGICs, status);
 
     res.render('client-gics-view', { user: req.user, gics, selectedStatus: status });
   } catch (err) {
@@ -322,11 +308,11 @@ router.get('/gic/:confirmationId', async (req, res, next) => {
 
 router.get('/transfer', fetchLoans, async (req, res, next) => {
   try {
-    const approved_balance = await accountService.getApprovedBalance(req.user.account);
+    const approvedBalance = await accountService.getApprovedBalance(req.user.account);
     res.render('client-transfer', {
       user: req.user,
       account: req.user.account,
-      approved_balance,
+      approvedBalance,
       loans: res.locals.loans,
       message: null
      });
