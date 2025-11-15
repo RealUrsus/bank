@@ -277,8 +277,20 @@ router.post('/gic/purchase/:productId', async (req, res, next) => {
 
 router.get('/gic/view', async (req, res, next) => {
   try {
-    const gics = await gicService.getUserGICs(req.user.id);
-    res.render('client-gics-view', { user: req.user, gics });
+    const status = req.query.status || 'all';
+    let gics;
+
+    if (status === 'all') {
+      gics = await gicService.getUserGICs(req.user.id, false);
+    } else if (status === 'active') {
+      gics = await gicService.getUserGICs(req.user.id, true);
+    } else {
+      // Filter by specific status name
+      const allGICs = await gicService.getUserGICs(req.user.id, false);
+      gics = allGICs.filter(g => g.StatusName && g.StatusName.toLowerCase() === status.toLowerCase());
+    }
+
+    res.render('client-gics-view', { user: req.user, gics, selectedStatus: status });
   } catch (err) {
     next(err);
   }

@@ -19,6 +19,27 @@
           <h3 class="mb-0">My GIC Investments</h3>
         </div>
 
+        <!-- Status Filter Button Group -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Filter by Status:</label>
+          <div class="btn-group d-block" role="group" aria-label="Status filter">
+            <input type="radio" class="btn-check" name="statusFilter" id="filter-active" value="active" <%= (typeof selectedStatus !== 'undefined' && selectedStatus === 'active') ? 'checked' : '' %>>
+            <label class="btn btn-outline-success" for="filter-active">
+              <i data-feather="activity" style="width: 16px; height: 16px;"></i> Active
+            </label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="filter-all" value="all" <%= (typeof selectedStatus === 'undefined' || selectedStatus === 'all') ? 'checked' : '' %>>
+            <label class="btn btn-outline-primary" for="filter-all">
+              <i data-feather="list" style="width: 16px; height: 16px;"></i> All
+            </label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="filter-closed" value="closed" <%= (typeof selectedStatus !== 'undefined' && selectedStatus === 'closed') ? 'checked' : '' %>>
+            <label class="btn btn-outline-secondary" for="filter-closed">
+              <i data-feather="x-square" style="width: 16px; height: 16px;"></i> Closed
+            </label>
+          </div>
+        </div>
+
         <!-- GICs Table -->
         <div class="table-responsive mt-4">
           <% if (gics && gics.length > 0) { %>
@@ -49,6 +70,7 @@
                 <th class="sortable" data-column="maturity">
                   Balance at Maturity <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
                 </th>
+                <th class="text-center">Status</th>
               </tr>
             </thead>
             <tbody id="gicsTableBody">
@@ -64,6 +86,7 @@
                 const endDate = new Date(startDate);
                 endDate.setMonth(endDate.getMonth() + term);
                 const formattedEndDate = endDate.toISOString().split('T')[0];
+                const statusClass = gic.StatusName ? 'status-' + gic.StatusName.toLowerCase().replace(/\s+/g, '-') : '';
               %>
               <tr class="clickable-row"
                   onclick="window.location.href='/client/gic/view/<%= gic.AccountID %>'"
@@ -91,6 +114,11 @@
                 <td><%= gic.StartDate %></td>
                 <td><%= formattedEndDate %></td>
                 <td>$<%= balanceAtMaturity.toFixed(2) %></td>
+                <td class="text-center">
+                  <span class="status-badge <%= statusClass %>">
+                    <%= gic.StatusName %>
+                  </span>
+                </td>
               </tr>
               <% } %>
             </tbody>
@@ -112,6 +140,15 @@
     <script src="/js/feather.min.js"></script>
     <script>
       feather.replace();
+
+      // Status filter functionality
+      const statusFilters = document.querySelectorAll('input[name="statusFilter"]');
+      statusFilters.forEach(filter => {
+        filter.addEventListener('change', function() {
+          const status = this.value;
+          window.location.href = '/client/gic/view?status=' + status;
+        });
+      });
 
       // Sorting functionality
       const tbody = document.getElementById("gicsTableBody");
