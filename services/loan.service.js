@@ -226,7 +226,7 @@ const loanService = {
       loan.PrincipalAmount,
       loan.InterestRate,
       loan.Term,
-      loan.PaymentFrequencyName
+      loan.PaymentFrequencyID
     );
   },
 
