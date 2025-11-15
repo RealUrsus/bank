@@ -31,10 +31,11 @@
           const totalAtMaturity = principal + interestAmount;
           const currentBalance = typeof balance !== 'undefined' && balance !== null ? balance : 0;
 
-          // Calculate paid off amount (principal + interest accrued to current day - current balance)
+          // Calculate paid off amount (principal + interest accrued to yesterday - current balance)
           const startDate = new Date(account.StartDate);
-          const today = new Date();
-          const daysElapsed = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const daysElapsed = Math.max(0, Math.floor((yesterday - startDate) / (1000 * 60 * 60 * 24)));
           const monthsElapsed = daysElapsed / 30.44; // Average days per month
           const accruedInterest = (principal * interestRate * (monthsElapsed / 12)) / 100;
           const paidOffAmount = principal + accruedInterest - currentBalance;
@@ -88,7 +89,7 @@
             <!-- Note about paid off amount -->
             <div class="alert alert-info mb-3">
               <i data-feather="info" style="width: 16px; height: 16px;"></i>
-              <strong>Note:</strong> Paid off Amount is Principal Loan Amount + interest accrued to current day minus Current Balance. This amount must be transferred from checking to assign status paid off and close loan.
+              <strong>Note:</strong> Paid off Amount is Principal Loan Amount + interest accrued to yesterday minus Current Balance. This amount must be transferred from checking to assign status paid off and close loan.
             </div>
           </div>
         </div>
