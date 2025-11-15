@@ -4,12 +4,9 @@
  */
 
 const crypto = require('crypto');
-const { promisify } = require('util');
 const db = require('./database.service');
-const { ROLES, PASSWORD_CONFIG } = require('./constants');
-
-// Promisify crypto.pbkdf2 for async/await usage
-const pbkdf2 = promisify(crypto.pbkdf2);
+const cryptoUtils = require('../utils/crypto');
+const { ROLES } = require('./constants');
 
 const authService = {
   /**
@@ -28,17 +25,14 @@ const authService = {
       return null;
     }
 
-    // Hash the provided password with the user's salt
-    const hashedPassword = await pbkdf2(
+    // Verify password using shared crypto utilities
+    const isValid = await cryptoUtils.verifyPassword(
       password,
-      user.Salt,
-      PASSWORD_CONFIG.PBKDF2_ITERATIONS,
-      PASSWORD_CONFIG.HASH_LENGTH,
-      PASSWORD_CONFIG.DIGEST
+      user.HashedPassword,
+      user.Salt
     );
 
-    // Use timing-safe comparison to prevent timing attacks
-    if (!crypto.timingSafeEqual(user.HashedPassword, hashedPassword)) {
+    if (!isValid) {
       return null;
     }
 
@@ -64,20 +58,21 @@ const authService = {
       roleId = ROLES.CLIENT
     } = userData;
 
-    // Generate salt and hash password
-    const salt = crypto.randomBytes(PASSWORD_CONFIG.SALT_BYTES);
-    const hashedPassword = await pbkdf2(
-      password,
-      salt,
-      PASSWORD_CONFIG.PBKDF2_ITERATIONS,
-      PASSWORD_CONFIG.HASH_LENGTH,
-      PASSWORD_CONFIG.DIGEST
-    );
+    // Check if username already exists (Fix #2)
+    const existingUser = await this.usernameExists(username);
+    if (existingUser) {
+      const error = new Error('Username already exists');
+      error.status = 400;
+      throw error;
+    }
+
+    // Generate salt and hash password using shared crypto utilities
+    const { hash, salt } = await cryptoUtils.hashPassword(password);
 
     // Insert user into database
     const result = await db.run(
       'INSERT INTO Users (Username, HashedPassword, Salt, Name, Surname, RoleID) VALUES (?, ?, ?, ?, ?, ?)',
-      [username, hashedPassword, salt, name, surname, roleId]
+      [username, hash, salt, name, surname, roleId]
     );
 
     return {

@@ -8,7 +8,7 @@ const accountService = require('./account.service');
 const transactionService = require('./transaction.service');
 const financialService = require('./financial.service');
 const maturityLogger = require('./maturity-logger.service');
-const { ACCOUNT_TYPES, STATUS, TRANSACTION_TYPES, PAYMENT_FREQUENCIES } = require('./constants');
+const { ACCOUNT_TYPES, STATUS, TRANSACTION_TYPES, PAYMENT_FREQUENCIES, FINANCIAL_CONFIG } = require('./constants');
 
 const loanService = {
   /**
@@ -42,9 +42,9 @@ const loanService = {
          INNER JOIN Status s ON a.StatusID = s.StatusID
          LEFT JOIN PaymentFrequencies pf ON a.PaymentFrequencyID = pf.PaymentFrequencyID
          WHERE a.UserID = ? AND a.AccountTypeID = ?
-           AND s.StatusName = 'Active'
+           AND a.StatusID = ?
          ORDER BY a.StartDate ASC`,
-        [userId, ACCOUNT_TYPES.LOAN]
+        [userId, ACCOUNT_TYPES.LOAN, STATUS.ACTIVE]
       );
     }
 
@@ -208,7 +208,7 @@ const loanService = {
     const paidOffAmount = principal + accruedInterest - balance;
 
     // If paid-off amount is 0 or negative (fully paid), mark as paid off
-    if (paidOffAmount <= 0.01) { // Allow small rounding tolerance
+    if (paidOffAmount <= FINANCIAL_CONFIG.ROUNDING_TOLERANCE) {
       await accountService.updateAccountStatus(loanId, STATUS.PAID_OFF);
       return true;
     }

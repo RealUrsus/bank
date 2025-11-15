@@ -93,19 +93,19 @@ const gicService = {
       return await db.queryMany(
         `SELECT a.*, gp.ProductName, s.StatusName
          FROM Accounts a
-         LEFT JOIN GICProducts gp ON a.Description = CAST(gp.ProductID AS TEXT)
+         LEFT JOIN GICProducts gp ON a.ProductID = gp.ProductID
          INNER JOIN Status s ON a.StatusID = s.StatusID
          WHERE a.UserID = ? AND a.AccountTypeID = ?
-           AND s.StatusName = 'Active'
+           AND a.StatusID = ?
          ORDER BY a.StartDate DESC`,
-        [userId, ACCOUNT_TYPES.INVESTMENT]
+        [userId, ACCOUNT_TYPES.INVESTMENT, STATUS.ACTIVE]
       );
     }
 
     return await db.queryMany(
       `SELECT a.*, gp.ProductName, s.StatusName
        FROM Accounts a
-       LEFT JOIN GICProducts gp ON a.Description = CAST(gp.ProductID AS TEXT)
+       LEFT JOIN GICProducts gp ON a.ProductID = gp.ProductID
        INNER JOIN Status s ON a.StatusID = s.StatusID
        WHERE a.UserID = ? AND a.AccountTypeID = ?
        ORDER BY a.StartDate DESC`,
@@ -122,7 +122,7 @@ const gicService = {
     return await db.queryOne(
       `SELECT a.*, gp.ProductName
        FROM Accounts a
-       LEFT JOIN GICProducts gp ON a.Description = CAST(gp.ProductID AS TEXT)
+       LEFT JOIN GICProducts gp ON a.ProductID = gp.ProductID
        WHERE a.AccountID = ? AND a.AccountTypeID = ?`,
       [gicId, ACCOUNT_TYPES.INVESTMENT]
     );
@@ -187,7 +187,7 @@ const gicService = {
         startDate: formatDate(new Date()),
         statusId: STATUS.ACTIVE,
         balance: amount,
-        description: productId.toString()
+        productId: productId
       });
 
       // Create withdrawal from chequing account
