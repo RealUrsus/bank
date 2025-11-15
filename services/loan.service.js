@@ -189,6 +189,7 @@ const loanService = {
 
   /**
    * Check if a loan is paid off and update status
+   * Daily check at midnight: if paid-off balance (principal + accrued interest - current balance) <= 0
    * @param {number} loanId - Loan ID
    * @returns {Promise<boolean>} True if loan was marked as paid off
    */
@@ -200,7 +201,18 @@ const loanService = {
 
     const balance = await accountService.getBalance(loanId);
 
-    if (balance >= loan.PrincipalAmount) {
+    // Calculate paid-off amount: principal + accrued interest to current day - current balance
+    const principal = parseFloat(loan.PrincipalAmount);
+    const interestRate = parseFloat(loan.InterestRate);
+    const startDate = new Date(loan.StartDate);
+    const today = new Date();
+    const daysElapsed = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
+    const monthsElapsed = daysElapsed / 30.44; // Average days per month
+    const accruedInterest = (principal * interestRate * (monthsElapsed / 12)) / 100;
+    const paidOffAmount = principal + accruedInterest - balance;
+
+    // If paid-off amount is 0 or negative (fully paid), mark as paid off
+    if (paidOffAmount <= 0.01) { // Allow small rounding tolerance
       await accountService.updateAccountStatus(loanId, STATUS.PAID_OFF);
       return true;
     }
