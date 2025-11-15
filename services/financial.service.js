@@ -144,6 +144,23 @@ const financialService = {
   },
 
   /**
+   * Calculate accrued interest from start date to yesterday
+   * Used for displaying current accrued interest on loans
+   * @param {number} principal - Principal amount
+   * @param {number} interestRate - Annual interest rate (as percentage)
+   * @param {Date|string} startDate - Start date of the loan/GIC
+   * @returns {number} Accrued interest amount
+   */
+  calculateAccruedInterestToYesterday(principal, interestRate, startDate) {
+    const start = new Date(startDate);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const daysElapsed = Math.max(0, Math.floor((yesterday - start) / (1000 * 60 * 60 * 24)));
+    const monthsElapsed = daysElapsed / 30.44; // Average days per month
+    return (principal * interestRate * (monthsElapsed / 12)) / 100;
+  },
+
+  /**
    * Calculate total interest over the life of a loan
    * @param {number} principal - Loan principal
    * @param {number} annualRate - Annual interest rate (as percentage)

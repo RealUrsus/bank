@@ -204,12 +204,7 @@ const loanService = {
     // Calculate paid-off amount: principal + accrued interest to yesterday - current balance
     const principal = parseFloat(loan.PrincipalAmount);
     const interestRate = parseFloat(loan.InterestRate);
-    const startDate = new Date(loan.StartDate);
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const daysElapsed = Math.max(0, Math.floor((yesterday - startDate) / (1000 * 60 * 60 * 24)));
-    const monthsElapsed = daysElapsed / 30.44; // Average days per month
-    const accruedInterest = (principal * interestRate * (monthsElapsed / 12)) / 100;
+    const accruedInterest = financialService.calculateAccruedInterestToYesterday(principal, interestRate, loan.StartDate);
     const paidOffAmount = principal + accruedInterest - balance;
 
     // If paid-off amount is 0 or negative (fully paid), mark as paid off
@@ -277,19 +272,11 @@ const loanService = {
     }
 
     // Get user's chequing account
-    const chequingAccount = await db.queryOne(
-      `SELECT AccountID FROM Accounts
-       WHERE UserID = ? AND AccountTypeID = ?`,
-      [loan.UserID, ACCOUNT_TYPES.CHEQUING]
-    );
-
-    if (!chequingAccount) {
-      throw new Error('User chequing account not found');
-    }
+    const chequingAccountId = await accountService.getChequingAccountId(loan.UserID);
 
     // Deposit loan principal to chequing account
     await transactionService.createSystemTransaction({
-      accountId: chequingAccount.AccountID,
+      accountId: chequingAccountId,
       transactionTypeId: TRANSACTION_TYPES.DEPOSIT,
       amount: loan.PrincipalAmount,
       description: `Loan disbursement - Loan #${loanId} ($${loan.PrincipalAmount.toFixed(2)} at ${loan.InterestRate}% APR)`
@@ -301,7 +288,7 @@ const loanService = {
       userId: loan.UserID,
       userName: `${loan.Name} ${loan.Surname}`,
       principal: loan.PrincipalAmount,
-      chequingAccountId: chequingAccount.AccountID
+      chequingAccountId: chequingAccountId
     });
 
     return true;
@@ -356,19 +343,11 @@ const loanService = {
     }
 
     // Get user's chequing account
-    const chequingAccount = await db.queryOne(
-      `SELECT AccountID FROM Accounts
-       WHERE UserID = ? AND AccountTypeID = ?`,
-      [loan.UserID, ACCOUNT_TYPES.CHEQUING]
-    );
-
-    if (!chequingAccount) {
-      throw new Error('User chequing account not found');
-    }
+    const chequingAccountId = await accountService.getChequingAccountId(loan.UserID);
 
     // Withdraw interest from chequing account
     const transactionId = await transactionService.createSystemTransaction({
-      accountId: chequingAccount.AccountID,
+      accountId: chequingAccountId,
       transactionTypeId: TRANSACTION_TYPES.WITHDRAWAL,
       amount: interestAmount,
       description: `${periodDescription} loan interest payment - Loan #${loanId} (${loan.InterestRate}% APR)`
@@ -414,22 +393,14 @@ const loanService = {
     });
 
     // Get user's chequing account
-    const chequingAccount = await db.queryOne(
-      `SELECT AccountID FROM Accounts
-       WHERE UserID = ? AND AccountTypeID = ?`,
-      [loan.UserID, ACCOUNT_TYPES.CHEQUING]
-    );
-
-    if (!chequingAccount) {
-      throw new Error('User chequing account not found');
-    }
+    const chequingAccountId = await accountService.getChequingAccountId(loan.UserID);
 
     // Perform final withdrawal and status update atomically
     await db.transaction(async () => {
       // Withdraw remaining loan balance from chequing account if any balance remains
       if (remainingBalance > 0) {
         await transactionService.createSystemTransaction({
-          accountId: chequingAccount.AccountID,
+          accountId: chequingAccountId,
           transactionTypeId: TRANSACTION_TYPES.WITHDRAWAL,
           amount: remainingBalance,
           description: `Loan maturity - Final payment for Loan #${loanId} (Remaining: $${remainingBalance.toFixed(2)})`
