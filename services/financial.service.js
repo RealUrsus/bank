@@ -115,19 +115,23 @@ const financialService = {
    * @param {number} principal - Loan principal
    * @param {number} annualRate - Annual interest rate (as percentage)
    * @param {number} termMonths - Term in months
-   * @param {string} frequency - Payment frequency (Monthly, Biweekly, Weekly)
+   * @param {number} paymentFrequencyId - Payment frequency ID (0=Bi-weekly, 1=Monthly, 2=Annually, 3=At Maturity)
    * @returns {number} Payment amount
    */
-  calculatePaymentByFrequency(principal, annualRate, termMonths, frequency) {
+  calculatePaymentByFrequency(principal, annualRate, termMonths, paymentFrequencyId) {
     const monthlyPayment = this.calculateMonthlyPayment(principal, annualRate, termMonths);
+    const { PAYMENT_FREQUENCIES } = require('./constants');
 
-    switch (frequency) {
-      case 'Monthly':
-        return monthlyPayment;
-      case 'Biweekly':
+    switch (paymentFrequencyId) {
+      case PAYMENT_FREQUENCIES.BI_WEEKLY:
         return monthlyPayment * 12 / 26; // 26 biweekly periods per year
-      case 'Weekly':
-        return monthlyPayment * 12 / 52; // 52 weekly periods per year
+      case PAYMENT_FREQUENCIES.MONTHLY:
+        return monthlyPayment;
+      case PAYMENT_FREQUENCIES.ANNUALLY:
+        return monthlyPayment * 12; // Annual payment
+      case PAYMENT_FREQUENCIES.AT_MATURITY:
+        // For at maturity, return total amount due (principal + total interest)
+        return principal + this.calculateTotalLoanInterest(principal, annualRate, termMonths);
       default:
         return monthlyPayment;
     }

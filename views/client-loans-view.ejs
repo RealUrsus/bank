@@ -99,7 +99,7 @@
                 <th>Rate</th>
                 <th>Term</th>
                 <th>Start Date</th>
-                <th>Maturity Date</th>
+                <th>Payment Frequency</th>
                 <th>Description</th>
                 <th class="text-center">Status</th>
               </tr>
@@ -109,10 +109,7 @@
                 // Parse date as local to avoid timezone conversion issues
                 const [year, month, day] = loan.StartDate.split('-').map(Number);
                 const startDate = new Date(year, month - 1, day);
-                const endDate = new Date(startDate);
-                endDate.setMonth(endDate.getMonth() + parseInt(loan.Term));
                 const formattedStartDate = startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                const formattedEndDate = endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                 const statusClass = loan.StatusName ? 'status-' + loan.StatusName.toLowerCase().replace(/\s+/g, '-') : '';
               %>
               <tr class="loan-row" onclick="window.location.href='/client/loan/view/<%= loan.AccountID %>'">
@@ -127,7 +124,7 @@
                 <td><%= loan.InterestRate %>%</td>
                 <td><%= loan.Term %> months</td>
                 <td><%= formattedStartDate %></td>
-                <td><%= formattedEndDate %></td>
+                <td><%= loan.PaymentFrequencyName || 'N/A' %></td>
                 <td><%= loan.Description || 'Personal Loan' %></td>
                 <td class="text-center">
                   <span class="status-badge <%= statusClass %>">
