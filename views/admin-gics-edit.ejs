@@ -19,22 +19,22 @@
 
           <div class="mb-3">
             <label for="productId"><h5>Product ID</h5></label>
-            <input type="text" name="productId" id="productId" value="<%= product.ProductID %>" readonly style="border: none;">
+            <input type="text" name="productId" id="productId" value="<%= product.ProductID %>" readonly class="form-control-borderless">
           </div>
 
           <div class="mb-3">
             <label for="productName"><h5>Product Name</h5></label>
-            <input type="text" class="form-control" id="productName" name="productName" value="<%= product.ProductName %>" style="max-width: 320px;" required>
+            <input type="text" class="form-control form-control-narrow" id="productName" name="productName" value="<%= product.ProductName %>" required>
           </div>
 
           <div class="mb-3">
             <label for="interest"><h5>Annual Interest Rate (%)</h5></label>
-            <input type="number" class="form-control" id="interest" name="interest" min="0" max="100" step="0.1" value="<%= product.InterestRate %>" style="max-width: 320px;" required>
+            <input type="number" class="form-control form-control-narrow" id="interest" name="interest" min="0" max="100" step="0.1" value="<%= product.InterestRate %>" required>
           </div>
 
           <div class="mb-3">
             <label for="term"><h5>Term</h5></label>
-            <select class="form-select" id="term" name="term" style="max-width: 320px;" required>
+            <select class="form-select form-control-narrow" id="term" name="term" required>
               <option value="12" <%= product.Term === 12 ? 'selected' : '' %>>12 months</option>
               <option value="24" <%= product.Term === 24 ? 'selected' : '' %>>24 months</option>
               <option value="36" <%= product.Term === 36 ? 'selected' : '' %>>36 months</option>
@@ -45,7 +45,7 @@
 
           <div class="mb-3">
             <label for="minimumAmount"><h5>Minimum Investment Amount</h5></label>
-            <input type="number" class="form-control" id="minimumAmount" name="minimumAmount" min="0" step="0.01" value="<%= product.MinimumAmount %>" style="max-width: 320px;" required>
+            <input type="number" class="form-control form-control-narrow" id="minimumAmount" name="minimumAmount" min="0" step="0.01" value="<%= product.MinimumAmount %>" required>
           </div>
 
           <div class="col-auto">

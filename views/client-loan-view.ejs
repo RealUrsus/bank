@@ -18,7 +18,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h3 class="mb-0">Loan #<%= account.AccountID %></h3>
           <a href="/client/loan/view" class="btn btn-outline-secondary btn-sm">
-            <i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> Back to Loans
+            <i data-feather="arrow-left" class="icon-md"></i> Back to Loans
           </a>
         </div>
 
@@ -54,7 +54,7 @@
                     <small class="text-muted d-block">Principal Loan Amount</small>
                     <h4 class="mb-0">$<%= principal.toFixed(2) %></h4>
                   </div>
-                  <i data-feather="dollar-sign" class="text-primary" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="dollar-sign" class="text-primary" class="icon-1xl"></i>
                 </div>
               </div>
               <div class="col-md-6 mb-3">
@@ -63,7 +63,7 @@
                     <small class="text-muted d-block">Amount at Maturity</small>
                     <h4 class="mb-0">$<%= totalAtMaturity.toFixed(2) %></h4>
                   </div>
-                  <i data-feather="trending-up" class="text-success" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="trending-up" class="text-success" class="icon-1xl"></i>
                 </div>
               </div>
               <div class="col-md-6 mb-3">
@@ -72,7 +72,7 @@
                     <small class="text-muted d-block">Current Balance</small>
                     <h4 class="mb-0">$<%= currentBalance.toFixed(2) %></h4>
                   </div>
-                  <i data-feather="credit-card" class="text-info" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="credit-card" class="text-info" class="icon-1xl"></i>
                 </div>
               </div>
               <div class="col-md-6 mb-3">
@@ -81,14 +81,14 @@
                     <small class="text-muted d-block">Paid off Amount</small>
                     <h4 class="mb-0 text-primary">$<%= paidOffAmount.toFixed(2) %></h4>
                   </div>
-                  <i data-feather="dollar-sign" class="text-primary" style="width: 32px; height: 32px;"></i>
+                  <i data-feather="dollar-sign" class="text-primary" class="icon-1xl"></i>
                 </div>
               </div>
             </div>
 
             <!-- Note about paid off amount -->
             <div class="alert alert-info mb-3">
-              <i data-feather="info" style="width: 16px; height: 16px;"></i>
+              <i data-feather="info" class="icon-md"></i>
               <strong>Note:</strong> Paid off Amount is Principal Loan Amount + interest accrued to yesterday minus Current Balance. This amount must be transferred from checking to assign status paid off and close loan.
             </div>
           </div>
@@ -124,11 +124,11 @@
                     <td class="text-center">
                       <% if (transaction.StatusID === 2) { %>
                         <span class="badge bg-success">
-                          <i data-feather="check" style="width: 12px; height: 12px;"></i> Approved
+                          <i data-feather="check" class="icon-xs"></i> Approved
                         </span>
                       <% } else { %>
                         <span class="badge bg-warning">
-                          <i data-feather="clock" style="width: 12px; height: 12px;"></i> Pending
+                          <i data-feather="clock" class="icon-xs"></i> Pending
                         </span>
                       <% } %>
                     </td>
@@ -139,7 +139,7 @@
               <% } else { %>
               <!-- Empty State -->
               <div class="text-center py-5">
-                <i data-feather="file-text" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+                <i data-feather="file-text" class="text-muted mb-3 icon-2xl"></i>
                 <h4 class="text-muted">No Transactions Found</h4>
                 <p class="text-muted">There are no transactions for this loan yet.</p>
               </div>

@@ -18,15 +18,15 @@
 
 				<div class="mb-3">
 					<label for="aid"><h5>Agreement #</h5></label>
-					<input type="text" name ="id" id="aid" value=<%= agreement.AgreementID %> readonly style="border: none;">
+					<input type="text" name ="id" id="aid" value=<%= agreement.AgreementID %> readonly class="form-control-borderless">
 				</div>
 				<div class="mb-3">
 					<h5>Agreement Title: <%= agreement.StatusName %></h5>
-					<input type="text" name="title" value="<%= agreement.AgreementName %>" class="form-control" style="max-width: 320px;">
+					<input type="text" name="title" value="<%= agreement.AgreementName %>" class="form-control form-control-narrow">
 				</div>
 				<div>
 					<h5>Agreement Content:</h5>
-					<textarea class="form-control" name="context" rows="15" style="white-space: pre-wrap;"><%= agreement.AgreementContent %></textarea>
+					<textarea class="form-control text-pre-wrap" name="context" rows="15"><%= agreement.AgreementContent %></textarea>
 				</div>
 				<div class="mb-3">
 					<label for="status"><h5>Status</h5></label>

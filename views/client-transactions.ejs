@@ -46,7 +46,7 @@
         <div class="mb-3 search-box">
           <div class="input-group">
             <span class="input-group-text bg-white">
-              <i data-feather="search" style="width: 16px; height: 16px;"></i>
+              <i data-feather="search" class="icon-md"></i>
             </span>
             <input type="text" class="form-control" id="searchTransactions" placeholder="Search by description, amount, or category...">
           </div>
@@ -59,16 +59,16 @@
             <thead class="table-light">
               <tr>
                 <th class="sortable" data-sort="date">
-                  Date <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Date <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable" data-sort="type">
-                  Type <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Type <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable text-end" data-sort="amount">
-                  Amount <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Amount <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th class="sortable" data-sort="category">
-                  Category <i data-feather="chevrons-up-down" style="width: 14px; height: 14px;"></i>
+                  Category <i data-feather="chevrons-up-down" class="icon-sm"></i>
                 </th>
                 <th>Description</th>
                 <th class="text-center">Status</th>
@@ -91,7 +91,7 @@
                 <td><%= formattedDate %></td>
                 <td>
                   <span class="badge <%= isDeposit ? 'bg-success' : 'bg-danger' %>">
-                    <i data-feather="<%= isDeposit ? 'arrow-down-circle' : 'arrow-up-circle' %>" style="width: 14px; height: 14px;"></i>
+                    <i data-feather="<%= isDeposit ? 'arrow-down-circle' : 'arrow-up-circle' %>" class="icon-sm"></i>
                     <%= isDeposit ? 'Deposit' : 'Withdrawal' %>
                   </span>
                 </td>
@@ -125,7 +125,7 @@
           <% } else { %>
           <!-- Empty State -->
           <div class="text-center py-5">
-            <i data-feather="inbox" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+            <i data-feather="inbox" class="text-muted mb-3 icon-2xl"></i>
             <h4 class="text-muted">No Transactions Found</h4>
             <p class="text-muted">You haven't made any transactions yet.</p>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enter-transaction">
@@ -191,7 +191,7 @@
             const noResults = document.createElement('div');
             noResults.id = 'noSearchResults';
             noResults.className = 'alert alert-info text-center mt-3';
-            noResults.innerHTML = '<i data-feather="search" style="width: 24px; height: 24px;"></i><br>No transactions match your search term: <strong>' + searchTerm + '</strong>';
+            noResults.innerHTML = '<i data-feather="search" class="icon-xl"></i><br>No transactions match your search term: <strong>' + searchTerm + '</strong>';
             transactionsTable.parentElement.appendChild(noResults);
             feather.replace();
           }

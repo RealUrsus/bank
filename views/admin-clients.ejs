@@ -31,7 +31,7 @@
                 <th>User ID</th>
                 <th>Name</th>
                 <th>Surname</th>
-                <th style="width: 200px; text-align: center;">Action</th>
+                <th class="col-width-xl">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -80,7 +80,7 @@
                   <div class="mb-3">
                     <label for="confirmPassword<%= client.UserID %>" class="form-label">Confirm Password</label>
                     <input type="password" class="form-control" id="confirmPassword<%= client.UserID %>" name="confirmPassword" required minlength="8">
-                    <div class="invalid-feedback" id="passwordMismatch<%= client.UserID %>" style="display: none;">
+                    <div class="invalid-feedback d-none-js" id="passwordMismatch<%= client.UserID %>">
                       Passwords do not match!
                     </div>
                   </div>

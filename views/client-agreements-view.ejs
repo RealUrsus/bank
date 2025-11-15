@@ -18,7 +18,7 @@
 				<div class="d-flex justify-content-between align-items-center mb-4">
 					<h3 class="mb-0">Agreement #<%= agreement.AgreementID %></h3>
 					<a href="/client/agreements" class="btn btn-outline-secondary btn-sm">
-						<i data-feather="arrow-left" style="width: 16px; height: 16px;"></i> Back to Agreements
+						<i data-feather="arrow-left" class="icon-md"></i> Back to Agreements
 					</a>
 				</div>
 
@@ -28,7 +28,7 @@
 					</div>
 					<div class="card-body">
 						<h6 class="text-muted mb-2">Agreement Content:</h6>
-						<textarea readonly class="form-control" name="context" rows="15" style="white-space: pre-wrap;"><%= agreement.AgreementContent %></textarea>
+						<textarea readonly class="form-control text-pre-wrap" name="context" rows="15"><%= agreement.AgreementContent %></textarea>
 					</div>
 				</div>
 			</div>

@@ -49,32 +49,32 @@
           <div class="btn-group d-block" role="group" aria-label="Status filter">
             <input type="radio" class="btn-check" name="statusFilter" id="filter-active" value="active" <%= selectedStatus === 'active' ? 'checked' : '' %>>
             <label class="btn btn-outline-success" for="filter-active">
-              <i data-feather="activity" style="width: 16px; height: 16px;"></i> Active
+              <i data-feather="activity" class="icon-md"></i> Active
             </label>
 
             <input type="radio" class="btn-check" name="statusFilter" id="filter-all" value="all" <%= selectedStatus === 'all' ? 'checked' : '' %>>
             <label class="btn btn-outline-primary" for="filter-all">
-              <i data-feather="list" style="width: 16px; height: 16px;"></i> All
+              <i data-feather="list" class="icon-md"></i> All
             </label>
 
             <input type="radio" class="btn-check" name="statusFilter" id="filter-pending" value="pending" <%= selectedStatus === 'pending' ? 'checked' : '' %>>
             <label class="btn btn-outline-warning" for="filter-pending">
-              <i data-feather="clock" style="width: 16px; height: 16px;"></i> Pending
+              <i data-feather="clock" class="icon-md"></i> Pending
             </label>
 
             <input type="radio" class="btn-check" name="statusFilter" id="filter-paid-off" value="paid off" <%= selectedStatus === 'paid off' ? 'checked' : '' %>>
             <label class="btn btn-outline-info" for="filter-paid-off">
-              <i data-feather="check-square" style="width: 16px; height: 16px;"></i> Paid Off
+              <i data-feather="check-square" class="icon-md"></i> Paid Off
             </label>
 
             <input type="radio" class="btn-check" name="statusFilter" id="filter-rejected" value="rejected" <%= selectedStatus === 'rejected' ? 'checked' : '' %>>
             <label class="btn btn-outline-danger" for="filter-rejected">
-              <i data-feather="x-circle" style="width: 16px; height: 16px;"></i> Rejected
+              <i data-feather="x-circle" class="icon-md"></i> Rejected
             </label>
 
             <input type="radio" class="btn-check" name="statusFilter" id="filter-closed" value="closed" <%= selectedStatus === 'closed' ? 'checked' : '' %>>
             <label class="btn btn-outline-secondary" for="filter-closed">
-              <i data-feather="x-square" style="width: 16px; height: 16px;"></i> Closed
+              <i data-feather="x-square" class="icon-md"></i> Closed
             </label>
           </div>
         </div>
@@ -83,7 +83,7 @@
         <div class="mb-3 search-box">
           <div class="input-group">
             <span class="input-group-text bg-white">
-              <i data-feather="search" style="width: 16px; height: 16px;"></i>
+              <i data-feather="search" class="icon-md"></i>
             </span>
             <input type="text" class="form-control" id="searchLoans" placeholder="Search by loan ID, description, or amount...">
           </div>
@@ -141,7 +141,7 @@
           <% } else { %>
           <!-- Empty State -->
           <div class="text-center py-5">
-            <i data-feather="file-text" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+            <i data-feather="file-text" class="text-muted mb-3 icon-2xl"></i>
             <h4 class="text-muted">No Loans Found</h4>
             <p class="text-muted">You don't have any loans with status: <strong><%= selectedStatus %></strong></p>
             <% if (selectedStatus !== 'all') { %>
@@ -195,7 +195,7 @@
             const noResults = document.createElement('div');
             noResults.id = 'noSearchResults';
             noResults.className = 'alert alert-info text-center mt-3';
-            noResults.innerHTML = '<i data-feather="search" style="width: 24px; height: 24px;"></i><br>No loans match your search term: <strong>' + searchTerm + '</strong>';
+            noResults.innerHTML = '<i data-feather="search" class="icon-xl"></i><br>No loans match your search term: <strong>' + searchTerm + '</strong>';
             loansTable.parentElement.appendChild(noResults);
             feather.replace();
           }

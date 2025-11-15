@@ -19,12 +19,12 @@
 
           <div class="mb-3">
             <label for="loanId"><h5>Loan ID</h5></label>
-            <input type="text" name="loanId" id="loanId" value="<%= loan.AccountID %>" readonly style="border: none;">
+            <input type="text" name="loanId" id="loanId" value="<%= loan.AccountID %>" readonly class="form-control-borderless">
           </div>
 
           <div class="mb-3">
             <label for="clientId"><h5>Client</h5></label>
-            <select name="clientId" id="clientId" class="form-select" style="max-width: 320px;" required>
+            <select name="clientId" id="clientId" class="form-select form-control-narrow" required>
               <% users.forEach(user => { %>
               <option value="<%= user.UserID %>" <%= loan.UserID === user.UserID ? 'selected' : '' %>>
                 <%= user.Name %> <%= user.Surname %>
@@ -35,22 +35,22 @@
 
           <div class="mb-3">
             <label for="date"><h5>Start Date</h5></label>
-            <input type="date" class="form-control" id="date" name="date" value="<%= loan.StartDate %>" style="max-width: 320px;" required>
+            <input type="date" class="form-control form-control-narrow" id="date" name="date" value="<%= loan.StartDate %>" required>
           </div>
 
           <div class="mb-3">
             <label for="amount"><h5>Principal Amount</h5></label>
-            <input type="text" class="form-control" id="amount" name="amount" pattern="^\d+(\.\d+)?$" value="<%= loan.PrincipalAmount %>" style="max-width: 320px;" required>
+            <input type="text" class="form-control form-control-narrow" id="amount" name="amount" pattern="^\d+(\.\d+)?$" value="<%= loan.PrincipalAmount %>" required>
           </div>
 
           <div class="mb-3">
             <label for="interest"><h5>Interest Rate</h5></label>
-            <input type="number" class="form-control" id="interest" name="interest" min="0" max="100" step="0.1" value="<%= loan.InterestRate %>" style="max-width: 320px;" required>
+            <input type="number" class="form-control form-control-narrow" id="interest" name="interest" min="0" max="100" step="0.1" value="<%= loan.InterestRate %>" required>
           </div>
 
           <div class="mb-3">
             <label for="paymentFrequency"><h5>Payment Frequency</h5></label>
-            <select class="form-select" id="paymentFrequency" name="paymentFrequency" style="max-width: 320px;" required>
+            <select class="form-select form-control-narrow" id="paymentFrequency" name="paymentFrequency" required>
               <option value="0" <%= loan.PaymentFrequencyID === 0 ? 'selected' : '' %>>Bi-weekly</option>
               <option value="1" <%= loan.PaymentFrequencyID === 1 ? 'selected' : '' %>>Monthly</option>
               <option value="2" <%= loan.PaymentFrequencyID === 2 ? 'selected' : '' %>>Annually</option>
@@ -60,7 +60,7 @@
 
           <div class="mb-3">
             <label for="term"><h5>Term</h5></label>
-            <select class="form-select" id="term" name="term" style="max-width: 320px;" required>
+            <select class="form-select form-control-narrow" id="term" name="term" required>
               <option value="12" <%= loan.Term === 12 ? 'selected' : '' %>>12 months</option>
               <option value="24" <%= loan.Term === 24 ? 'selected' : '' %>>24 months</option>
               <option value="36" <%= loan.Term === 36 ? 'selected' : '' %>>36 months</option>

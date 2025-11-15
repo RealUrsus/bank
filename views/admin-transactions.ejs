@@ -23,7 +23,7 @@
         <div class="card mb-4">
           <div class="card-body">
             <h5 class="card-title mb-3">
-              <i data-feather="user" style="width: 20px; height: 20px;"></i>
+              <i data-feather="user" class="icon-lg"></i>
               Select Client
             </h5>
             <form method="GET" action="/admin/transactions">
@@ -41,7 +41,7 @@
                 </div>
                 <div class="col-md-3">
                   <button type="submit" class="btn btn-primary w-100">
-                    <i data-feather="search" style="width: 16px; height: 16px;"></i>
+                    <i data-feather="search" class="icon-md"></i>
                     Load Transactions
                   </button>
                 </div>
@@ -64,7 +64,7 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title mb-3">
-                <i data-feather="list" style="width: 20px; height: 20px;"></i>
+                <i data-feather="list" class="icon-lg"></i>
                 Pending Transactions
               </h5>
               <div class="table-responsive">
@@ -91,11 +91,11 @@
                       <td>
                         <span class="badge <%= isDeposit ? 'bg-success' : (isWithdrawal ? 'bg-danger' : 'bg-info') %>">
                           <% if (isDeposit) { %>
-                            <i data-feather="arrow-down-circle" style="width: 14px; height: 14px;"></i> Deposit
+                            <i data-feather="arrow-down-circle" class="icon-sm"></i> Deposit
                           <% } else if (isWithdrawal) { %>
-                            <i data-feather="arrow-up-circle" style="width: 14px; height: 14px;"></i> Withdrawal
+                            <i data-feather="arrow-up-circle" class="icon-sm"></i> Withdrawal
                           <% } else { %>
-                            <i data-feather="repeat" style="width: 14px; height: 14px;"></i> Transfer
+                            <i data-feather="repeat" class="icon-sm"></i> Transfer
                           <% } %>
                         </span>
                       </td>
@@ -116,7 +116,7 @@
                             <input type="hidden" name="id" value="<%= transaction.TransactionID %>">
                             <input type="hidden" name="clientId" value="<%= clientId %>">
                             <button type="submit" class="btn btn-success btn-sm">
-                              <i data-feather="check" style="width: 14px; height: 14px;"></i>
+                              <i data-feather="check" class="icon-sm"></i>
                               Approve
                             </button>
                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -125,7 +125,7 @@
                             <input type="hidden" name="id" value="<%= transaction.TransactionID %>">
                             <input type="hidden" name="clientId" value="<%= clientId %>">
                             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this transaction?')">
-                              <i data-feather="trash-2" style="width: 14px; height: 14px;"></i>
+                              <i data-feather="trash-2" class="icon-sm"></i>
                               Delete
                             </button>
                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -144,7 +144,7 @@
           <div class="card">
             <div class="card-body">
               <div class="text-center py-5">
-                <i data-feather="check-circle" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+                <i data-feather="check-circle" class="text-muted mb-3 icon-2xl"></i>
                 <h4 class="text-muted">No Pending Transactions</h4>
                 <p class="text-muted">This client has no pending transactions to approve.</p>
               </div>
@@ -154,7 +154,7 @@
         <% } else { %>
         <!-- No Client Selected -->
         <div class="text-center py-5">
-          <i data-feather="user-check" style="width: 64px; height: 64px;" class="text-muted mb-3"></i>
+          <i data-feather="user-check" class="text-muted mb-3 icon-2xl"></i>
           <h4 class="text-muted">Select a Client</h4>
           <p class="text-muted">Please select a client from the dropdown above to view their pending transactions.</p>
         </div>
