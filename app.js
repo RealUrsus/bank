@@ -17,8 +17,8 @@ require('./jobs/dailyTasks');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// Disable the strictTransportSecurity middleware to avoid conflicts with HTTPS setups
-app.use(helmet({ strictTransportSecurity: false }));
+// Disable the strictTransportSecurity and contentSecurityPolicy middleware
+app.use(helmet({ strictTransportSecurity: false, contentSecurityPolicy: false }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
