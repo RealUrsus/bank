@@ -11,10 +11,10 @@
   "author": {
     "name": "Polar Bear",
     "email": "polar@bear.com",
-    "url": "https://www.polarbear.me/"
+    "url": "https://github.com/RealUrsus"
   },
   "homepage": "https://github.com/RealUrsus",
-  "license": "Unlicense",
+  "license": "MIT License:",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
