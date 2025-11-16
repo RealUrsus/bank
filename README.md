@@ -1,10 +1,10 @@
 # First Home Bank
 
-A web-based banking simulator designed to teach teenagers financial literacy through hands-on experience with real-world banking concepts.
+A web-based home banking application designed to teach teenagers financial literacy by tracking their real money - pocket money, allowances, and earnings.
 
 ## Overview
 
-First Home Bank provides a safe, educational environment where teens can learn about money management, savings, loans, and investments without real financial risk. Parents or educators act as bank administrators, while teens experience banking operations from a client perspective.
+First Home Bank helps parents manage and track their teens' finances in a structured banking environment. Teens learn about money management, savings, loans, and investments using their actual pocket money. Parents act as bank administrators, overseeing transactions and teaching financial responsibility through real-world banking operations.
 
 ## Features
 
@@ -47,4 +47,4 @@ First Home Bank provides a safe, educational environment where teens can learn a
 
 ## License
 
-Unlicense
+MIT
